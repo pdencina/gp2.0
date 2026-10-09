@@ -19,9 +19,11 @@ const STUBS = `
 
 describe("aplicar_en_orden.sql", () => {
   it("coincide con lo que genera el script a partir de 000 y 001", () => {
-    const committed = read("v2/aplicar_en_orden.sql");
+    // Se ignoran los saltos de línea: Windows los convierte a CRLF al descargar el repositorio.
+    const lf = (t: string) => t.replace(/\r\n/g, "\n");
+    const committed = lf(read("v2/aplicar_en_orden.sql"));
     execFileSync("node", [join(root, "..", "scripts", "build-apply-sql.js")]);
-    expect(read("v2/aplicar_en_orden.sql")).toBe(committed);
+    expect(lf(read("v2/aplicar_en_orden.sql"))).toBe(committed);
   });
 
   it("actualiza un proyecto en versión 1 de una sola vez y conserva las cuentas", async () => {
