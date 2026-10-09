@@ -1,9 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { ROLE_VIEWS, canPromote, type Role } from "@/lib/roles";
-import { Logo } from "@/components/Logo";
+import { AppHeader } from "@/components/AppHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -42,12 +41,7 @@ export default async function EquipoPage({
 
   return (
     <div className="mx-auto max-w-4xl p-4 md:p-8">
-      <header className="mb-6 flex items-center justify-between">
-        <Logo />
-        <Link href="/inicio" className="text-sm text-stone-600 hover:underline">
-          ← Inicio
-        </Link>
-      </header>
+      <AppHeader role={myRole} />
 
       <h1 className="text-2xl font-medium">Tu equipo</h1>
       <p className="mb-5 mt-1 text-sm text-stone-500">

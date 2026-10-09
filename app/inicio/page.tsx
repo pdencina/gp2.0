@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ROLE_VIEWS, type Role } from "@/lib/roles";
-import { Logo } from "@/components/Logo";
+import { AppHeader } from "@/components/AppHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -51,19 +51,7 @@ export default async function InicioPage() {
 
   return (
     <div className="mx-auto max-w-4xl p-4 md:p-8">
-      <header className="mb-6 flex items-center justify-between">
-        <Logo />
-        <div className="flex items-center gap-4 text-sm">
-          {["monitor", "coordinador", "admin"].includes(role) && (
-            <Link href="/equipo" className="text-brand-teal hover:underline">
-              Equipo
-            </Link>
-          )}
-          <form action="/auth/signout" method="post">
-            <button className="text-stone-600 hover:underline">Salir</button>
-          </form>
-        </div>
-      </header>
+      <AppHeader role={role} />
 
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -97,7 +85,9 @@ export default async function InicioPage() {
             {groups.map((g) => (
               <li key={g.id} className="flex items-center justify-between border-b border-stone-100 py-2.5 text-sm last:border-0">
                 <span>
-                  {g.name}
+                  <Link href={`/grupos/${g.id}`} className="hover:underline">
+                    {g.name}
+                  </Link>
                   <span className="ml-2 text-stone-400">{g.curriculums?.name}</span>
                 </span>
                 <span className="text-stone-500">
