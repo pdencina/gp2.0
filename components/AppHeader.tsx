@@ -6,6 +6,7 @@ const LINKS: { href: string; label: string; roles: Role[] }[] = [
   { href: "/inicio", label: "Inicio", roles: ["admin", "coordinador", "monitor", "lider", "alumno"] },
   { href: "/curriculums", label: "Currículums", roles: ["admin", "coordinador"] },
   { href: "/grupos", label: "Grupos", roles: ["admin", "coordinador", "monitor", "lider"] },
+  { href: "/alertas", label: "Alertas", roles: ["admin", "coordinador", "monitor", "lider"] },
   { href: "/equipo", label: "Equipo", roles: ["admin", "coordinador", "monitor"] },
 ];
 

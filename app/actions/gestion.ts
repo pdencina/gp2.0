@@ -103,6 +103,27 @@ export async function guardarAsistencia(fd: FormData) {
   redirect(`/grupos/${group_id}?lista=${present.length}`);
 }
 
+export async function registrarContacto(fd: FormData) {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const kind = text(fd, "kind");
+  if (!["llamada", "mensaje", "visita"].includes(kind)) finish("/alertas", "Elige cómo contactaste a la persona.");
+
+  const { error } = await supabase.from("contacts").insert({
+    student_id: text(fd, "student_id"),
+    group_id: text(fd, "group_id"),
+    contacted_by: user.id,
+    kind,
+    note: orNull(text(fd, "note")),
+  });
+  revalidatePath("/inicio");
+  finish("/alertas", error?.message);
+}
+
 export async function quitarAlumno(fd: FormData) {
   const group_id = text(fd, "group_id");
   const { error } = await createClient()

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ROLE_VIEWS, type Role } from "@/lib/roles";
 import { AppHeader } from "@/components/AppHeader";
+import { ALERT_LABEL, SEVERITY_CLASS, type Alert } from "@/lib/alerts";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +56,9 @@ export default async function InicioPage() {
     ? `${Math.round((marks.filter((a) => a.present).length / marks.length) * 100)}%`
     : "—";
 
+  const alerts =
+    role === "alumno" ? [] : (((await supabase.rpc("my_alerts")).data ?? []) as Alert[]);
+
   const metrics: [string, string | number][] =
     role === "alumno"
       ? [["Mi grupo", groups[0]?.name ?? "—"], ["Compañeros", students || "—"], ["Próximo", groups[0]?.meeting_day ?? "—"]]
@@ -95,6 +99,30 @@ export default async function InicioPage() {
           </div>
         ))}
       </div>
+
+      {alerts.length > 0 && (
+        <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-sm font-medium">Necesitan tu atención</h2>
+            <Link href="/alertas" className="text-sm text-brand-teal hover:underline">
+              Ver las {alerts.length} →
+            </Link>
+          </div>
+          <ul>
+            {alerts.slice(0, 4).map((a, i) => (
+              <li key={`${a.kind}-${a.group_id}-${a.student_id ?? i}`} className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 py-2.5 text-sm last:border-0">
+                <span>
+                  <span className="font-medium">{a.student_name || a.group_name}</span>
+                  <span className="ml-2 text-stone-500">{a.detail}</span>
+                </span>
+                <span className={`rounded px-2 py-0.5 text-xs ${SEVERITY_CLASS[a.severity]}`}>
+                  {ALERT_LABEL[a.kind]}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="rounded-xl border border-stone-200 bg-white p-4">
         <h2 className="mb-2 text-sm font-medium">{view.listTitle}</h2>
