@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ROLE_VIEWS, type Role } from "@/lib/roles";
@@ -52,9 +53,16 @@ export default async function InicioPage() {
     <div className="mx-auto max-w-4xl p-4 md:p-8">
       <header className="mb-6 flex items-center justify-between">
         <Logo />
-        <form action="/auth/signout" method="post">
-          <button className="text-sm text-stone-600 hover:underline">Salir</button>
-        </form>
+        <div className="flex items-center gap-4 text-sm">
+          {["monitor", "coordinador", "admin"].includes(role) && (
+            <Link href="/equipo" className="text-brand-teal hover:underline">
+              Equipo
+            </Link>
+          )}
+          <form action="/auth/signout" method="post">
+            <button className="text-stone-600 hover:underline">Salir</button>
+          </form>
+        </div>
       </header>
 
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
