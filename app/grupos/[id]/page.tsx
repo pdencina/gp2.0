@@ -24,7 +24,7 @@ export default async function GrupoPage({
   searchParams,
 }: {
   params: { id: string };
-  searchParams: { error?: string; ok?: string };
+  searchParams: { error?: string; ok?: string; lista?: string };
 }) {
   const { supabase, role } = await getSession();
 
@@ -66,6 +66,18 @@ export default async function GrupoPage({
 
   const full = members.length >= group.max_members;
 
+  const { data: sessionRows } = await supabase
+    .from("sessions")
+    .select("held_on, lesson_number, attendance(present)")
+    .eq("group_id", group.id)
+    .order("held_on", { ascending: false })
+    .limit(8);
+  const sessions = (sessionRows ?? []) as unknown as {
+    held_on: string;
+    lesson_number: number | null;
+    attendance: { present: boolean }[];
+  }[];
+
   return (
     <div className="mx-auto max-w-4xl p-4 md:p-8">
       <AppHeader role={role} />
@@ -79,6 +91,20 @@ export default async function GrupoPage({
         {group.location ? ` · ${group.location}` : ""}
       </p>
       <Flash error={searchParams.error} ok={searchParams.ok} />
+      {searchParams.lista && (
+        <p role="status" className="mb-4 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">
+          Lista guardada: {searchParams.lista} {searchParams.lista === "1" ? "presente" : "presentes"}.
+        </p>
+      )}
+
+      {canManage && (
+        <Link
+          href={`/grupos/${group.id}/lista`}
+          className="mb-5 flex h-12 items-center justify-center rounded-xl bg-brand-orange font-medium text-white hover:brightness-95"
+        >
+          Pasar lista
+        </Link>
+      )}
 
       <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
         <h2 className="mb-3 text-sm font-medium">Responsables</h2>
@@ -173,6 +199,39 @@ export default async function GrupoPage({
           </ul>
         )}
       </section>
+
+      {canManage && (
+        <section className="mt-5 rounded-xl border border-stone-200 bg-white p-4">
+          <h2 className="mb-3 text-sm font-medium">Últimas reuniones</h2>
+          {sessions.length === 0 ? (
+            <p className="py-4 text-center text-sm text-stone-500">Todavía no se ha pasado lista.</p>
+          ) : (
+            <ul>
+              {sessions.map((s) => {
+                const total = s.attendance.length;
+                const n = s.attendance.filter((a) => a.present).length;
+                const pct = total ? Math.round((n / total) * 100) : 0;
+                return (
+                  <li key={s.held_on} className="border-b border-stone-100 last:border-0">
+                    <Link
+                      href={`/grupos/${group.id}/lista?fecha=${s.held_on}`}
+                      className="flex items-center justify-between py-2.5 text-sm hover:bg-stone-50"
+                    >
+                      <span>
+                        {s.held_on.split("-").reverse().join("/")}
+                        {s.lesson_number ? <span className="ml-2 text-stone-400">Lección {s.lesson_number}</span> : null}
+                      </span>
+                      <span className={pct < 60 ? "text-amber-700" : "text-stone-600"}>
+                        {n}/{total} · {pct}%
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      )}
     </div>
   );
 }

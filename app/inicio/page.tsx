@@ -44,10 +44,30 @@ export default async function InicioPage() {
 
   const students = groups.reduce((n, g) => n + (g.group_members[0]?.count ?? 0), 0);
 
+  // Asistencia de las últimas 4 semanas (RLS limita a lo que cada rol puede ver).
+  const since = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const { data: recent } = await supabase
+    .from("sessions")
+    .select("attendance(present)")
+    .gte("held_on", since);
+  const marks = ((recent ?? []) as unknown as { attendance: { present: boolean }[] }[]).flatMap((s) => s.attendance);
+  const attendancePct = marks.length
+    ? `${Math.round((marks.filter((a) => a.present).length / marks.length) * 100)}%`
+    : "—";
+
   const metrics: [string, string | number][] =
     role === "alumno"
       ? [["Mi grupo", groups[0]?.name ?? "—"], ["Compañeros", students || "—"], ["Próximo", groups[0]?.meeting_day ?? "—"]]
-      : [["Grupos", groups.length], ["Alumnos", students], ["Cupos libres", groups.reduce((n, g) => n + g.max_members - (g.group_members[0]?.count ?? 0), 0)]];
+      : [["Grupos", groups.length], ["Alumnos", students], ["Asistencia (4 sem.)", attendancePct]];
+
+  const actionHref =
+    role === "lider" && groups[0]
+      ? `/grupos/${groups[0].id}/lista`
+      : role === "admin"
+        ? "/curriculums"
+        : role === "coordinador" || role === "monitor"
+          ? "/grupos"
+          : null;
 
   return (
     <div className="mx-auto max-w-4xl p-4 md:p-8">
@@ -60,9 +80,11 @@ export default async function InicioPage() {
             {view.label} · {view.scope}
           </p>
         </div>
-        <button className="rounded-lg bg-brand-orange px-4 py-2.5 text-sm font-medium text-white">
-          {view.action}
-        </button>
+        {actionHref && (
+          <Link href={actionHref} className="rounded-lg bg-brand-orange px-4 py-2.5 text-sm font-medium text-white hover:brightness-95">
+            {view.action}
+          </Link>
+        )}
       </div>
 
       <div className="mb-5 grid grid-cols-3 gap-3">

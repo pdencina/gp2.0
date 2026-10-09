@@ -82,6 +82,27 @@ export async function agregarAlumno(fd: FormData) {
   finish(path, error?.message);
 }
 
+export async function guardarAsistencia(fd: FormData) {
+  const group_id = text(fd, "group_id");
+  const held_on = text(fd, "held_on");
+  const lesson = parseInt(text(fd, "lesson_number"), 10);
+  const back = `/grupos/${group_id}/lista`;
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(held_on)) finish(back, "Elige una fecha válida.");
+  const present = fd.getAll("present").map(String);
+
+  const { error } = await createClient().rpc("save_attendance", {
+    gid: group_id,
+    day: held_on,
+    lesson: Number.isFinite(lesson) && lesson > 0 ? lesson : null,
+    present,
+  });
+  if (error) finish(back, error.message);
+  revalidatePath(`/grupos/${group_id}`);
+  revalidatePath("/inicio");
+  redirect(`/grupos/${group_id}?lista=${present.length}`);
+}
+
 export async function quitarAlumno(fd: FormData) {
   const group_id = text(fd, "group_id");
   const { error } = await createClient()
