@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { authMessage, passwordProblem } from "@/lib/authErrors";
 
 type Mode = "login" | "registro" | "recuperar";
 
@@ -16,6 +18,7 @@ export function LoginForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [accepted, setAccepted] = useState(false);
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -23,61 +26,73 @@ export function LoginForm() {
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
 
+  function switchMode(next: Mode) {
+    setMode(next);
+    setError("");
+    setInfo("");
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setInfo("");
-    setLoading(true);
 
+    const cleanEmail = email.trim().toLowerCase();
+    if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) return setError("Escribe un correo válido.");
+
+    if (mode === "registro") {
+      if (name.trim().length < 2) return setError("Escribe tu nombre completo.");
+      const problem = passwordProblem(password);
+      if (problem) return setError(problem);
+      if (!accepted) return setError("Debes aceptar la política de privacidad para crear tu cuenta.");
+    }
+    if (mode === "login" && !password) return setError("Escribe tu contraseña.");
+
+    setLoading(true);
     if (mode === "login") {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) setError("Correo o contraseña incorrectos. Revisa tus datos e inténtalo de nuevo.");
+      const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
+      if (error) setError(authMessage(error.message));
       else {
         router.push("/inicio");
         router.refresh();
       }
     } else if (mode === "registro") {
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: cleanEmail,
         password,
         options: {
-          data: { full_name: name },
+          data: { full_name: name.trim() },
           emailRedirectTo: `${origin}/auth/callback`,
         },
       });
-      if (error) setError(error.message);
+      if (error) setError(authMessage(error.message));
       else if (data.session) {
         router.push("/inicio");
         router.refresh();
-      } else setInfo("Te enviamos un correo para confirmar tu cuenta.");
+      } else setInfo("Te enviamos un correo para confirmar tu cuenta. Revisa también el spam.");
     } else {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${origin}/auth/callback`,
+      const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+        redirectTo: `${origin}/auth/callback?next=/auth/restablecer`,
       });
-      if (error) setError(error.message);
-      else setInfo("Si el correo existe, te enviamos un enlace para recuperar tu contraseña.");
+      if (error) setError(authMessage(error.message));
+      else setInfo("Si el correo tiene una cuenta, te enviamos un enlace para recuperar tu contraseña.");
     }
     setLoading(false);
   }
 
   async function onMagicLink() {
-    if (!email) return setError("Escribe tu correo para enviarte el enlace.");
+    const cleanEmail = email.trim().toLowerCase();
+    if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) return setError("Escribe tu correo para enviarte el enlace.");
     setError("");
+    setInfo("");
     setLoading(true);
     const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: `${origin}/auth/callback` },
+      email: cleanEmail,
+      options: { emailRedirectTo: `${origin}/auth/callback`, shouldCreateUser: false },
     });
     setLoading(false);
-    if (error) setError(error.message);
-    else setInfo("Revisa tu correo: te enviamos un enlace para ingresar.");
-  }
-
-  async function onGoogle() {
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${origin}/auth/callback` },
-    });
+    if (error) setError(authMessage(error.message));
+    else setInfo("Si el correo tiene una cuenta, te enviamos un enlace para ingresar.");
   }
 
   const titles: Record<Mode, [string, string, string]> = {
@@ -101,7 +116,6 @@ export function LoginForm() {
             autoComplete="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            required
           />
         )}
         <input
@@ -113,37 +127,57 @@ export function LoginForm() {
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          required
         />
         {mode !== "recuperar" && (
-          <div className="relative">
-            <input
-              className={input}
-              type={show ? "text" : "password"}
-              placeholder="Contraseña"
-              aria-label="Contraseña"
-              autoComplete={mode === "login" ? "current-password" : "new-password"}
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShow(!show)}
-              className="absolute right-3 top-3 text-xs text-stone-500"
-              aria-label={show ? "Ocultar contraseña" : "Mostrar contraseña"}
-            >
-              {show ? "Ocultar" : "Ver"}
-            </button>
+          <div>
+            <div className="relative">
+              <input
+                className={input}
+                type={show ? "text" : "password"}
+                placeholder="Contraseña"
+                aria-label="Contraseña"
+                autoComplete={mode === "login" ? "current-password" : "new-password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={() => setShow(!show)}
+                className="absolute right-3 top-3 text-xs text-stone-500"
+                aria-label={show ? "Ocultar contraseña" : "Mostrar contraseña"}
+              >
+                {show ? "Ocultar" : "Ver"}
+              </button>
+            </div>
+            {mode === "registro" && (
+              <p className="mt-1 text-xs text-stone-500">Al menos 8 caracteres, con letras y números.</p>
+            )}
           </div>
+        )}
+
+        {mode === "registro" && (
+          <label className="flex items-start gap-2 text-xs text-stone-600">
+            <input
+              type="checkbox"
+              checked={accepted}
+              onChange={(e) => setAccepted(e.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              Acepto la{" "}
+              <Link href="/privacidad" target="_blank" className="text-brand-teal underline">
+                política de privacidad
+              </Link>
+              .
+            </span>
+          </label>
         )}
 
         {mode === "login" && (
           <div className="text-right">
             <button
               type="button"
-              onClick={() => setMode("recuperar")}
+              onClick={() => switchMode("recuperar")}
               className="text-xs text-brand-teal hover:underline"
             >
               ¿Olvidaste tu contraseña?
@@ -173,23 +207,15 @@ export function LoginForm() {
 
       {mode === "login" && (
         <>
-          <div className="my-5 text-center text-xs text-stone-400">o continúa con</div>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={onGoogle}
-              className="h-10 rounded-lg border border-stone-300 text-sm hover:bg-stone-50"
-            >
-              Google
-            </button>
-            <button
-              type="button"
-              onClick={onMagicLink}
-              className="h-10 rounded-lg border border-stone-300 text-sm hover:bg-stone-50"
-            >
-              Enlace por correo
-            </button>
-          </div>
+          <div className="my-5 text-center text-xs text-stone-400">o</div>
+          <button
+            type="button"
+            onClick={onMagicLink}
+            disabled={loading}
+            className="h-10 w-full rounded-lg border border-stone-300 text-sm hover:bg-stone-50 disabled:opacity-60"
+          >
+            Ingresar con un enlace por correo
+          </button>
         </>
       )}
 
@@ -197,12 +223,12 @@ export function LoginForm() {
         {mode === "login" ? (
           <>
             ¿Primera vez?{" "}
-            <button onClick={() => setMode("registro")} className="font-medium text-brand-teal hover:underline">
+            <button onClick={() => switchMode("registro")} className="font-medium text-brand-teal hover:underline">
               Crea tu cuenta
             </button>
           </>
         ) : (
-          <button onClick={() => setMode("login")} className="font-medium text-brand-teal hover:underline">
+          <button onClick={() => switchMode("login")} className="font-medium text-brand-teal hover:underline">
             Volver a ingresar
           </button>
         )}
