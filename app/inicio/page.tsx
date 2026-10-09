@@ -30,7 +30,9 @@ export default async function InicioPage() {
 
   const role = (profile?.role ?? "alumno") as Role;
   const view = ROLE_VIEWS[role];
-  const firstName = (profile?.full_name || user.email || "").split(" ")[0];
+  const firstName = profile?.full_name
+    ? profile.full_name.split(" ")[0]
+    : (user.email ?? "").split("@")[0];
 
   // RLS ya limita los grupos a lo que cada rol puede ver.
   const { data } = await supabase
