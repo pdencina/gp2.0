@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 
 type GroupRow = {
   id: string;
+  curriculum_id: string;
   name: string;
   meeting_day: string | null;
   meeting_time: string | null;
@@ -39,7 +40,7 @@ export default async function InicioPage() {
   // RLS ya limita los grupos a lo que cada rol puede ver.
   const { data } = await supabase
     .from("groups")
-    .select("id, name, meeting_day, meeting_time, max_members, curriculums(name), group_members(count)")
+    .select("id, curriculum_id, name, meeting_day, meeting_time, max_members, curriculums(name), group_members(count)")
     .order("name");
   const groups = (data ?? []) as unknown as GroupRow[];
 
@@ -67,9 +68,25 @@ export default async function InicioPage() {
   const alerts =
     role === "alumno" ? [] : (((await supabase.rpc("my_alerts")).data ?? []) as Alert[]);
 
+  // Alumno: su lección actual (la última a la que ya tiene acceso) y su asistencia.
+  let currentLesson: { id: string; number: number } | null = null;
+  let myAttendance = "—";
+  if (role === "alumno" && groups[0]) {
+    const { data: lessonRows } = await supabase
+      .from("lessons")
+      .select("id, number")
+      .eq("curriculum_id", groups[0].curriculum_id)
+      .order("number", { ascending: false })
+      .limit(1);
+    currentLesson = (lessonRows?.[0] as { id: string; number: number } | undefined) ?? null;
+
+    const { data: mine } = await supabase.from("attendance").select("present").eq("student_id", user.id);
+    if (mine?.length) myAttendance = `${mine.filter((a) => a.present).length} de ${mine.length}`;
+  }
+
   const metrics: [string, string | number][] =
     role === "alumno"
-      ? [["Mi grupo", groups[0]?.name ?? "—"], ["Compañeros", students || "—"], ["Próximo", groups[0]?.meeting_day ?? "—"]]
+      ? [["Mi grupo", groups[0]?.name ?? "—"], ["Lección actual", currentLesson?.number ?? "—"], ["Mis asistencias", myAttendance]]
       : [["Grupos", groups.length], ["Alumnos", students], ["Asistencia (4 sem.)", attendancePct]];
 
   const actionHref =
@@ -79,7 +96,9 @@ export default async function InicioPage() {
         ? "/curriculums"
         : role === "coordinador" || role === "monitor"
           ? "/grupos"
-          : null;
+          : role === "alumno" && currentLesson
+            ? `/lecciones/${currentLesson.id}`
+            : null;
 
   return (
     <div className="mx-auto max-w-4xl p-4 md:p-8">

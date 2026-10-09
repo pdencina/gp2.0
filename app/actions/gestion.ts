@@ -12,6 +12,7 @@ function friendly(message: string): string {
   const m = message.toLowerCase();
   if (m.includes("row-level security")) return "No tienes permiso para hacer este cambio.";
   if (m.includes("groups_one_group_per_leader")) return "Ese líder ya tiene un grupo asignado.";
+  if (m.includes("lessons_curriculum_id_number_key")) return "Ya existe una lección con ese número en este currículum.";
   if (m.includes("duplicate key")) return "Esa persona ya está en el grupo.";
   return message;
 }
@@ -123,6 +124,38 @@ export async function registrarContacto(fd: FormData) {
   });
   revalidatePath("/inicio");
   finish("/alertas", error?.message);
+}
+
+export async function guardarLeccion(fd: FormData) {
+  const id = text(fd, "id");
+  const curriculum_id = text(fd, "curriculum_id");
+  const back = id ? `/lecciones/${id}/editar` : `/curriculums/${curriculum_id}`;
+
+  const number = parseInt(text(fd, "number"), 10);
+  if (!Number.isFinite(number) || number < 1) finish(back, "Escribe el número de la lección.");
+  const title = text(fd, "title");
+  if (title.length < 2) finish(back, "Escribe el título de la lección.");
+  const video = text(fd, "video_url");
+  if (video && !/^https:\/\/\S+$/.test(video)) finish(back, "El enlace del video debe comenzar con https://");
+
+  const row = {
+    curriculum_id,
+    number,
+    title,
+    summary: orNull(text(fd, "summary")),
+    content: orNull(text(fd, "content")),
+    questions: orNull(text(fd, "questions")),
+    video_url: orNull(video),
+  };
+
+  const supabase = createClient();
+  const { data, error } = id
+    ? await supabase.from("lessons").update(row).eq("id", id).select("id")
+    : await supabase.from("lessons").insert(row).select("id");
+  finish(
+    back,
+    error?.message ?? (data?.length ? undefined : "No tienes permiso para hacer este cambio.")
+  );
 }
 
 export async function actualizarPerfil(fd: FormData) {

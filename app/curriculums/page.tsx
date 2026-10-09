@@ -71,9 +71,14 @@ export default async function CurriculumsPage({
                 <h2 className="font-medium">{c.name}</h2>
                 {c.description && <p className="text-sm text-stone-500">{c.description}</p>}
               </div>
-              <Link href="/grupos" className="text-sm text-brand-teal hover:underline">
-                {c.groups[0]?.count ?? 0} grupos →
-              </Link>
+              <div className="flex gap-4 text-sm">
+                <Link href={`/curriculums/${c.id}`} className="text-brand-teal hover:underline">
+                  Lecciones
+                </Link>
+                <Link href="/grupos" className="text-brand-teal hover:underline">
+                  {c.groups[0]?.count ?? 0} grupos →
+                </Link>
+              </div>
             </div>
 
             {isAdmin ? (

@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
 
 type Group = {
   id: string;
+  curriculum_id: string;
   name: string;
   meeting_day: string | null;
   meeting_time: string | null;
@@ -31,7 +32,7 @@ export default async function GrupoPage({
 
   const { data } = await supabase
     .from("groups")
-    .select("id, name, meeting_day, meeting_time, location, max_members, monitor_id, leader_id, curriculums(name)")
+    .select("id, curriculum_id, name, meeting_day, meeting_time, location, max_members, monitor_id, leader_id, curriculums(name)")
     .eq("id", params.id)
     .maybeSingle();
   if (!data) notFound();
@@ -88,6 +89,17 @@ export default async function GrupoPage({
     attendance: { present: boolean }[];
   }[];
 
+  // Próxima lección del grupo: la siguiente a la última que se dio.
+  const nextLessonNumber = (sessions.find((s) => s.lesson_number)?.lesson_number ?? 0) + 1;
+  const { data: nextLesson } = canManage
+    ? await supabase
+        .from("lessons")
+        .select("id, number, title, summary")
+        .eq("curriculum_id", group.curriculum_id)
+        .eq("number", nextLessonNumber)
+        .maybeSingle()
+    : { data: null };
+
   return (
     <div className="mx-auto max-w-4xl p-4 md:p-8">
       <AppHeader role={role} />
@@ -114,6 +126,23 @@ export default async function GrupoPage({
         >
           Pasar lista
         </Link>
+      )}
+
+      {canManage && (
+        <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
+          <h2 className="mb-1 text-sm font-medium">Próxima lección</h2>
+          {nextLesson ? (
+            <Link href={`/lecciones/${nextLesson.id}`} className="block text-sm hover:underline">
+              <span className="text-stone-400">{nextLesson.number}.</span>{" "}
+              <span className="font-medium">{nextLesson.title}</span>
+              {nextLesson.summary && <span className="block text-stone-500">{nextLesson.summary}</span>}
+            </Link>
+          ) : (
+            <p className="text-sm text-stone-500">
+              Todavía no existe la lección {nextLessonNumber} de este currículum.
+            </p>
+          )}
+        </section>
       )}
 
       <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
