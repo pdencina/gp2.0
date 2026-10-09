@@ -218,4 +218,7 @@ begin
   end loop;
 end $$;
 
+-- Pide a la API de Supabase que refresque su lista de funciones.
+notify pgrst, 'reload schema';
+
 commit;
