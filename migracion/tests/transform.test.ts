@@ -69,9 +69,10 @@ describe("estructura del programa", () => {
   });
 
   it("temporadas: nombres legibles, fechas invertidas corregidas y estado", () => {
-    expect(plan.seasons.map((s) => s.name).sort()).toEqual(["2023 · T2", "2025 · T1", "2026"]);
+    expect(plan.seasons.map((s) => s.name).sort()).toEqual(["2022 · T2", "2023 · T2", "2024 · T3", "2025 · T1", "2026"]);
+    // fechas invertidas: se toman del calendario de semanas de esa temporada
     const fixed = plan.seasons.find((s) => s.name === "2023 · T2")!;
-    expect(fixed.startDate < fixed.endDate).toBe(true);
+    expect(fixed).toMatchObject({ startDate: "2023-01-30", endDate: "2023-04-17" });
     expect(plan.seasons.find((s) => s.name === "2026")!.status).toBe("en_curso");
     expect(plan.seasons.find((s) => s.name === "2025 · T1")!.status).toBe("cerrada");
     expect(issues("temporada_fechas_invertidas")).toHaveLength(1);
@@ -80,13 +81,14 @@ describe("estructura del programa", () => {
   it("ciclos: se quita el duplicado y se enlaza el ciclo previo", () => {
     expect(plan.cycles).toHaveLength(2);
     expect(issues("ciclo_duplicado")).toHaveLength(1);
+    // ciclo_prela es el identificador del ciclo previo (11), no su número (1)
     const c2 = plan.cycles.find((c) => c.number === 2)!;
     const c1 = plan.cycles.find((c) => c.number === 1)!;
     expect(c2.prerequisiteId).toBe(c1.id);
   });
 
   it("grupos: horario separado en campos, modalidad, dirección y estado", () => {
-    expect(plan.groups).toHaveLength(2);
+    expect(plan.groups).toHaveLength(4);
     const g1 = plan.groups.find((g) => g.status === "en_curso")!;
     expect(g1).toMatchObject({ weekday: 5, startTime: "20:30", endTime: "22:00", modality: "virtual", leaderEmail: "ana@x.cl", monitorEmail: "ana@x.cl" });
     const g2 = plan.groups.find((g) => g.status === "finalizado")!;
@@ -150,6 +152,56 @@ describe("asistencia", () => {
     expect(ms.map((m) => m.heldOn)).toEqual(["2025-02-04", "2025-02-11", "2025-02-18"]); // martes
     const luis = plan.enrollments.find((e) => e.email === "luis@x.cl" && e.groupId === g.id)!;
     expect(plan.attendance.filter((a) => a.enrollmentId === luis.id).map((a) => a.status)).toEqual(["presente", "ausente", "presente"]);
+  });
+});
+
+describe("calendarios difíciles", () => {
+  const groupOf = (leader: string, season: string) =>
+    plan.groups.find((g) => g.leaderEmail === leader && plan.seasons.find((s) => s.id === g.seasonId)!.name === season)!;
+  const meetingsOf = (gid: string) => plan.meetings.filter((m) => m.groupId === gid).sort((a, b) => a.lessonNumber - b.lessonNumber);
+
+  it("semanas que empiezan en domingo: una reunión por semana, sin repetir fechas", () => {
+    const g = groupOf("lider2@x.cl", "2024 · T3");
+    const ms = meetingsOf(g.id);
+    expect(ms.map((m) => m.heldOn)).toEqual(["2024-06-14", "2024-06-21", "2024-06-28"]); // viernes
+    expect(ms.map((m) => m.lessonNumber)).toEqual([1, 2, 3]);
+    const luis = plan.enrollments.find((e) => e.email === "luis@x.cl" && e.groupId === g.id)!;
+    expect(plan.attendance.filter((a) => a.enrollmentId === luis.id).map((a) => a.status)).toEqual(["presente", "presente", "ausente"]);
+    expect(issues("reunion_fecha_repetida")).toHaveLength(0);
+  });
+
+  it("un calendario de semanas de otro año se descarta y se usa el de la temporada", () => {
+    const g = groupOf("ana@x.cl", "2022 · T2");
+    const ms = meetingsOf(g.id);
+    expect(ms.map((m) => m.heldOn)).toEqual(["2022-05-17", "2022-05-24"]); // martes de 2022, no de 2021
+    expect(issues("calendario_de_semanas_incoherente")).toHaveLength(1);
+  });
+
+  it("modelo actual: la fecha de inicio se estima con las fechas de marcado", () => {
+    const g = plan.groups.find((x) => x.status === "en_curso")!;
+    expect(meetingsOf(g.id).map((m) => m.heldOn)).toEqual(["2026-04-17", "2026-04-24"]);
+    expect(issues("reunion_fechas_estimadas")).toHaveLength(1);
+  });
+
+  it("marcas puestas de golpe no producen reuniones en el futuro", () => {
+    const tables = {
+      paises: [{ id: 1, paisnombre: "Chile" }],
+      users: [{ id: 1, name: "A", lastname: "B", email: "a@x.cl", telefono: "912345678", paise_id: 1, active: 1, password: "0", genero: "Femenino", fechanacimiento: "1990-01-01", created_at: "2026-04-01 00:00:00" }],
+      grupospequenos: [{ id: 1, nombre_grupop: "G", restriction: "", edad_min: 0, edad_max: 0, status_gp: 1 }],
+      temporadas: [{ id: 1, nombre_temporada: "2026", fecha_inicio: "2026-04-13", fecha_fin: "2026-11-23", status: 1 }],
+      ciclos: [{ id: 1, grupopequeno_id: 1, nombre_ciclo: 1, titulo: null, number_of_classes: 11, ciclo_prela: null }],
+      gpequenoliders: [{ id: 1, temporada_id: 1, grupopequeno_id: 1, ciclo_id: 1, lider_id: 0, horario: "Viernes, 20:00 hrs a 21:00 hrs", monitor_id: null, asistencia_completada: 0, is_in_person: 0, created_at: "2026-04-01 00:00:00" }],
+      inscripcions: [{ id: 1, temporada_id: 1, user_id: 1, grupopequeno_id: 1, ciclo_id: 1, lider_id: 0, gpequenolider_id: 1, status: 1, horario: "Viernes, 20:00 hrs a 21:00 hrs", created_at: "2026-04-14 00:00:00", updated_at: "2026-04-14 00:00:00" }],
+      attendance_weeks: Array.from({ length: 11 }, (_, i) => ({ id: i + 1, name: `Semana ${i + 1}`, status: 1, inscripcion_id: 1, updated_at: "2026-10-08 10:00:00" })),
+    };
+    const p = transform(parseDump(toDump(tables)), today);
+    const dates = p.meetings.map((m) => m.heldOn).sort();
+    expect(dates).toHaveLength(11);
+    expect(dates[dates.length - 1] <= "2026-10-09").toBe(true);
+    for (let i = 1; i < dates.length; i++) {
+      expect((Date.parse(dates[i]) - Date.parse(dates[i - 1])) / 86400000).toBe(7);
+    }
+    expect(new Set(dates.map((d) => new Date(d + "T00:00:00Z").getUTCDay()))).toEqual(new Set([5])); // todos viernes
   });
 });
 

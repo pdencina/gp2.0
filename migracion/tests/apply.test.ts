@@ -55,7 +55,7 @@ describe("importación completa sobre el esquema v2", () => {
   it("importa todo sin errores", async () => {
     const result = await applyPlan(plan, { db, createAuthUser });
     expect(result).toMatchObject({
-      cuentas_creadas: 5, perfiles: 6, curriculums: 2, temporadas: 3, ciclos: 2, grupos: 2, reuniones: 5, recursos: 1,
+      cuentas_creadas: 5, perfiles: 6, curriculums: 2, temporadas: 5, ciclos: 2, grupos: 4, reuniones: 10, recursos: 1,
     });
   });
 
@@ -99,22 +99,22 @@ describe("importación completa sobre el esquema v2", () => {
   it("los grupos quedan con su líder y monitor, y el cupo respeta los inscritos", async () => {
     const g = (await db.query<{ status: string; weekday: number; modality: string; leader: string | null; capacity: number; address: string | null }>(
       `select g.status, g.weekday, g.modality, u.email as leader, g.capacity, g.address
-         from groups g left join auth.users u on u.id = g.leader_id order by g.status`
+         from groups g left join auth.users u on u.id = g.leader_id order by g.status, g.address nulls last`
     )).rows;
-    expect(g).toHaveLength(2);
-    expect(g[0]).toMatchObject({ status: "en_curso", weekday: 5, modality: "virtual", leader: "ana@x.cl", capacity: 15 });
-    expect(g[1]).toMatchObject({ status: "finalizado", weekday: 2, modality: "presencial", address: "Calle 1, Santiago" });
+    expect(g).toHaveLength(4);
+    expect(g.find((x) => x.status === "en_curso")).toMatchObject({ weekday: 5, modality: "virtual", leader: "ana@x.cl", capacity: 15 });
+    expect(g.find((x) => x.address)).toMatchObject({ status: "finalizado", weekday: 2, modality: "presencial", address: "Calle 1, Santiago" });
   });
 
   it("las inscripciones históricas pasan aunque las reglas de inscripción las habrían rechazado", async () => {
     // Luis (hombre) y Ana (mujer) en un grupo de hombres, y sin términos aceptados: solo posible con la carga histórica.
-    expect(await count("enrollments")).toBe(4);
+    expect(await count("enrollments")).toBe(6);
     const e = (await db.query<{ status: string; curriculum: string; season: string }>(
       `select e.status, c.name as curriculum, s.name as season
          from enrollments e join curriculums c on c.id = e.curriculum_id join seasons s on s.id = e.season_id order by e.enrolled_at, e.status`
     )).rows;
     expect(e.every((x) => x.curriculum.startsWith("HOMBRES"))).toBe(true);
-    expect(e.map((x) => x.status).sort()).toEqual(["aprobado", "en_curso", "no_completo", "preinscrito"]);
+    expect(e.map((x) => x.status).sort()).toEqual(["aprobado", "aprobado", "aprobado", "en_curso", "no_completo", "preinscrito"]);
   });
 
   it("el avance se calcula bien sobre lo importado", async () => {

@@ -12,7 +12,7 @@ Trae a Grupos Pequeños 2.0 lo que la plataforma nueva necesita, traducido a su 
 | Currículums, ciclos, temporadas | Con audiencia y edades; los coordinadores activos quedan asignados |
 | Grupos (horarios) | Día, hora y modalidad separados, dirección si es presencial, líder y monitor |
 | Inscripciones | Con sus estados: reprobado pasa a "no completó" |
-| Asistencia | Se combinan las dos tablas antiguas; solo se crean reuniones en semanas con marcas |
+| Asistencia | Hasta 2025 se usa el calendario real de semanas. Desde 2026 la plataforma antigua guarda "Semana 1 a 11" **sin fecha**, así que la fecha de cada reunión se **estima** a partir de cuándo se marcó (ver más abajo). Solo se crean reuniones en semanas con marcas |
 | Recursos | Solo enlaces `https://` |
 
 **No se importa** (a propósito, para una segunda etapa): aportes económicos, matrimonios, evaluaciones, fútbol, soporte, contraseñas olvidadas y registros técnicos.
@@ -53,3 +53,9 @@ npm run migrar -- --aplicar --si-estoy-seguro
 
 ## Pruebas
 `npm test` incluye una importación completa contra un Postgres real con el esquema v2.
+
+## Cosas que conviene saber de los datos antiguos
+- **Fechas de 2026 estimadas.** En los grupos con el modelo actual la fecha de inicio se calcula con la mediana de las fechas en que se marcó cada semana, y nunca queda en el futuro. Puede haber un error de una semana. El número de lección y la asistencia de cada persona sí son exactos.
+- **Calendarios con errores.** Una temporada de 2022 traía el calendario de semanas copiado de 2021 y una de 2023 tenía el inicio y el término invertidos. El script los detecta y usa la mejor fuente disponible; queda anotado en `avisos.csv`.
+- **Ciclo previo.** `ciclo_prela` es el identificador del ciclo que debe aprobarse antes, no su número.
+- **Grupos sin horario enlazado.** Las temporadas antiguas casi no enlazaban cada inscripción con su horario. Se asignan por temporada, líder y texto del horario; las que no calzan con ninguno se agrupan en grupos creados para no perder la inscripción.

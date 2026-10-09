@@ -21,3 +21,16 @@ export function mondayOf(d: Date): Date {
   const wd = d.getUTCDay() === 0 ? 7 : d.getUTCDay();
   return addDays(d, 1 - wd);
 }
+
+/** Día de la semana ISO: lunes = 1 … domingo = 7. */
+export const isoWeekday = (d: Date) => (d.getUTCDay() === 0 ? 7 : d.getUTCDay());
+
+/** Primer día entre `from` y los 6 siguientes que cae en el día de la semana pedido. */
+export function dayInWeek(from: Date, weekday: number | null): Date {
+  if (!weekday) return from;
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(from, i);
+    if (isoWeekday(d) === weekday) return d;
+  }
+  return from;
+}

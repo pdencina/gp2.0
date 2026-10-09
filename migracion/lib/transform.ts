@@ -1,6 +1,6 @@
 import type { Cell, Row, Tables } from "./mysqldump";
 import { allCountries, countryByName, inferPhone, norm } from "./countries";
-import { addDays, fmtDate, mondayOf, toDate, uuid5 } from "./ids";
+import { addDays, dayInWeek, fmtDate, mondayOf, toDate, uuid5 } from "./ids";
 import { parseHorario } from "./schedule";
 
 // ======================================================================
@@ -273,7 +273,16 @@ export function transform(t: Tables, today = new Date()): Plan {
       continue;
     }
     if (end < start) {
-      [start, end] = [end, start];
+      const weeks = (t.semanas ?? [])
+        .filter((w) => String(w.temporada_id) === String(x.id))
+        .map((w) => [dateOnly(w.fecha_inicio), dateOnly(w.fecha_fin)] as const)
+        .filter((p): p is readonly [string, string] => !!p[0] && !!p[1]);
+      if (weeks.length) {
+        start = weeks.map((p) => p[0]).sort()[0];
+        end = weeks.map((p) => p[1]).sort().slice(-1)[0];
+      } else {
+        [start, end] = [end, start];
+      }
       issue("temporada_fechas_invertidas", "temporadas", s(x.id));
     }
     const nombre = s(x.nombre_temporada);
@@ -291,7 +300,7 @@ export function transform(t: Tables, today = new Date()): Plan {
   const cycles: CycleOut[] = [];
   const cycleIdByOld = new Map<string, string>();
   const cycleKey = new Map<string, string>(); // `${curriculum}|${numero}` -> id
-  const oldCyclePrereq: { id: string; curriculumId: string; prela: number }[] = [];
+  const oldCyclePrereq: { id: string; prela: string }[] = [];
   for (const c of t.ciclos ?? []) {
     const cid = curriculumId(c.grupopequeno_id);
     const number = n(c.nombre_ciclo);
@@ -315,10 +324,11 @@ export function transform(t: Tables, today = new Date()): Plan {
       prerequisiteId: null,
     });
     const prela = n(c.ciclo_prela);
-    if (prela && prela > 0) oldCyclePrereq.push({ id, curriculumId: cid, prela });
+    if (prela && prela > 0) oldCyclePrereq.push({ id, prela: String(prela) });
   }
   for (const p of oldCyclePrereq) {
-    const target = cycleKey.get(`${p.curriculumId}|${p.prela}`);
+    // ciclo_prela es el identificador del ciclo que debe aprobarse antes
+    const target = cycleIdByOld.get(p.prela);
     const cycle = cycles.find((c) => c.id === p.id)!;
     if (target && target !== p.id) cycle.prerequisiteId = target;
     else issue("ciclo_previo_no_resuelto", "ciclos", p.id.slice(0, 8), `ciclo_prela=${p.prela}`);
@@ -356,7 +366,7 @@ export function transform(t: Tables, today = new Date()): Plan {
     if (cycle.curriculumId !== curriculumId(h.grupopequeno_id)) issue("horario_curriculum_distinto", "gpequenoliders", s(h.id));
 
     const sched = parseHorario(s(h.horario));
-    if (!sched) issue("horario_no_entendido", "gpequenoliders", s(h.id), s(h.horario).slice(0, 40));
+    if (!sched && s(h.horario)) issue("horario_no_entendido", "gpequenoliders", s(h.id), s(h.horario).slice(0, 40));
     const addr = addresses.get(String(h.id));
     const inPerson = n(h.is_in_person) === 1;
     const lEmail = leaderEmail(h.lider_id);
@@ -481,6 +491,11 @@ export function transform(t: Tables, today = new Date()): Plan {
   for (const g of groups) g.capacity = Math.max(15, counts.get(g.id) ?? 0);
 
   // ---------------- Reuniones y asistencia ----------------
+  // Hay dos modelos en la plataforma antigua:
+  //  - Actual (attendance_weeks): "Semana 1..11" relativa a cada grupo, sin fecha. Solo se conoce cuándo se marcó,
+  //    así que la fecha de inicio del grupo se estima y las reuniones se calculan semana a semana.
+  //  - Histórico (asistencias + semanas): semanas del calendario, con fecha real.
+  // Se usa uno u otro por grupo: si algún inscrito tiene marcas en el modelo actual, se usa ese.
   const semanasBySeason = new Map<string, Row[]>();
   for (const w of t.semanas ?? []) {
     const list = semanasBySeason.get(String(w.temporada_id)) ?? [];
@@ -491,20 +506,22 @@ export function transform(t: Tables, today = new Date()): Plan {
   const weekIndexOfSemana = new Map<string, { season: string; index: number }>();
   for (const [season, list] of semanasBySeason) list.forEach((w, i) => weekIndexOfSemana.set(String(w.id), { season, index: i + 1 }));
 
-  // Estado por inscripción y semana: attendance_weeks (actual) tiene prioridad sobre asistencias (histórico)
-  const marks = new Map<string, Map<number, number>>(); // id antiguo de inscripción -> semana -> estado
-  const put = (inscId: string, week: number, status: number, overwrite: boolean) => {
-    const m = marks.get(inscId) ?? new Map<number, number>();
-    if (overwrite || !m.has(week)) m.set(week, status);
-    marks.set(inscId, m);
-  };
-  for (const a of t.asistencias ?? []) {
-    const w = weekIndexOfSemana.get(String(a.semana_id));
-    if (w) put(String(a.inscripcion_id), w.index, Number(a.status), true);
-  }
+  type Mark = { status: number; day: string | null };
+  const relMarks = new Map<string, Map<number, Mark>>(); // inscripción -> semana relativa -> marca
   for (const a of t.attendance_weeks ?? []) {
     const week = parseInt(s(a.name).replace(/\D/g, ""), 10);
-    if (Number.isFinite(week) && week > 0) put(String(a.inscripcion_id), week, Number(a.status), true);
+    if (!Number.isFinite(week) || week < 1) continue;
+    const m = relMarks.get(String(a.inscripcion_id)) ?? new Map<number, Mark>();
+    m.set(week, { status: Number(a.status), day: dateOnly(a.updated_at) });
+    relMarks.set(String(a.inscripcion_id), m);
+  }
+  const calMarks = new Map<string, Map<number, number>>(); // inscripción -> semana del calendario -> estado
+  for (const a of t.asistencias ?? []) {
+    const w = weekIndexOfSemana.get(String(a.semana_id));
+    if (!w) continue;
+    const m = calMarks.get(String(a.inscripcion_id)) ?? new Map<number, number>();
+    m.set(w.index, Number(a.status));
+    calMarks.set(String(a.inscripcion_id), m);
   }
 
   const oldIdOfEnrollment = new Map<string, string>();
@@ -515,40 +532,102 @@ export function transform(t: Tables, today = new Date()): Plan {
 
   const enrollmentsByGroup = new Map<string, EnrollmentOut[]>();
   for (const e of enrollments) enrollmentsByGroup.set(e.groupId, [...(enrollmentsByGroup.get(e.groupId) ?? []), e]);
-
+  const reportedSeasons = new Set<string>();
   const seasonOldIdOf = new Map(seasons.map((x) => [x.id, (t.temporadas ?? []).find((o) => uuid5(`season:${o.id}`) === x.id)?.id]));
+
   for (const [groupId, list] of enrollmentsByGroup) {
     const group = groupById.get(groupId)!;
-    const weeks = new Set<number>();
-    for (const e of list) for (const [w, st] of marks.get(oldIdOfEnrollment.get(e.id)!) ?? []) if (st > 0) weeks.add(w);
-    if (weeks.size === 0) continue;
+    const live = list.filter((e) => e.status !== "cancelado");
+    const oldIds = live.map((e) => oldIdOfEnrollment.get(e.id)!);
+    const useRelative = oldIds.some((id) => [...(relMarks.get(id)?.values() ?? [])].some((m) => m.status > 0));
 
-    const seasonOld = String(seasonOldIdOf.get(group.seasonId));
-    const semanas = semanasBySeason.get(seasonOld) ?? [];
-    const seasonStartDate = seasonStart.get(seasonOld) ?? seasonById.get(group.seasonId)!.startDate;
-    const usedDates = new Set<string>();
-    const meetingOfWeek = new Map<number, string>();
+    // semana (relativa o de calendario) -> número de lección y fecha
+    const lessonOf = new Map<number, number>();
+    const dateOf = new Map<number, string>();
 
-    for (const w of Array.from(weeks).sort((a, b) => a - b)) {
-      let base: Date;
-      if (semanas.length) {
-        const ref = semanas[Math.min(w, semanas.length) - 1];
-        base = mondayOf(toDate(dateOnly(ref.fecha_inicio) ?? seasonStartDate));
-        if (w > semanas.length) base = addDays(base, 7 * (w - semanas.length));
-      } else {
-        base = addDays(mondayOf(toDate(seasonStartDate)), 7 * (w - 1));
+    if (useRelative) {
+      const weeks = new Set<number>();
+      const implied: number[] = [];
+      for (const id of oldIds) {
+        for (const [w, m] of relMarks.get(id) ?? []) {
+          if (m.status <= 0) continue;
+          weeks.add(w);
+          if (m.day) implied.push(toDate(m.day).getTime() - 7 * (w - 1) * 86400000);
+        }
       }
-      const date = fmtDate(addDays(base, (group.weekday ?? 1) - 1));
-      if (usedDates.has(date)) { issue("reunion_fecha_repetida", "asistencia", `${groupId.slice(0, 8)}:${w}`); continue; }
+      if (weeks.size === 0) continue;
+      let start: Date;
+      if (implied.length) {
+        // Cada marca da una fecha de inicio posible (fecha de marca menos las semanas transcurridas). Hay marcas
+        // tardías y otras puestas de golpe, así que se usa la mediana.
+        implied.sort((x, y) => x - y);
+        const guess = new Date(implied[Math.floor(0.5 * (implied.length - 1))]);
+        start = group.weekday ? addDays(mondayOf(guess), group.weekday - 1) : guess;
+      } else {
+        const seasonStartDate = seasonStart.get(String(seasonOldIdOf.get(group.seasonId))) ?? seasonById.get(group.seasonId)!.startDate;
+        start = addDays(mondayOf(toDate(seasonStartDate)), (group.weekday ?? 1) - 1);
+      }
+      // Nunca hay reuniones en el futuro: si la última cae después de hoy, se corre todo hacia atrás por semanas
+      const lastDate = addDays(start, 7 * (Math.max(...weeks) - 1));
+      if (lastDate > today) start = addDays(start, -7 * Math.ceil((lastDate.getTime() - today.getTime()) / (7 * 86400000)));
+      for (const w of weeks) {
+        lessonOf.set(w, w);
+        dateOf.set(w, fmtDate(addDays(start, 7 * (w - 1))));
+      }
+      issue("reunion_fechas_estimadas", "asistencia", groupId.slice(0, 8));
+    } else {
+      const weeks = new Set<number>();
+      for (const id of oldIds) for (const [w, st] of calMarks.get(id) ?? []) if (st > 0) weeks.add(w);
+      if (weeks.size === 0) continue;
+      const seasonOld = String(seasonOldIdOf.get(group.seasonId));
+      const sea = seasonById.get(group.seasonId)!;
+      const rawSemanas = semanasBySeason.get(seasonOld) ?? [];
+      const firstWeek = rawSemanas.length ? dateOnly(rawSemanas[0].fecha_inicio) : null;
+      const consistent =
+        !!firstWeek &&
+        firstWeek >= fmtDate(addDays(toDate(sea.startDate), -45)) &&
+        firstWeek <= fmtDate(addDays(toDate(sea.endDate), 45));
+      if (rawSemanas.length && !consistent && !reportedSeasons.has(group.seasonId)) {
+        reportedSeasons.add(group.seasonId);
+        issue("calendario_de_semanas_incoherente", "semanas", seasonOld, "se usó el calendario de la temporada");
+      }
+      const semanas = consistent ? rawSemanas : [];
+      const seasonStartDate = seasonStart.get(seasonOld) ?? sea.startDate;
+      Array.from(weeks).sort((a, b) => a - b).forEach((w, i) => {
+        // Se busca el día del grupo dentro de la semana (algunas semanas del calendario empiezan en domingo)
+        let anchor: Date;
+        if (semanas.length) {
+          anchor = toDate(dateOnly(semanas[Math.min(w, semanas.length) - 1].fecha_inicio) ?? seasonStartDate);
+          if (w > semanas.length) anchor = addDays(anchor, 7 * (w - semanas.length));
+        } else {
+          anchor = addDays(toDate(seasonStartDate), 7 * (w - 1));
+        }
+        lessonOf.set(w, i + 1);
+        dateOf.set(w, fmtDate(dayInWeek(anchor, group.weekday)));
+      });
+    }
+
+    const meetingOfWeek = new Map<number, string>();
+    const usedDates = new Set<string>();
+    for (const w of Array.from(lessonOf.keys()).sort((a, b) => a - b)) {
+      let date = dateOf.get(w)!;
+      if (usedDates.has(date)) {
+        // Calendarios con semanas traslapadas: se pasa al mismo día de la semana siguiente que esté libre
+        while (usedDates.has(date)) date = fmtDate(addDays(toDate(date), 7));
+        issue("reunion_fecha_ajustada", "asistencia", `${groupId.slice(0, 8)}:${w}`);
+      }
       usedDates.add(date);
       const id = uuid5(`meeting:${groupId}:${w}`);
       meetingOfWeek.set(w, id);
-      meetings.push({ id, groupId, heldOn: date, lessonNumber: w });
+      meetings.push({ id, groupId, heldOn: date, lessonNumber: lessonOf.get(w)! });
     }
 
-    for (const e of list) {
-      if (e.status === "cancelado") continue;
-      for (const [w, st] of marks.get(oldIdOfEnrollment.get(e.id)!) ?? []) {
+    for (const e of live) {
+      const oldId = oldIdOfEnrollment.get(e.id)!;
+      const marks: [number, number][] = useRelative
+        ? [...(relMarks.get(oldId) ?? [])].map(([w, m]) => [w, m.status] as [number, number])
+        : [...(calMarks.get(oldId) ?? [])];
+      for (const [w, st] of marks) {
         const meetingId = meetingOfWeek.get(w);
         if (meetingId && statusName[st]) attendance.push({ meetingId, enrollmentId: e.id, status: statusName[st] });
       }
