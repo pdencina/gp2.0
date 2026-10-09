@@ -18,7 +18,7 @@ export default async function EditarLeccionPage(props: {
 
   const { data: lesson } = await supabase
     .from("lessons")
-    .select("id, curriculum_id, number, title, summary, content, questions, video_url")
+    .select("id, cycle_id, number, title, summary, content, questions, video_url")
     .eq("id", params.id)
     .maybeSingle();
   if (!lesson) notFound();
@@ -31,7 +31,7 @@ export default async function EditarLeccionPage(props: {
       </Link>
       <h1 className="mb-5 mt-2 text-2xl font-medium">Editar lección {lesson.number}</h1>
       <Flash error={searchParams.error} ok={searchParams.ok} />
-      <LessonForm curriculumId={lesson.curriculum_id} lesson={lesson} />
+      <LessonForm cycleId={lesson.cycle_id} lesson={lesson} />
     </div>
   );
 }

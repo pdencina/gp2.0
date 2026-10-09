@@ -2,9 +2,13 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import type { Role } from "@/lib/roles";
 
+const ALL: Role[] = ["admin", "coordinador", "monitor", "lider", "alumno"];
+
 const LINKS: { href: string; label: string; roles: Role[] }[] = [
-  { href: "/inicio", label: "Inicio", roles: ["admin", "coordinador", "monitor", "lider", "alumno"] },
+  { href: "/inicio", label: "Inicio", roles: ALL },
+  { href: "/inscripcion", label: "Inscripción", roles: ALL },
   { href: "/curriculums", label: "Currículums", roles: ["admin", "coordinador"] },
+  { href: "/temporadas", label: "Temporadas", roles: ["admin"] },
   { href: "/grupos", label: "Grupos", roles: ["admin", "coordinador", "monitor", "lider"] },
   { href: "/alertas", label: "Alertas", roles: ["admin", "coordinador", "monitor", "lider"] },
   { href: "/equipo", label: "Equipo", roles: ["admin", "coordinador", "monitor"] },

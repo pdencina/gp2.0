@@ -3,67 +3,75 @@
 import { useState } from "react";
 
 type Member = { id: string; name: string };
+type Mark = "presente" | "ausente" | "recuperado";
 
-export function AttendanceList({ members, initial }: { members: Member[]; initial: string[] }) {
-  const [present, setPresent] = useState<Set<string>>(new Set(initial));
+const OPTIONS: { value: Mark; label: string; on: string }[] = [
+  { value: "presente", label: "Presente", on: "bg-brand-green text-white border-brand-green" },
+  { value: "recuperado", label: "Recuperado", on: "bg-brand-teal text-white border-brand-teal" },
+  { value: "ausente", label: "Ausente", on: "bg-stone-600 text-white border-stone-600" },
+];
 
-  function toggle(id: string) {
-    setPresent((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
+export function AttendanceList({
+  members,
+  initial,
+}: {
+  members: Member[];
+  initial: Record<string, Mark>;
+}) {
+  const [marks, setMarks] = useState<Record<string, Mark>>(
+    Object.fromEntries(members.map((m) => [m.id, initial[m.id] ?? "ausente"]))
+  );
 
-  const allMarked = present.size === members.length;
+  const count = (v: Mark) => members.filter((m) => marks[m.id] === v).length;
+  const allPresent = count("presente") === members.length;
 
   return (
     <>
       <div className="mb-3 flex items-center justify-between text-sm">
         <span className="font-medium" aria-live="polite">
-          {present.size} de {members.length} presentes
+          {count("presente") + count("recuperado")} de {members.length} asisten
+          {count("recuperado") > 0 && <span className="text-stone-500"> ({count("recuperado")} recuperados)</span>}
         </span>
         <button
           type="button"
-          onClick={() => setPresent(allMarked ? new Set() : new Set(members.map((m) => m.id)))}
+          onClick={() =>
+            setMarks(Object.fromEntries(members.map((m) => [m.id, allPresent ? "ausente" : "presente"])))
+          }
           className="text-brand-teal hover:underline"
         >
-          {allMarked ? "Desmarcar a todos" : "Marcar a todos"}
+          {allPresent ? "Desmarcar a todos" : "Marcar a todos"}
         </button>
       </div>
 
       <ul className="space-y-2 pb-24">
         {members.map((m) => {
-          const on = present.has(m.id);
+          const mark = marks[m.id];
           return (
-            <li key={m.id}>
-              <label
-                className={`flex min-h-14 cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 transition has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-teal ${
-                  on ? "border-brand-green bg-green-50" : "border-stone-200 bg-white"
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  name="present"
-                  value={m.id}
-                  checked={on}
-                  onChange={() => toggle(m.id)}
-                  className="sr-only"
-                />
-                <span
-                  aria-hidden="true"
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-sm ${
-                    on ? "border-brand-green bg-brand-green text-white" : "border-stone-300 text-transparent"
-                  }`}
-                >
-                  ✓
-                </span>
-                <span className="text-base">{m.name}</span>
-                <span className={`ml-auto text-xs ${on ? "text-green-800" : "text-stone-400"}`}>
-                  {on ? "Presente" : "Ausente"}
-                </span>
-              </label>
+            <li
+              key={m.id}
+              className={`rounded-xl border px-4 py-3 ${
+                mark === "ausente" ? "border-stone-200 bg-white" : "border-brand-green bg-green-50"
+              }`}
+            >
+              <div className="mb-2 text-base">{m.name}</div>
+              <div role="radiogroup" aria-label={`Asistencia de ${m.name}`} className="grid grid-cols-3 gap-2">
+                {OPTIONS.map((o) => (
+                  <button
+                    key={o.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={mark === o.value}
+                    onClick={() => setMarks((prev) => ({ ...prev, [m.id]: o.value }))}
+                    className={`h-11 rounded-lg border text-sm font-medium transition ${
+                      mark === o.value ? o.on : "border-stone-300 bg-white text-stone-600"
+                    }`}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+              {mark === "presente" && <input type="hidden" name="present" value={m.id} />}
+              {mark === "recuperado" && <input type="hidden" name="recovered" value={m.id} />}
             </li>
           );
         })}

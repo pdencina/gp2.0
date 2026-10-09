@@ -11,27 +11,27 @@ export default async function LeccionPage(props: { params: Promise<{ id: string 
 
   const { data } = await supabase
     .from("lessons")
-    .select("id, curriculum_id, number, title, summary, content, questions, video_url, curriculums(name)")
+    .select("id, cycle_id, number, title, summary, content, questions, video_url, cycles(number, title, curriculums(name))")
     .eq("id", params.id)
     .maybeSingle();
   if (!data) notFound();
   const lesson = data as unknown as {
     id: string;
-    curriculum_id: string;
+    cycle_id: string;
     number: number;
     title: string;
     summary: string | null;
     content: string | null;
     questions: string | null;
     video_url: string | null;
-    curriculums: { name: string } | null;
+    cycles: { number: number; title: string | null; curriculums: { name: string } | null } | null;
   };
 
   // Solo las lecciones a las que tienes acceso (RLS), para ubicar la anterior y la siguiente.
   const { data: all } = await supabase
     .from("lessons")
     .select("id, number, title")
-    .eq("curriculum_id", lesson.curriculum_id)
+    .eq("cycle_id", lesson.cycle_id)
     .order("number");
   const list = (all ?? []) as { id: string; number: number; title: string }[];
   const i = list.findIndex((l) => l.id === lesson.id);
@@ -39,7 +39,7 @@ export default async function LeccionPage(props: { params: Promise<{ id: string 
   const next = i >= 0 && i < list.length - 1 ? list[i + 1] : null;
 
   const canEdit = role === "admin" || role === "coordinador";
-  const curriculumName = lesson.curriculums?.name;
+  const where = `${lesson.cycles?.curriculums?.name ?? ""} · Ciclo ${lesson.cycles?.number ?? ""}`;
   const paragraphs = (lesson.content ?? "").split(/\n\s*\n/).filter((p) => p.trim());
   const questions = (lesson.questions ?? "").split("\n").map((q) => q.trim()).filter(Boolean);
 
@@ -47,8 +47,8 @@ export default async function LeccionPage(props: { params: Promise<{ id: string 
     <div className="mx-auto max-w-2xl p-4 md:p-8">
       <AppHeader role={role} />
       <div className="flex items-center justify-between text-sm">
-        <Link href={canEdit ? `/curriculums/${lesson.curriculum_id}` : "/inicio"} className="text-brand-teal hover:underline">
-          ← {canEdit ? curriculumName : "Inicio"}
+        <Link href={canEdit ? `/ciclos/${lesson.cycle_id}` : "/inicio"} className="text-brand-teal hover:underline">
+          ← {canEdit ? "Lecciones del ciclo" : "Inicio"}
         </Link>
         {canEdit && (
           <Link href={`/lecciones/${lesson.id}/editar`} className="text-brand-teal hover:underline">
@@ -58,7 +58,7 @@ export default async function LeccionPage(props: { params: Promise<{ id: string 
       </div>
 
       <p className="mt-4 text-sm text-stone-500">
-        {curriculumName} · Lección {lesson.number}
+        {where} · Lección {lesson.number}
       </p>
       <h1 className="mt-1 text-3xl font-medium leading-tight">{lesson.title}</h1>
       {lesson.summary && <p className="mt-3 text-lg text-stone-600">{lesson.summary}</p>}

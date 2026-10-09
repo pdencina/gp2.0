@@ -182,6 +182,22 @@ describe("quién ve qué", () => {
     expect(open.length).toBeGreaterThan(0);
   });
 
+  it("las vistas de la aplicación respetan los permisos", async () => {
+    // un ajeno ve los grupos abiertos y sus cupos, pero no a los inscritos
+    const open = await as<{ id: string; enrolled: number; capacity: number }>(
+      OUTSIDER, `select id, enrolled, capacity from group_overview where id = $1`, [GROUP_A]
+    );
+    expect(open).toHaveLength(1);
+    expect(open[0].enrolled).toBe(3);
+    expect(await as(OUTSIDER, `select * from roster`)).toHaveLength(0);
+
+    // el líder ve a sus inscritos con nombre; otro líder no
+    const roster = await as<{ person_name: string }>(LEADER, `select person_name from roster where group_id = $1`, [GROUP_A]);
+    expect(roster).toHaveLength(3);
+    expect(roster.every((r) => r.person_name.startsWith("Alumno"))).toBe(true);
+    expect(await as(LEADER2, `select * from roster where group_id = $1`, [GROUP_A])).toHaveLength(0);
+  });
+
   it("solo el coordinador o el administrador crean grupos", async () => {
     const insert = `insert into groups (season_id, cycle_id, name) values ('${SEASON}', '${CYCLE1}', 'Intruso')`;
     expect(await failure(LEADER, insert)).toContain("row-level security");

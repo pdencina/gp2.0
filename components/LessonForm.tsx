@@ -15,18 +15,18 @@ const area =
   "w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm outline-none focus:border-brand-teal focus:ring-2 focus:ring-brand-teal/20";
 
 export function LessonForm({
-  curriculumId,
+  cycleId,
   lesson,
   nextNumber,
 }: {
-  curriculumId: string;
+  cycleId: string;
   lesson?: Lesson;
   nextNumber?: number;
 }) {
   return (
     <form action={guardarLeccion} className="space-y-3 rounded-xl border border-stone-200 bg-white p-4">
       <input type="hidden" name="id" value={lesson?.id ?? ""} />
-      <input type="hidden" name="curriculum_id" value={curriculumId} />
+      <input type="hidden" name="cycle_id" value={cycleId} />
 
       <div className="grid gap-3 md:grid-cols-[110px_1fr]">
         <label className="text-xs text-stone-500">

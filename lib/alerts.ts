@@ -1,16 +1,18 @@
 export type Alert = {
-  kind: "ausente" | "nuevo" | "asistencia_baja" | "sin_reunion" | "sin_lider" | "sin_monitor";
+  kind: "ausente" | "en_riesgo" | "excedido" | "nuevo" | "asistencia_baja" | "sin_reunion" | "sin_lider" | "sin_monitor";
   severity: number;
   group_id: string;
   group_name: string;
-  student_id: string | null;
-  student_name: string | null;
+  person_id: string | null;
+  person_name: string | null;
   detail: string;
   since: string;
 };
 
 export const ALERT_LABEL: Record<Alert["kind"], string> = {
   ausente: "Faltas seguidas",
+  en_riesgo: "En riesgo",
+  excedido: "Superó las ausencias",
   nuevo: "Persona nueva",
   asistencia_baja: "Asistencia baja",
   sin_reunion: "Sin reunión",

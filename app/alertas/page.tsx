@@ -19,17 +19,14 @@ export default async function AlertasPage(props: {
   const { data } = await supabase.rpc("my_alerts");
   const alerts = (data ?? []) as Alert[];
 
-  // Teléfonos de las personas con alerta (si la columna aún no existe, simplemente no hay botón).
-  const studentIds = Array.from(new Set(alerts.map((a) => a.student_id).filter(Boolean))) as string[];
-  const { data: phoneRows } = studentIds.length
-    ? await supabase.from("profiles").select("id, phone").in("id", studentIds)
+  const personIds = Array.from(new Set(alerts.map((a) => a.person_id).filter(Boolean))) as string[];
+  const { data: phoneRows } = personIds.length
+    ? await supabase.from("profiles").select("id, phone").in("id", personIds)
     : { data: [] };
-  const phones = new Map(
-    ((phoneRows ?? []) as { id: string; phone: string | null }[]).map((p) => [p.id, p.phone])
-  );
+  const phones = new Map(((phoneRows ?? []) as { id: string; phone: string | null }[]).map((p) => [p.id, p.phone]));
 
   const message = (a: Alert) => {
-    const first = (a.student_name ?? "").split(" ")[0];
+    const first = (a.person_name ?? "").split(" ")[0];
     return a.kind === "nuevo"
       ? `Hola ${first}, te damos la bienvenida a ${a.group_name}. ¿Cómo estás? Aquí estamos para lo que necesites.`
       : `Hola ${first}, ¿cómo estás? Te extrañamos en ${a.group_name}. ¿Hay algo en que podamos ayudarte?`;
@@ -48,15 +45,13 @@ export default async function AlertasPage(props: {
 
       <ul className="space-y-3">
         {alerts.map((a, i) => (
-          <li key={`${a.kind}-${a.group_id}-${a.student_id ?? i}`} className="rounded-xl border border-stone-200 bg-white p-4">
+          <li key={`${a.kind}-${a.group_id}-${a.person_id ?? i}`} className="rounded-xl border border-stone-200 bg-white p-4">
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div>
-                <span className={`rounded px-2 py-0.5 text-xs ${SEVERITY_CLASS[a.severity]}`}>
-                  {ALERT_LABEL[a.kind]}
-                </span>
-                <p className="mt-2 font-medium">{a.student_name || a.group_name}</p>
+                <span className={`rounded px-2 py-0.5 text-xs ${SEVERITY_CLASS[a.severity]}`}>{ALERT_LABEL[a.kind]}</span>
+                <p className="mt-2 font-medium">{a.person_name || a.group_name}</p>
                 <p className="text-sm text-stone-500">
-                  {a.student_name ? `${a.group_name} · ` : ""}
+                  {a.person_name ? `${a.group_name} · ` : ""}
                   {a.detail}
                 </p>
               </div>
@@ -65,11 +60,11 @@ export default async function AlertasPage(props: {
               </Link>
             </div>
 
-            {a.student_id && (
+            {a.person_id && (
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                {phones.get(a.student_id) ? (
+                {phones.get(a.person_id) ? (
                   <a
-                    href={whatsappLink(phones.get(a.student_id)!, message(a))}
+                    href={whatsappLink(phones.get(a.person_id)!, message(a))}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="rounded-lg bg-brand-green px-3 py-1.5 text-sm font-medium text-white hover:brightness-95"
@@ -82,13 +77,13 @@ export default async function AlertasPage(props: {
               </div>
             )}
 
-            {a.student_id && (
+            {a.person_id && (
               <details className="mt-3">
                 <summary className="inline-block cursor-pointer rounded-lg border border-brand-teal px-3 py-1.5 text-sm text-brand-teal hover:bg-brand-teal hover:text-white">
                   Registrar contacto
                 </summary>
                 <form action={registrarContacto} className="mt-3 grid gap-2 md:grid-cols-[auto_1fr_auto]">
-                  <input type="hidden" name="student_id" value={a.student_id} />
+                  <input type="hidden" name="person_id" value={a.person_id} />
                   <input type="hidden" name="group_id" value={a.group_id} />
                   <select name="kind" aria-label="Tipo de contacto" defaultValue="mensaje" className={fieldClass}>
                     <option value="mensaje">Mensaje</option>
