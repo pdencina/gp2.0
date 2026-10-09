@@ -22,11 +22,9 @@
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.8",
     "@types/node": "^20",
-    "@types/pg": "^8.23.1",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "autoprefixer": "^10.4.19",
-    "pg": "^8.23.1",
     "postcss": "^8.4.38",
     "tailwindcss": "3.4.4",
     "tsx": "^4.23.15",

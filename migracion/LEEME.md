@@ -28,14 +28,14 @@ npm run migrar:simular
 ```
 Muestra un informe y deja `migracion/salida/informe.json` y `avisos.csv`. Los avisos son lo que conviene revisar antes de importar: correos inválidos, teléfonos que no se pudieron resolver, duplicados, fechas invertidas.
 
-## Paso 3. Preparar el acceso a la base nueva
-Crea `migracion/.env.migracion` (no se sube a GitHub) con:
+## Paso 3. Preparar la base nueva y el acceso
+1. En el SQL Editor de Supabase, ejecuta una sola vez `supabase/v2/002_importacion.sql`. Instala las funciones que usa el importador; solo las puede llamar la clave `service_role`. Al terminar la migración se quitan con `003_quitar_importacion.sql`.
+2. Crea `migracion/.env.migracion` (no se sube a GitHub) con:
 ```
 SUPABASE_URL=https://TU-PROYECTO.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=...        (Supabase → Project Settings → API → service_role)
-DATABASE_URL=postgresql://...        (Supabase → Project Settings → Database → Connection string, modo Session)
 ```
-La clave `service_role` da control total: no la compartas ni la pegues en chats.
+La clave `service_role` da control total: no la compartas ni la pegues en chats. El importador habla con Supabase por HTTPS (la misma vía que la web), así que funciona en redes que bloquean la conexión directa a la base de datos. No hace falta la contraseña de la base.
 
 ## Paso 4. Prueba chica y luego completa
 ```
@@ -46,6 +46,7 @@ npm run migrar -- --aplicar --si-estoy-seguro
 
 ## Cómo es de seguro
 - Por defecto solo simula. Para escribir hace falta `--aplicar` **y** `--si-estoy-seguro`, y muestra el proyecto de destino.
+- Cada llamada a la base es una transacción: si algo falla, esa parte no queda a medias y se puede volver a ejecutar.
 - Se puede repetir: cada fila antigua produce siempre el mismo identificador, así que no duplica. No la repitas **después de abrir la plataforma al público**, porque volvería a pisar datos editados a mano.
 - Nunca baja el rol de una cuenta que ya existe, ni borra el historial de roles de cuentas ya creadas.
 - Si un currículum o temporada ya existe con el mismo nombre, el importado se renombra con "(importado)".

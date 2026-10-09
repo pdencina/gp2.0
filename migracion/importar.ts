@@ -8,7 +8,8 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseDump } from "./lib/mysqldump";
 import { summarize, transform, type Plan } from "./lib/transform";
-import { applyPlan, type AuthCreator } from "./lib/apply";
+import { applyPlan } from "./lib/apply";
+import { httpAuthCreator, httpRpc } from "./lib/http";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -58,29 +59,6 @@ function loadEnv(file: string): Record<string, string> {
   return env;
 }
 
-function authCreator(url: string, serviceKey: string): AuthCreator {
-  return async ({ email, passwordHash, fullName }) => {
-    const body: Record<string, unknown> = { email, email_confirm: true, user_metadata: { full_name: fullName } };
-    if (passwordHash) body.password_hash = passwordHash;
-    for (let attempt = 1; attempt <= 4; attempt++) {
-      const res = await fetch(`${url}/auth/v1/admin/users`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", apikey: serviceKey, Authorization: `Bearer ${serviceKey}` },
-        body: JSON.stringify(body),
-      });
-      if (res.ok) return;
-      const text = await res.text();
-      if (res.status === 422 && /already|exists|registered/i.test(text)) return;
-      if (res.status === 429 || res.status >= 500) {
-        await new Promise((r) => setTimeout(r, 1000 * attempt));
-        continue;
-      }
-      throw new Error(`No se pudo crear la cuenta (${res.status}): ${text.slice(0, 160)}`);
-    }
-    throw new Error("No se pudo crear la cuenta tras varios intentos");
-  };
-}
-
 async function main() {
   const dumpPath = resolve(arg("respaldo") ?? join(here, "datos", "respaldo.sql"));
   if (!existsSync(dumpPath)) {
@@ -112,7 +90,7 @@ async function main() {
   }
 
   const env = loadEnv(join(here, ".env.migracion"));
-  for (const k of ["DATABASE_URL", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"]) {
+  for (const k of ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"]) {
     if (!env[k]) throw new Error(`Falta ${k} en migracion/.env.migracion`);
   }
   const host = new URL(env.SUPABASE_URL).host;
@@ -122,20 +100,13 @@ async function main() {
     process.exit(1);
   }
 
-  const { Client } = await import("pg");
-  const client = new Client({ connectionString: env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
-  await client.connect();
-  try {
-    const result = await applyPlan(plan, {
-      db: client as unknown as Parameters<typeof applyPlan>[1]["db"],
-      createAuthUser: authCreator(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY),
-      log: (m) => console.log(m),
-    });
-    console.log("\n=== Importado ===");
-    console.log(JSON.stringify(result, null, 2));
-  } finally {
-    await client.end();
-  }
+  const result = await applyPlan(plan, {
+    rpc: httpRpc(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY),
+    createAuthUser: httpAuthCreator(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY),
+    log: (m) => console.log(m),
+  });
+  console.log("\n=== Importado ===");
+  console.log(JSON.stringify(result, null, 2));
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

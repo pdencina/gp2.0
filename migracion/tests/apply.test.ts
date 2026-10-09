@@ -2,16 +2,17 @@ import { PGlite } from "@electric-sql/pglite";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
-import { applyPlan, type AuthCreator } from "../lib/apply";
+import { applyPlan, type AuthCreator, type Rpc } from "../lib/apply";
 import { parseDump } from "../lib/mysqldump";
 import { transform, type Plan } from "../lib/transform";
 import { OLD_DB, toDump } from "./fixture";
 
-// Importación completa contra un Postgres real con el esquema v2 (con sus triggers y reglas).
+// Importación completa contra un Postgres real con el esquema v2 y las funciones de importación.
 
 const STUBS = `
   create role anon nologin;
   create role authenticated nologin;
+  create role service_role nologin;
   create schema auth;
   create table auth.users (
     id uuid primary key default gen_random_uuid(),
@@ -23,10 +24,20 @@ const STUBS = `
     select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
   $$;
 `;
+const sql = (rel: string) => readFileSync(join(__dirname, "../../supabase/v2", rel), "utf8");
 
 let db: PGlite;
 let plan: Plan;
 let created: string[] = [];
+
+// Hace lo mismo que la API de Supabase: llama a la función con su único argumento.
+const rpc: Rpc = async (fn, args) => {
+  const [key, value] = Object.entries(args)[0];
+  const cast = key === "rows" ? "jsonb" : key === "ids" ? "uuid[]" : "text[]";
+  const param = key === "rows" ? JSON.stringify(value) : value;
+  const r = await db.query<Record<string, unknown>>(`select * from ${fn}($1::${cast})`, [param]);
+  return fn === "import_auth_map" ? r.rows : r.rows[0][fn];
+};
 
 const createAuthUser: AuthCreator = async ({ email, passwordHash, fullName }) => {
   created.push(email);
@@ -40,7 +51,8 @@ const count = async (table: string) => (await db.query<{ n: number }>(`select co
 beforeAll(async () => {
   db = new PGlite();
   await db.exec(STUBS);
-  await db.exec(readFileSync(join(__dirname, "../../supabase/v2/001_schema.sql"), "utf8"));
+  await db.exec(sql("001_schema.sql"));
+  await db.exec(sql("002_importacion.sql"));
   plan = transform(parseDump(toDump(OLD_DB)), new Date("2026-10-09T00:00:00Z"));
 
   // Cuentas y datos que ya existían en la plataforma nueva antes de importar
@@ -51,9 +63,40 @@ beforeAll(async () => {
   `);
 });
 
+describe("seguridad de las funciones de importación", () => {
+  it("los usuarios de la aplicación no pueden usarlas", async () => {
+    for (const role of ["anon", "authenticated"]) {
+      await db.exec(`set role ${role}`);
+      try {
+        await expect(db.query(`select import_profiles('[]'::jsonb)`)).rejects.toThrow(/permission denied/);
+        await expect(db.query(`select * from import_auth_map(array['a@x.cl'])`)).rejects.toThrow(/permission denied/);
+      } finally {
+        await db.exec("reset role");
+      }
+    }
+  });
+
+  it("la clave de administración sí puede", async () => {
+    await db.exec("set role service_role");
+    try {
+      const r = await db.query(`select * from import_auth_map(array['nadie@x.cl'])`);
+      expect(r.rows).toEqual([]);
+    } finally {
+      await db.exec("reset role");
+    }
+  });
+
+  it("avisa con claridad si faltan instaladas", async () => {
+    const failing: Rpc = async () => {
+      throw new Error("import_auth_map: 404 Could not find the function public.import_auth_map");
+    };
+    await expect(applyPlan(plan, { rpc: failing, createAuthUser })).rejects.toThrow(/002_importacion\.sql/);
+  });
+});
+
 describe("importación completa sobre el esquema v2", () => {
   it("importa todo sin errores", async () => {
-    const result = await applyPlan(plan, { db, createAuthUser });
+    const result = await applyPlan(plan, { rpc, createAuthUser });
     expect(result).toMatchObject({
       cuentas_creadas: 5, perfiles: 6, curriculums: 2, temporadas: 5, ciclos: 2, grupos: 4, reuniones: 10, recursos: 1,
     });
@@ -131,14 +174,11 @@ describe("importación completa sobre el esquema v2", () => {
     expect(luis2025).toMatchObject({ held: 3, present: 2, absences: 1, status: "aprobado" });
   });
 
-  it("deja los triggers como estaban", async () => {
-    const t = (await db.query<{ tgenabled: string }>(`select tgenabled from pg_trigger where tgname = 'trg_log_role_change'`)).rows;
-    expect(t.every((x) => x.tgenabled === "O")).toBe(true);
-    // y las reglas de inscripción vuelven a aplicar: la salvedad de la carga histórica no queda activa
+  it("las reglas de inscripción siguen aplicando después de importar", async () => {
+    // la salvedad de la carga histórica es solo de cada llamada
     const flag = (await db.query<{ v: string | null }>(`select current_setting('app.skip_checks', true) as v`)).rows[0].v;
     expect(flag === null || flag === "" || flag === "off").toBe(true);
 
-    // Un hombre sin el perfil completo no puede entrar a un grupo con restricción de edad sin fecha de nacimiento
     await db.exec(`
       insert into auth.users (email) values ('nuevo@x.cl');
       update profiles set gender = 'mujer' where id = (select id from auth.users where email = 'nuevo@x.cl');
@@ -151,25 +191,23 @@ describe("importación completa sobre el esquema v2", () => {
   });
 
   it("repetir la importación no duplica nada", async () => {
-    const before = {
+    const snapshot = async () => ({
       perfiles: await count("profiles"), historial: await count("role_history"), grupos: await count("groups"),
       inscripciones: await count("enrollments"), reuniones: await count("meetings"), asistencia: await count("attendance"),
-    };
+    });
+    const before = await snapshot();
     created = [];
     await applyPlan(plan, {
-      db,
+      rpc,
       createAuthUser: async () => { throw new Error("no debería crear cuentas de nuevo"); },
     });
     expect(created).toEqual([]);
-    expect({
-      perfiles: await count("profiles"), historial: await count("role_history"), grupos: await count("groups"),
-      inscripciones: await count("enrollments"), reuniones: await count("meetings"), asistencia: await count("attendance"),
-    }).toEqual(before);
+    expect(await snapshot()).toEqual(before);
   });
 
   it("si el líder de un grupo no tiene rol suficiente, el grupo se importa sin líder", async () => {
     const copy: Plan = { ...plan, groups: plan.groups.map((g, i) => (i === 0 ? { ...g, leaderEmail: "luis@x.cl" } : g)) };
-    await applyPlan(copy, { db, createAuthUser });
+    await applyPlan(copy, { rpc, createAuthUser });
     const g = (await db.query<{ leader_id: string | null }>(`select leader_id from groups where id = $1`, [copy.groups[0].id])).rows[0];
     expect(g.leader_id).toBeNull();
   });
