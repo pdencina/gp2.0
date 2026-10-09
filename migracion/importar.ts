@@ -100,11 +100,18 @@ async function main() {
     process.exit(1);
   }
 
+  const rechazadas: string[] = [];
   const result = await applyPlan(plan, {
     rpc: httpRpc(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY),
     createAuthUser: httpAuthCreator(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY),
     log: (m) => console.log(m),
+    onRejected: (email, reason) => rechazadas.push(`${email},${JSON.stringify(reason)}`),
   });
+  if (rechazadas.length) {
+    const file = join(outDir, "cuentas-rechazadas.csv");
+    writeFileSync(file, ["correo,motivo", ...rechazadas].join("\n"));
+    console.log(`\nSe omitieron ${rechazadas.length} personas cuyo correo Supabase rechazó (lista en ${file}).`);
+  }
   console.log("\n=== Importado ===");
   console.log(JSON.stringify(result, null, 2));
 }

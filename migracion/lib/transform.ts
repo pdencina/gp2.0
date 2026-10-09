@@ -98,7 +98,8 @@ function cleanName(first: Cell, last: Cell): string {
 }
 
 const BCRYPT = /^\$2[aby]\$\d\d\$.{53}$/;
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Formato estricto (ASCII, sin puntos pegados ni al borde): el que Supabase acepta de verdad
+const EMAIL = /^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@([A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?\.)+[A-Za-z]{2,}$/;
 
 // ======================================================================
 // Transformación principal

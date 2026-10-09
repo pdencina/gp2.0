@@ -1,4 +1,5 @@
 import type { AuthCreator, Rpc } from "./apply";
+import { AccountRejected } from "./errors";
 
 type Fetch = typeof fetch;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -57,6 +58,8 @@ export function httpAuthCreator(url: string, serviceKey: string, fetchImpl: Fetc
         await wait(500 * attempt * attempt);
         continue;
       }
+      // 400 o 422: Supabase rechazó los datos de esa cuenta; no es un problema de conexión ni de permisos
+      if (res.status === 400 || res.status === 422) throw new AccountRejected(`(${res.status}) ${text.slice(0, 160)}`);
       throw new Error(`No se pudo crear una cuenta (${res.status}): ${text.slice(0, 160)}`);
     }
   };

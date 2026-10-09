@@ -1,5 +1,6 @@
 import type { Plan, PersonOut } from "./transform";
 import { uuid5 } from "./ids";
+import { AccountRejected } from "./errors";
 
 /** Llama a una función de importación de la base (ver supabase/v2/002_importacion.sql). */
 export type Rpc = (fn: string, args: Record<string, unknown>) => Promise<unknown>;
@@ -10,6 +11,8 @@ export type ApplyOptions = {
   createAuthUser: AuthCreator;
   log?: (msg: string) => void;
   concurrency?: number;
+  /** Se llama por cada cuenta que Supabase rechazó; la importación sigue con las demás. */
+  onRejected?: (email: string, reason: string) => void;
 };
 
 export type ApplyResult = Record<string, number>;
@@ -56,12 +59,21 @@ export async function applyPlan(plan: Plan, opts: ApplyOptions): Promise<ApplyRe
   const createdEmails = new Set(toCreate.map((p) => p.email));
   log(`Cuentas: ${plan.persons.length - toCreate.length} ya existen, ${toCreate.length} por crear`);
   let done = 0;
+  let rejected = 0;
   await pool(toCreate, opts.concurrency ?? 6, async (p: PersonOut) => {
-    await createAuthUser({ email: p.email, passwordHash: p.passwordHash, fullName: p.fullName });
-    if (++done % 500 === 0) log(`  ${done}/${toCreate.length} cuentas creadas`);
+    try {
+      await createAuthUser({ email: p.email, passwordHash: p.passwordHash, fullName: p.fullName });
+    } catch (e) {
+      if (!(e instanceof AccountRejected)) throw e;
+      rejected++;
+      opts.onRejected?.(p.email, e.message);
+    }
+    if (++done % 500 === 0) log(`  ${done}/${toCreate.length} cuentas procesadas`);
   });
+  if (rejected) log(`Aviso: Supabase rechazó ${rejected} cuentas; esas personas se omiten`);
+  result.cuentas_rechazadas = rejected;
   await loadAuth(toCreate.map((p) => p.email));
-  result.cuentas_creadas = toCreate.length;
+  result.cuentas_creadas = toCreate.length - rejected;
 
   const idOf = (email: string | null) => (email ? authIds.get(email) ?? null : null);
   const people = plan.persons.filter((p) => authIds.has(p.email));
