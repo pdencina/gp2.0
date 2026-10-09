@@ -15,11 +15,10 @@ type Curriculum = {
   groups: { count: number }[];
 };
 
-export default async function CurriculumsPage({
-  searchParams,
-}: {
-  searchParams: { error?: string; ok?: string };
+export default async function CurriculumsPage(props: {
+  searchParams: Promise<{ error?: string; ok?: string }>;
 }) {
+  const searchParams = await props.searchParams;
   const { supabase, role } = await getSession();
   if (role !== "admin" && role !== "coordinador") redirect("/inicio");
   const isAdmin = role === "admin";

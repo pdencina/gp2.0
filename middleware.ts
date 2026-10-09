@@ -27,7 +27,11 @@ export async function middleware(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   const isPublic =
-    path.startsWith("/login") || path.startsWith("/auth") || path.startsWith("/privacidad");
+    path.startsWith("/login") ||
+    path.startsWith("/auth") ||
+    path.startsWith("/privacidad") ||
+    path === "/api/health" ||
+    path === "/robots.txt";
 
   if (!user && !isPublic) {
     return NextResponse.redirect(new URL("/login", request.url));

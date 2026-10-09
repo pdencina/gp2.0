@@ -9,11 +9,10 @@ import { registrarContacto } from "@/app/actions/gestion";
 
 export const dynamic = "force-dynamic";
 
-export default async function AlertasPage({
-  searchParams,
-}: {
-  searchParams: { error?: string; ok?: string };
+export default async function AlertasPage(props: {
+  searchParams: Promise<{ error?: string; ok?: string }>;
 }) {
+  const searchParams = await props.searchParams;
   const { supabase, role } = await getSession();
   if (role === "alumno") redirect("/inicio");
 

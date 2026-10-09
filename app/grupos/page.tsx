@@ -19,11 +19,10 @@ type GroupRow = {
   group_members: { count: number }[];
 };
 
-export default async function GruposPage({
-  searchParams,
-}: {
-  searchParams: { error?: string; ok?: string };
+export default async function GruposPage(props: {
+  searchParams: Promise<{ error?: string; ok?: string }>;
 }) {
+  const searchParams = await props.searchParams;
   const { supabase, role } = await getSession();
   if (role === "alumno") redirect("/inicio");
   const canCreate = role === "admin" || role === "coordinador";

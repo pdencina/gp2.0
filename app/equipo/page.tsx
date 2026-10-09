@@ -9,19 +9,18 @@ export const dynamic = "force-dynamic";
 async function promover(formData: FormData) {
   "use server";
   const id = String(formData.get("id") ?? "");
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.rpc("promote_user", { target: id });
   revalidatePath("/equipo");
   if (error) redirect(`/equipo?error=${encodeURIComponent(error.message)}`);
   redirect("/equipo?ok=1");
 }
 
-export default async function EquipoPage({
-  searchParams,
-}: {
-  searchParams: { error?: string; ok?: string };
+export default async function EquipoPage(props: {
+  searchParams: Promise<{ error?: string; ok?: string }>;
 }) {
-  const supabase = createClient();
+  const searchParams = await props.searchParams;
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

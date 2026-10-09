@@ -25,14 +25,14 @@ function finish(path: string, error?: string): never {
 export async function crearCurriculum(fd: FormData) {
   const name = text(fd, "name");
   if (name.length < 2) finish("/curriculums", "Escribe el nombre del currículum.");
-  const { error } = await createClient()
+  const { error } = await (await createClient())
     .from("curriculums")
     .insert({ name, description: orNull(text(fd, "description")) });
   finish("/curriculums", error?.message);
 }
 
 export async function asignarCoordinador(fd: FormData) {
-  const { data, error } = await createClient()
+  const { data, error } = await (await createClient())
     .from("curriculums")
     .update({ coordinator_id: orNull(text(fd, "coordinator_id")) })
     .eq("id", text(fd, "id"))
@@ -45,7 +45,7 @@ export async function crearGrupo(fd: FormData) {
   if (name.length < 2) finish("/grupos", "Escribe el nombre del grupo.");
   if (!text(fd, "curriculum_id")) finish("/grupos", "Elige un currículum.");
 
-  const { data, error } = await createClient()
+  const { data, error } = await (await createClient())
     .from("groups")
     .insert({
       curriculum_id: text(fd, "curriculum_id"),
@@ -64,7 +64,7 @@ export async function crearGrupo(fd: FormData) {
 export async function asignarResponsables(fd: FormData) {
   const id = text(fd, "id");
   const path = `/grupos/${id}`;
-  const { data, error } = await createClient()
+  const { data, error } = await (await createClient())
     .from("groups")
     .update({
       monitor_id: orNull(text(fd, "monitor_id")),
@@ -80,7 +80,7 @@ export async function agregarAlumno(fd: FormData) {
   const student_id = text(fd, "student_id");
   const path = `/grupos/${group_id}`;
   if (!student_id) finish(path, "Elige a la persona que quieres agregar.");
-  const { error } = await createClient().from("group_members").insert({ group_id, student_id });
+  const { error } = await (await createClient()).from("group_members").insert({ group_id, student_id });
   finish(path, error?.message);
 }
 
@@ -93,7 +93,7 @@ export async function guardarAsistencia(fd: FormData) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(held_on)) finish(back, "Elige una fecha válida.");
   const present = fd.getAll("present").map(String);
 
-  const { error } = await createClient().rpc("save_attendance", {
+  const { error } = await (await createClient()).rpc("save_attendance", {
     gid: group_id,
     day: held_on,
     lesson: Number.isFinite(lesson) && lesson > 0 ? lesson : null,
@@ -106,7 +106,7 @@ export async function guardarAsistencia(fd: FormData) {
 }
 
 export async function registrarContacto(fd: FormData) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -148,7 +148,7 @@ export async function guardarLeccion(fd: FormData) {
     video_url: orNull(video),
   };
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = id
     ? await supabase.from("lessons").update(row).eq("id", id).select("id")
     : await supabase.from("lessons").insert(row).select("id");
@@ -159,7 +159,7 @@ export async function guardarLeccion(fd: FormData) {
 }
 
 export async function actualizarPerfil(fd: FormData) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -181,7 +181,7 @@ export async function actualizarPerfil(fd: FormData) {
 
 export async function quitarAlumno(fd: FormData) {
   const group_id = text(fd, "group_id");
-  const { error } = await createClient()
+  const { error } = await (await createClient())
     .from("group_members")
     .delete()
     .eq("group_id", group_id)

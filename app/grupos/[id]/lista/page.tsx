@@ -11,13 +11,12 @@ export const dynamic = "force-dynamic";
 const todayInChile = () =>
   new Date().toLocaleDateString("en-CA", { timeZone: "America/Santiago" });
 
-export default async function ListaPage({
-  params,
-  searchParams,
-}: {
-  params: { id: string };
-  searchParams: { fecha?: string; error?: string };
+export default async function ListaPage(props: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ fecha?: string; error?: string }>;
 }) {
+  const params = await props.params;
+  const searchParams = await props.searchParams;
   const { supabase, role } = await getSession();
   if (!["admin", "coordinador", "monitor", "lider"].includes(role)) redirect(`/grupos/${params.id}`);
 

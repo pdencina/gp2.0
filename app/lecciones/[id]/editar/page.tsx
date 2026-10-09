@@ -7,13 +7,12 @@ import { LessonForm } from "@/components/LessonForm";
 
 export const dynamic = "force-dynamic";
 
-export default async function EditarLeccionPage({
-  params,
-  searchParams,
-}: {
-  params: { id: string };
-  searchParams: { error?: string; ok?: string };
+export default async function EditarLeccionPage(props: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string; ok?: string }>;
 }) {
+  const params = await props.params;
+  const searchParams = await props.searchParams;
   const { supabase, role } = await getSession();
   if (role !== "admin" && role !== "coordinador") redirect(`/lecciones/${params.id}`);
 

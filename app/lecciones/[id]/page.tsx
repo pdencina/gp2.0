@@ -5,7 +5,8 @@ import { AppHeader } from "@/components/AppHeader";
 
 export const dynamic = "force-dynamic";
 
-export default async function LeccionPage({ params }: { params: { id: string } }) {
+export default async function LeccionPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const { supabase, role } = await getSession();
 
   const { data } = await supabase

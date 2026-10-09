@@ -4,7 +4,7 @@ import type { Role } from "@/lib/roles";
 
 // Devuelve el cliente de Supabase y los datos básicos de la persona con sesión.
 export async function getSession() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

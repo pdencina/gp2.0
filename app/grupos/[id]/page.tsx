@@ -21,13 +21,12 @@ type Group = {
   curriculums: { name: string } | null;
 };
 
-export default async function GrupoPage({
-  params,
-  searchParams,
-}: {
-  params: { id: string };
-  searchParams: { error?: string; ok?: string; lista?: string };
+export default async function GrupoPage(props: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string; ok?: string; lista?: string }>;
 }) {
+  const params = await props.params;
+  const searchParams = await props.searchParams;
   const { supabase, role } = await getSession();
 
   const { data } = await supabase

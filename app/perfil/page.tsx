@@ -7,11 +7,10 @@ import { actualizarPerfil } from "@/app/actions/gestion";
 
 export const dynamic = "force-dynamic";
 
-export default async function PerfilPage({
-  searchParams,
-}: {
-  searchParams: { error?: string; ok?: string };
+export default async function PerfilPage(props: {
+  searchParams: Promise<{ error?: string; ok?: string }>;
 }) {
+  const searchParams = await props.searchParams;
   const { supabase, user, role, fullName } = await getSession();
 
   // El teléfono se lee aparte: si la columna aún no existe, el resto sigue funcionando.
