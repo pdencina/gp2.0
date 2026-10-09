@@ -2,10 +2,24 @@
 -- Estructura: Temporada > Currículum > Ciclo > Grupo > Inscripción > Reunión > Asistencia.
 -- Personas: perfil + historial de roles. Ver docs/DISENO_V2.md.
 
+-- Todo o nada: si algo falla, no se aplica ningún cambio.
+begin;
+
+-- Guarda: un proyecto en versión 1 debe pasar antes por 000_preparar_desde_v1.sql.
+do $$ begin
+  if to_regclass('public.group_members') is not null then
+    raise exception 'Este proyecto está en la versión 1. Primero ejecuta 000_preparar_desde_v1.sql (lee su encabezado). No se hizo ningún cambio.';
+  end if;
+end $$;
+
 -- ======================================================================
 -- Tipos
 -- ======================================================================
-create type app_role as enum ('admin', 'coordinador', 'monitor', 'lider', 'alumno');
+-- app_role ya existe en proyectos que vienen de la versión 1; se reutiliza.
+do $$ begin
+  create type app_role as enum ('admin', 'coordinador', 'monitor', 'lider', 'alumno');
+exception when duplicate_object then null;
+end $$;
 create type audience as enum ('todos', 'hombres', 'mujeres', 'parejas');
 create type season_status as enum ('borrador', 'inscripciones', 'en_curso', 'cerrada');
 create type group_status as enum ('abierto', 'en_curso', 'finalizado');
@@ -16,26 +30,37 @@ create type attendance_status as enum ('presente', 'ausente', 'recuperado');
 -- ======================================================================
 -- Personas
 -- ======================================================================
-create table profiles (
+-- Si el proyecto viene de la versión 1, profiles ya existe y solo se amplía.
+create table if not exists profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   full_name text not null default '',
   role app_role not null default 'alumno',
-  phone text check (phone is null or phone ~ '^\+[0-9]{8,15}$'),
-  country text check (country is null or country ~ '^[A-Z]{2}$'),
-  birth_date date,
-  gender text check (gender in ('hombre', 'mujer')),
-  city text,
-  guardian_name text,
-  guardian_email text,
-  guardian_phone text,
-  terms_accepted_at timestamptz,
-  terms_version text,
-  accepts_comms boolean not null default true,
-  active boolean not null default true,
   created_at timestamptz not null default now()
 );
+alter table profiles add column if not exists phone text check (phone is null or phone ~ '^\+[0-9]{8,15}$');
+alter table profiles add column if not exists country text check (country is null or country ~ '^[A-Z]{2}$');
+alter table profiles add column if not exists birth_date date;
+alter table profiles add column if not exists gender text check (gender in ('hombre', 'mujer'));
+alter table profiles add column if not exists city text;
+alter table profiles add column if not exists guardian_name text;
+alter table profiles add column if not exists guardian_email text;
+alter table profiles add column if not exists guardian_phone text;
+alter table profiles add column if not exists terms_accepted_at timestamptz;
+alter table profiles add column if not exists terms_version text;
+alter table profiles add column if not exists accepts_comms boolean not null default true;
+alter table profiles add column if not exists active boolean not null default true;
 
-create table role_history (
+-- En la versión 1 la columna se llamaba user_id.
+do $$ begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'role_history' and column_name = 'user_id'
+  ) then
+    alter table role_history rename column user_id to person_id;
+  end if;
+end $$;
+
+create table if not exists role_history (
   id uuid primary key default gen_random_uuid(),
   person_id uuid not null references profiles(id) on delete cascade,
   from_role app_role,
@@ -43,7 +68,7 @@ create table role_history (
   changed_by uuid references profiles(id) on delete set null,
   created_at timestamptz not null default now()
 );
-create index on role_history (person_id);
+create index if not exists role_history_person_id_idx on role_history (person_id);
 
 -- ======================================================================
 -- Programa
@@ -323,6 +348,7 @@ begin
   return new;
 end $$;
 
+drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created after insert on auth.users
 for each row execute function handle_new_user();
 
@@ -339,6 +365,7 @@ begin
   return new;
 end $$;
 
+drop trigger if exists trg_log_role_change on profiles;
 create trigger trg_log_role_change after insert or update of role on profiles
 for each row execute function log_role_change();
 
@@ -844,7 +871,11 @@ alter table attendance enable row level security;
 alter table contacts enable row level security;
 alter table audit_log enable row level security;
 
--- profiles
+-- profiles (se reemplazan las políticas de la versión 1, si existen)
+drop policy if exists "ver perfiles permitidos" on profiles;
+drop policy if exists "editar mi perfil" on profiles;
+drop policy if exists "admin gestiona perfiles" on profiles;
+drop policy if exists "ver historial permitido" on role_history;
 create policy "ver perfiles permitidos" on profiles for select using (can_see_profile(id));
 create policy "editar mi perfil" on profiles for update
   using (id = auth.uid()) with check (id = auth.uid() and role = my_role());
@@ -931,3 +962,5 @@ grant execute on function enroll(uuid), enroll_person(uuid, uuid), confirm_enrol
   cancel_enrollment(uuid), save_attendance(uuid, date, int, uuid[], uuid[]), close_group(uuid),
   create_continuation(uuid, uuid), promote_user(uuid), assignable_people(app_role),
   enrollment_candidates(uuid), my_alerts() to authenticated;
+
+commit;
