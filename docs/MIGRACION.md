@@ -65,10 +65,24 @@ Se pueden importar a Supabase cambiando el prefijo `$2y$` por `$2a$`. **Los usua
 - Varios coordinadores por currículum.
 - Un mismo perfil puede tener historial de varios roles.
 
-## 6. Pendiente de confirmar con el código antiguo
-- Significado exacto de `status` en asistencias, inscripciones y horarios.
-- Reglas de negocio: pasar de ciclo (máx. 3 ausencias), reabrir ciclo, continuación, reasignar alumnos.
+## 6. Reglas confirmadas en el código antiguo (Laravel, `app/Helpers` y controladores)
+**Asistencia (`asistencias.status`):** 0 = inscrito sin marca, 1 = presente, 2 = ausente, 3 = recuperado.
+**Inscripción (`inscripcions.status`):** 0 = reprobado, 1 = inscrito (en curso), 2 = aprobado, 3 = preinscrito, 9 = no participó.
+**Calificación al cerrar la temporada:** se cuentan como inasistencia las semanas en 0 y en 2. Con más de 3 inasistencias la inscripción pasa a reprobado; con 3 o menos, a aprobado (el 30 % de 12 semanas).
+**Inscripción:** una persona solo puede estar una vez por grupo pequeño y temporada; si el horario ya terminó, puede reinscribirse. Hay inscripción individual, de matrimonios (pareja) e importación masiva por CSV. El coordinador cancela; el administrador puede cambiar cualquier estado.
+**Alcance:** el coordinador y el monitor ven solo los grupos pequeños que tienen asignados.
+**Reasignar alumnos:** existe una pantalla que mueve inscripciones de un horario a otro y recrea las semanas de asistencia.
+**Distribución real de inscripciones:** 20.803 aprobadas, 14.509 reprobadas, 2.040 en curso, 14 preinscritas y 3 sin participar.
+
+## 6.1 Pendiente de decidir
 - Qué módulos económicos (aportes, matrimonios, fútbol) hay que traer.
+- Si "reprobado" se mantiene tal cual o se replantea (hoy es el 39 % de las inscripciones).
+- Prerrequisitos entre ciclos (`ciclo_prela`) y su uso real.
+
+## 6.2 Hallazgos de seguridad en el servidor actual (revisar aparte de la migración)
+- Existe un archivo `credenciales.txt` en texto plano en la carpeta del servidor `gpv2server`. No fue abierto. Debe moverse a un gestor de contraseñas y borrarse; todas las claves que contenga deben considerarse expuestas y rotarse.
+- Hay copias comprimidas de la aplicación (`apparchile.zip`, `apparchiledev.zip`) en la carpeta principal, que pueden incluir claves.
+- La contraseña de la base de datos y del correo viven en archivos de entorno en el mismo servidor; rotarlas al terminar la migración.
 
 ## 7. Plan
 1. Aprobar el esquema v2 (sección 5).
