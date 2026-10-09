@@ -8,12 +8,23 @@ export const dynamic = "force-dynamic";
 export default async function LeccionPage({ params }: { params: { id: string } }) {
   const { supabase, role } = await getSession();
 
-  const { data: lesson } = await supabase
+  const { data } = await supabase
     .from("lessons")
     .select("id, curriculum_id, number, title, summary, content, questions, video_url, curriculums(name)")
     .eq("id", params.id)
     .maybeSingle();
-  if (!lesson) notFound();
+  if (!data) notFound();
+  const lesson = data as unknown as {
+    id: string;
+    curriculum_id: string;
+    number: number;
+    title: string;
+    summary: string | null;
+    content: string | null;
+    questions: string | null;
+    video_url: string | null;
+    curriculums: { name: string } | null;
+  };
 
   // Solo las lecciones a las que tienes acceso (RLS), para ubicar la anterior y la siguiente.
   const { data: all } = await supabase
@@ -27,7 +38,7 @@ export default async function LeccionPage({ params }: { params: { id: string } }
   const next = i >= 0 && i < list.length - 1 ? list[i + 1] : null;
 
   const canEdit = role === "admin" || role === "coordinador";
-  const curriculumName = (lesson as unknown as { curriculums: { name: string } | null }).curriculums?.name;
+  const curriculumName = lesson.curriculums?.name;
   const paragraphs = (lesson.content ?? "").split(/\n\s*\n/).filter((p) => p.trim());
   const questions = (lesson.questions ?? "").split("\n").map((q) => q.trim()).filter(Boolean);
 
