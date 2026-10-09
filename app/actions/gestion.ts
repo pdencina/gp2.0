@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { normalizePhone } from "@/lib/phone";
 
 const text = (fd: FormData, key: string) => String(fd.get(key) ?? "").trim();
 const orNull = (v: string) => (v === "" ? null : v);
@@ -122,6 +123,27 @@ export async function registrarContacto(fd: FormData) {
   });
   revalidatePath("/inicio");
   finish("/alertas", error?.message);
+}
+
+export async function actualizarPerfil(fd: FormData) {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const name = text(fd, "full_name");
+  if (name.length < 2) finish("/perfil", "Escribe tu nombre completo.");
+
+  const rawPhone = text(fd, "phone");
+  const phone = normalizePhone(rawPhone);
+  if (rawPhone && !phone) {
+    finish("/perfil", "El teléfono no es válido. Incluye el código de país, por ejemplo +56 9 1234 5678.");
+  }
+
+  const { error } = await supabase.from("profiles").update({ full_name: name, phone }).eq("id", user.id);
+  revalidatePath("/inicio");
+  finish("/perfil", error?.message);
 }
 
 export async function quitarAlumno(fd: FormData) {

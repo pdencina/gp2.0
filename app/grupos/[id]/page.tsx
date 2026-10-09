@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSession, type Person } from "@/lib/session";
 import { AppHeader } from "@/components/AppHeader";
+import { whatsappLink } from "@/lib/phone";
 import { Flash, fieldClass } from "@/components/Flash";
 import { agregarAlumno, asignarResponsables, quitarAlumno } from "@/app/actions/gestion";
 
@@ -46,6 +47,15 @@ export default async function GrupoPage({
   const members = ((memberRows ?? []) as unknown as { student_id: string; profiles: { full_name: string } | null }[])
     .map((m) => ({ id: m.student_id, name: m.profiles?.full_name || "Sin nombre" }))
     .sort((a, b) => a.name.localeCompare(b.name));
+
+  // Teléfonos de los alumnos, visibles solo para quien gestiona el grupo.
+  const { data: phoneRows } =
+    canManage && members.length
+      ? await supabase.from("profiles").select("id, phone").in("id", members.map((m) => m.id))
+      : { data: [] };
+  const phoneOf = new Map(
+    ((phoneRows ?? []) as { id: string; phone: string | null }[]).map((p) => [p.id, p.phone])
+  );
 
   const ids = [group.monitor_id, group.leader_id].filter(Boolean) as string[];
   const { data: names } = ids.length
@@ -186,7 +196,19 @@ export default async function GrupoPage({
           <ul>
             {members.map((m) => (
               <li key={m.id} className="flex items-center justify-between border-b border-stone-100 py-2 text-sm last:border-0">
-                <span>{m.name}</span>
+                <span>
+                  {m.name}
+                  {phoneOf.get(m.id) && (
+                    <a
+                      href={whatsappLink(phoneOf.get(m.id)!)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-3 text-xs text-brand-teal hover:underline"
+                    >
+                      WhatsApp
+                    </a>
+                  )}
+                </span>
                 {canManage && (
                   <form action={quitarAlumno}>
                     <input type="hidden" name="group_id" value={group.id} />

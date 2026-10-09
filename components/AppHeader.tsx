@@ -20,6 +20,9 @@ export function AppHeader({ role }: { role: Role }) {
             {l.label}
           </Link>
         ))}
+        <Link href="/perfil" className="text-brand-teal hover:underline">
+          Mi perfil
+        </Link>
         <form action="/auth/signout" method="post">
           <button className="text-stone-600 hover:underline">Salir</button>
         </form>

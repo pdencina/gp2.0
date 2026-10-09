@@ -56,6 +56,14 @@ export default async function InicioPage() {
     ? `${Math.round((marks.filter((a) => a.present).length / marks.length) * 100)}%`
     : "—";
 
+  // Aviso para completar el teléfono (solo si la columna existe y está vacía).
+  const { data: phoneRow, error: phoneError } = await supabase
+    .from("profiles")
+    .select("phone")
+    .eq("id", user.id)
+    .maybeSingle();
+  const missingPhone = !phoneError && !(phoneRow as { phone: string | null } | null)?.phone;
+
   const alerts =
     role === "alumno" ? [] : (((await supabase.rpc("my_alerts")).data ?? []) as Alert[]);
 
@@ -99,6 +107,16 @@ export default async function InicioPage() {
           </div>
         ))}
       </div>
+
+      {missingPhone && (
+        <Link
+          href="/perfil"
+          className="mb-5 flex items-center justify-between rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800 hover:brightness-95"
+        >
+          <span>Agrega tu teléfono para que tu líder pueda escribirte por WhatsApp.</span>
+          <span className="font-medium">Completar →</span>
+        </Link>
+      )}
 
       {alerts.length > 0 && (
         <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">

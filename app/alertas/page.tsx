@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
+import { whatsappLink } from "@/lib/phone";
 import { ALERT_LABEL, SEVERITY_CLASS, type Alert } from "@/lib/alerts";
 import { AppHeader } from "@/components/AppHeader";
 import { Flash, fieldClass } from "@/components/Flash";
@@ -18,6 +19,22 @@ export default async function AlertasPage({
 
   const { data } = await supabase.rpc("my_alerts");
   const alerts = (data ?? []) as Alert[];
+
+  // Teléfonos de las personas con alerta (si la columna aún no existe, simplemente no hay botón).
+  const studentIds = Array.from(new Set(alerts.map((a) => a.student_id).filter(Boolean))) as string[];
+  const { data: phoneRows } = studentIds.length
+    ? await supabase.from("profiles").select("id, phone").in("id", studentIds)
+    : { data: [] };
+  const phones = new Map(
+    ((phoneRows ?? []) as { id: string; phone: string | null }[]).map((p) => [p.id, p.phone])
+  );
+
+  const message = (a: Alert) => {
+    const first = (a.student_name ?? "").split(" ")[0];
+    return a.kind === "nuevo"
+      ? `Hola ${first}, te damos la bienvenida a ${a.group_name}. ¿Cómo estás? Aquí estamos para lo que necesites.`
+      : `Hola ${first}, ¿cómo estás? Te extrañamos en ${a.group_name}. ¿Hay algo en que podamos ayudarte?`;
+  };
 
   return (
     <div className="mx-auto max-w-3xl p-4 md:p-8">
@@ -48,6 +65,23 @@ export default async function AlertasPage({
                 Ver grupo →
               </Link>
             </div>
+
+            {a.student_id && (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {phones.get(a.student_id) ? (
+                  <a
+                    href={whatsappLink(phones.get(a.student_id)!, message(a))}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-lg bg-brand-green px-3 py-1.5 text-sm font-medium text-white hover:brightness-95"
+                  >
+                    Escribir por WhatsApp
+                  </a>
+                ) : (
+                  <span className="text-xs text-stone-400">Sin teléfono registrado</span>
+                )}
+              </div>
+            )}
 
             {a.student_id && (
               <details className="mt-3">
