@@ -37,6 +37,16 @@ export default async function LeccionPage(props: { params: Promise<{ id: string 
   const prev = i > 0 ? list[i - 1] : null;
   const next = i >= 0 && i < list.length - 1 ? list[i + 1] : null;
 
+  // Materiales de la unidad y de su módulo (la base de datos decide cuáles puede ver cada persona)
+  const { data: mats } = await supabase
+    .from("resources")
+    .select("id, name, kind, description")
+    .eq("cycle_id", lesson.cycle_id)
+    .eq("archived", false)
+    .or(`unit_id.eq.${lesson.id},unit_id.is.null`)
+    .order("created_at");
+  const materials = (mats ?? []) as { id: string; name: string; kind: string | null; description: string | null }[];
+
   const canEdit = role === "admin" || role === "coordinador";
   const where = `${lesson.cycles?.curriculums?.name ?? ""} · Ciclo ${lesson.cycles?.number ?? ""}`;
   const paragraphs = (lesson.content ?? "").split(/\n\s*\n/).filter((p) => p.trim());
@@ -88,6 +98,22 @@ export default async function LeccionPage(props: { params: Promise<{ id: string 
               <li key={idx}>{q}</li>
             ))}
           </ol>
+        </section>
+      )}
+
+      {materials.length > 0 && (
+        <section className="mt-8 rounded-xl bg-white p-5 ring-1 ring-stone-200">
+          <h2 className="mb-3 font-medium">Materiales</h2>
+          <ul className="space-y-2">
+            {materials.map((m) => (
+              <li key={m.id}>
+                <a href={`/api/materiales/${m.id}`} target="_blank" rel="noopener noreferrer" className="text-brand-teal hover:underline">
+                  {m.name}
+                </a>
+                {m.description && <span className="ml-2 text-sm text-stone-500">{m.description}</span>}
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 

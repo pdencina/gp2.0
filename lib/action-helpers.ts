@@ -16,6 +16,8 @@ export function friendly(message: string): string {
   if (m.includes("ce_one_open")) return "Ya tienes una inscripción abierta en este programa.";
   if (m.includes("enrollments_one_active")) return "Ya estás inscrito en este currículum en esta temporada.";
   if (m.includes("lessons_cycle_id_number_key")) return "Ya existe una lección con ese número en este ciclo.";
+  if (m.includes("cycles_version_number_key")) return "Ya existe un módulo con ese número en esta versión.";
+  if (m.includes("resources_file_in_own_folder")) return "El archivo no pertenece a este programa.";
   if (m.includes("cycles_curriculum_id_number_key")) return "Ya existe un ciclo con ese número en este currículum.";
   if (m.includes("seasons_name_key")) return "Ya existe una temporada con ese nombre.";
   if (m.includes("curriculums_name_key")) return "Ya existe un currículum con ese nombre.";
