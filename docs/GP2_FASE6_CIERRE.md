@@ -85,11 +85,19 @@ Con 8.000 personas, 1.500 grupos, 20.000 inscripciones y 63.000 asistencias (en 
 | 9 Más de un currículum a la vez | Permitido, uno por programa |
 | 10 Online internacional | Cada grupo guarda su zona horaria (`groups.timezone`); todavía no se muestra en pantalla |
 
+## Complementos posteriores al cierre
+
+| Pieza | Para qué |
+|---|---|
+| `012_importar_solo_nuevo.sql` y `npm run migrar:solo-nuevo` | Traer lo que se siga registrando en la plataforma anterior **sin pisar nada** de lo hecho en GP 2.0 (resuelve la advertencia sobre la fecha de corte). Probado: no cambia roles, teléfonos, líderes, direcciones, coordinadores ni asistencia existentes; solo cierra lo que allá terminó y aquí seguía abierto |
+| `013_sedes_por_lote.sql` y **Habilitación → Asignar sedes por lote** | Dar sede a grupos y personas por criterio (programa, modalidad, sede del líder, ciudad, sede del grupo) y no uno por uno; nunca cambia una sede ya asignada; una sola anotación en la auditoría por acción |
+| Zona horaria de cada grupo | Se edita en el detalle del grupo; en los grupos online quien participa ve la hora en su propia zona |
+
 ## Qué queda por delante (no es de código)
 1. Aplicar `011` y correr los dos scripts de comprobación.
 2. Dejar los datos listos: el reparto de los 13 ciclos de HOMBRES en años, la revisión de créditos heredados, las sedes de grupos y personas, los pastores por sede, la lista final de ofertas y la carga de tus materiales. La guía paso a paso está en [HABILITACION_POR_SEDE.md](HABILITACION_POR_SEDE.md).
 3. Probar con personas reales de una sede piloto antes de abrir más.
-4. **Elegir la fecha de corte con la plataforma anterior.** La importación completa pisaría lo hecho en GP 2.0, así que después de empezar un piloto no debe repetirse; falta construir una importación "solo lo nuevo" (ver la guía de habilitación).
+4. **Elegir la fecha de corte con la plataforma anterior.** Una importación completa final antes del primer piloto; después, solo la importación "solo lo nuevo" (ver la guía de habilitación).
 
 ## Límites
 - Las pruebas verifican reglas y permisos contra un Postgres real y la compilación, pero **ninguna prueba abre las pantallas en un navegador con una cuenta real**: la revisión visual con usuarios de verdad (una sede piloto) sigue pendiente.

@@ -47,7 +47,8 @@ Además de lo del líder:
 - **Currículums → Clasificar**: ofertas, categorías, años de ruta, si dan certificado y visibilidad.
 - **Equipo**: promover personas por la escalera alumno → líder → monitor → coordinador.
 - **Certificados**: designar pastores por sede, revocar un certificado (con motivo).
-- **Habilitación**: reconciliación de datos y etapa de cada sede.
+- **Habilitación**: reconciliación de datos y etapa de cada sede. Desde ahí, **Asignar sedes por lote** para dar sede a grupos y personas por programa, modalidad, líder, ciudad o grupo, sin repasar uno por uno.
+- **Zona horaria** de cada grupo (en su detalle): quien participa de un grupo online ve además la hora de la reunión en su propia zona.
 
 ## Verificar un certificado
 Cualquier persona puede abrir `/verificar` en el sitio, escribir el código del pie del certificado y ver si es válido. Solo muestra el nombre, el programa, la sede y la fecha.

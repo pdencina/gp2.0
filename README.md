@@ -26,9 +26,9 @@ Cada persona ve solo lo que le corresponde: las reglas viven en la base de datos
 
 Las migraciones están en `supabase/v2/` y se ejecutan **en orden, una sola vez**, en el SQL Editor de Supabase (con un respaldo antes):
 
-`001_schema` → `004_rendimiento` → `005_panel` → `006_gp2_nucleo` → `007_catalogo` → `008_calendario` → `009_biblioteca` → `010_certificados` → `011_habilitacion`
+`001_schema` → `004_rendimiento` → `005_panel` → `006_gp2_nucleo` → `007_catalogo` → `008_calendario` → `009_biblioteca` → `010_certificados` → `011_habilitacion` → `013_sedes_por_lote`
 
-(`002` y `003` son de la importación y se quitan al terminar; `000` solo se usa al actualizar desde la versión 1.) Todas las posteriores a 001 solo agregan: no borran datos.
+(`002`, `003` y `012` son de la importación (`012` es la importación "solo lo nuevo") y se quitan al terminar con `003`; `000` solo se usa al actualizar desde la versión 1.) Todas las posteriores a 001 solo agregan: no borran datos.
 
 ## Desarrollo local
 

@@ -3,6 +3,7 @@
 //   npx tsx migracion/importar.ts --respaldo migracion/datos/respaldo.sql            (simulación, no escribe nada)
 //   npx tsx migracion/importar.ts --respaldo ... --muestra 20 --aplicar --si-estoy-seguro   (prueba con 20 grupos)
 //   npx tsx migracion/importar.ts --respaldo ... --aplicar --si-estoy-seguro                (importación completa)
+//   npx tsx migracion/importar.ts --respaldo ... --solo-nuevo --aplicar --si-estoy-seguro   (solo lo que falta; no pisa nada)
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -95,6 +96,8 @@ async function main() {
   }
   const host = new URL(env.SUPABASE_URL).host;
   console.log(`\nDestino: ${host}`);
+  if (flag("solo-nuevo")) console.log("Modo: SOLO LO NUEVO (no se modifica nada de lo ya cargado).");
+  else console.log("Modo: importación completa (vuelve a escribir el estado de todo lo importado).");
   if (!flag("si-estoy-seguro")) {
     console.error("Por seguridad, agrega --si-estoy-seguro para confirmar que ese es el proyecto correcto.");
     process.exit(1);
@@ -105,6 +108,7 @@ async function main() {
     rpc: httpRpc(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY),
     createAuthUser: httpAuthCreator(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY),
     log: (m) => console.log(m),
+    onlyNew: flag("solo-nuevo"),
     onRejected: (email, reason) => rechazadas.push(`${email},${JSON.stringify(reason)}`),
   });
   if (rechazadas.length) {

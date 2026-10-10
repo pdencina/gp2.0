@@ -61,6 +61,8 @@ beforeAll(async () => {
   await db.exec(sql("009_biblioteca.sql"));
   await db.exec(sql("010_certificados.sql"));
   await db.exec(sql("011_habilitacion.sql"));
+  await db.exec(sql("012_importar_solo_nuevo.sql"));
+  await db.exec(sql("013_sedes_por_lote.sql"));
   plan = transform(parseDump(toDump(OLD_DB)), new Date("2026-10-09T00:00:00Z"));
 
   // Cuentas y datos que ya existían en la plataforma nueva antes de importar

@@ -52,6 +52,23 @@ npm run migrar -- --aplicar --si-estoy-seguro
 - Si un currículum o temporada ya existe con el mismo nombre, el importado se renombra con "(importado)".
 - Las inscripciones históricas se cargan saltando las reglas de inscripción (cupo, audiencia, ciclo previo); las reglas vuelven a aplicar de inmediato para todo lo que se haga después.
 
+## Después de abrir GP 2.0: importar solo lo nuevo
+La importación completa vuelve a escribir el estado de todo lo importado, así que **no se usa una vez que alguien trabaja en GP 2.0**. Para traer lo que se siga registrando en la plataforma anterior hay un modo que solo agrega:
+
+1. Ejecuta una vez `supabase/v2/012_importar_solo_nuevo.sql` en el SQL Editor de Supabase (usa `003_quitar_importacion.sql` para quitarlo al terminar).
+2. Exporta de nuevo el respaldo y córrelo:
+```
+npm run migrar:solo-nuevo -- --respaldo migracion/datos/respaldo.sql                         (simulación)
+npm run migrar:solo-nuevo -- --respaldo migracion/datos/respaldo.sql --aplicar --si-estoy-seguro
+```
+
+Qué hace y qué no:
+- **Agrega** personas, currículums, temporadas, ciclos, grupos, inscripciones, reuniones, marcas de asistencia y recursos que todavía no existen aquí. Las personas nuevas reciben su cuenta y su historial.
+- **No modifica** nada de lo que ya existe: ni roles, ni teléfonos, ni líderes, ni direcciones, ni coordinadores, ni marcas de asistencia ya cargadas. Un coordinador que se quitó en GP 2.0 no vuelve.
+- **Dos avances hacia adelante** (y nunca hacia atrás): una inscripción que aquí sigue "en curso" o "preinscrita" y allá se cerró (aprobado, no completó…) se cierra, y deja su crédito histórico por revisar; y un grupo que allá finalizó y aquí sigue abierto se finaliza.
+- Es repetible: correrlo dos veces seguidas no cambia nada la segunda vez.
+- Si una reunión nueva cae el mismo día que una que ya existe en el mismo grupo (por ejemplo, una planificada aquí), la nueva se omite junto con su asistencia.
+
 ## Pruebas
 `npm test` incluye una importación completa contra un Postgres real con el esquema v2.
 

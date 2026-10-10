@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "migrar:simular": "tsx migracion/importar.ts",
     "migrar": "tsx migracion/importar.ts",
-    "smoke": "node scripts/smoke.js"
+    "smoke": "node scripts/smoke.js",
+    "migrar:solo-nuevo": "tsx migracion/importar.ts --solo-nuevo"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

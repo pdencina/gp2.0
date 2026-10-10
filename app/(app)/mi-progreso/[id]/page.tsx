@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { scheduleLabel, ENROLLMENT_LABEL, WEEKDAYS, todayInChile, type GroupOverview } from "@/lib/format";
 import { dayMonth, weekdayName } from "@/lib/calendar";
+import { LocalTime } from "@/components/LocalTime";
 import { avanzarAnio } from "@/app/actions/certificados";
 import { certificateTitle, formatCode, normalizeYear, routeSummary, type CertificateRow, type YearStatus } from "@/lib/certificates";
 import { Flash, fieldClass, primaryBtn } from "@/components/Flash";
@@ -100,6 +101,9 @@ export default async function ProgresoDetallePage(props: {
     const { data } = await supabase.rpc("compatible_groups", { ce: id });
     compatible = ((data ?? []) as CompatibleGroup[]).filter((g) => g.group_id !== current?.group_id);
   }
+  const tzIds = [...compatible.map((g) => g.group_id), ...(current ? [current.group_id] : [])];
+  const { data: tzRows } = tzIds.length ? await supabase.from("groups").select("id, timezone").in("id", tzIds) : { data: [] };
+  const zoneOf = new Map(((tzRows ?? []) as { id: string; timezone: string }[]).map((g) => [g.id, g.timezone]));
   const shown = filterGroups(compatible, { modalidad: searchParams.modalidad, sede: searchParams.sede, dia: searchParams.dia });
   const campusOptions = Array.from(new Set(compatible.map((g) => g.campus).filter(Boolean))) as string[];
   const dayOptions = Array.from(new Set(compatible.map((g) => g.weekday).filter((d) => d != null))).sort() as number[];
@@ -292,6 +296,7 @@ export default async function ProgresoDetallePage(props: {
           <div className="text-sm">
             <p className="font-medium">{currentGroup.name}</p>
             <p className="text-stone-500">{scheduleLabel(currentGroup)}</p>
+            {currentGroup.modality === "virtual" && <p><LocalTime time={currentGroup.start_time} zone={zoneOf.get(currentGroup.id) ?? null} /></p>}
             {currentGroup.leader_name && <p className="text-stone-500">Líder: {currentGroup.leader_name}</p>}
             {currentGroup.backup_leader_name && <p className="text-stone-500">Respaldo: {currentGroup.backup_leader_name}</p>}
             {currentGroup.campus_name && <p className="text-stone-500">Sede: {currentGroup.campus_name}</p>}
@@ -373,6 +378,7 @@ export default async function ProgresoDetallePage(props: {
                       {scheduleLabel(g)}
                       {g.campus ? ` · ${g.campus}` : ""}
                     </p>
+                    {g.modality === "virtual" && <p><LocalTime time={g.start_time} zone={zoneOf.get(g.group_id) ?? null} /></p>}
                     <p className="text-xs text-stone-400">
                       {g.leader_name ? `Líder: ${g.leader_name} · ` : ""}
                       {g.capacity_left} {g.capacity_left === 1 ? "cupo" : "cupos"}

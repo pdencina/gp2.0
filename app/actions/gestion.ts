@@ -151,6 +151,14 @@ export async function asignarSede(fd: FormData) {
   finish(`/grupos/${id}`, error?.message ?? (data?.length ? undefined : "No tienes permiso para hacer este cambio."));
 }
 
+export async function asignarZonaHoraria(fd: FormData) {
+  const id = text(fd, "id");
+  const zone = text(fd, "timezone");
+  if (!/^[A-Za-z_]+(\/[A-Za-z_]+){1,2}$/.test(zone)) finish(`/grupos/${id}`, "Elige una zona horaria válida.");
+  const { data, error } = await (await createClient()).from("groups").update({ timezone: zone }).eq("id", id).select("id");
+  finish(`/grupos/${id}`, error?.message ?? (data?.length ? undefined : "No tienes permiso para hacer este cambio."));
+}
+
 export async function asignarResponsables(fd: FormData) {
   const id = text(fd, "id");
   const { data, error } = await (await createClient())

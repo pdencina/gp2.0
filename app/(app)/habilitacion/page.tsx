@@ -57,7 +57,12 @@ export default async function HabilitacionPage(props: {
       <Flash error={sp.error} ok={sp.ok} />
 
       <section className="mb-8">
-        <h2 className="mb-3 text-sm font-medium">Sedes</h2>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-sm font-medium">Sedes</h2>
+          {isAdmin && (
+            <Link href="/habilitacion/sedes" className="text-sm text-brand-teal hover:underline">Asignar sedes por lote →</Link>
+          )}
+        </div>
         {campuses.length === 0 ? (
           <p className="rounded-xl border border-stone-200 bg-white p-6 text-center text-sm text-stone-500">Todavía no hay sedes con grupos.</p>
         ) : (
