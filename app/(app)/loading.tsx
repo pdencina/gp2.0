@@ -1,8 +1,13 @@
+import { BrandLogo } from "@/components/BrandLogo";
+
 // Mientras carga cualquier pantalla del menú, se ve el esqueleto de la página (no una pantalla en blanco).
 export default function Loading() {
   return (
     <div className="mx-auto max-w-5xl p-4 pb-16 md:p-8" aria-busy="true" aria-label="Cargando">
-      <div className="skeleton mb-2 h-8 w-64" />
+      <div className="mb-2 flex items-center gap-3">
+        <BrandLogo variant="mark" anim="loading" className="h-10 w-auto" label={null} />
+        <div className="skeleton h-8 w-64" />
+      </div>
       <div className="skeleton mb-8 h-4 w-96 max-w-full" />
       <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (

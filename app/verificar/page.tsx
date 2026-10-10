@@ -31,7 +31,7 @@ export default async function VerificarPage(props: { searchParams: Promise<{ cod
 
   return (
     <main className="enter mx-auto flex min-h-screen max-w-lg flex-col justify-center p-6">
-      <div className="mb-6 flex justify-center"><Logo /></div>
+      <div className="mb-6 flex justify-center"><Logo badge={false} /></div>
       <h1 className="page-title text-center">Verificar un certificado</h1>
       <p className="mb-6 mt-1 text-center text-sm text-stone-500">Escribe el código que aparece al pie del certificado.</p>
 

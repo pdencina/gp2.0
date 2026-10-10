@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Icon } from "@/components/Icon";
+import { BrandLogo } from "@/components/BrandLogo";
 
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
@@ -12,9 +12,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
   return (
     <main className="flex min-h-screen items-center justify-center p-6">
       <div className="enter max-w-sm text-center">
-        <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
-          <Icon name="alert" className="h-7 w-7" />
-        </span>
+        <BrandLogo variant="mark" mood="sad" anim="idle" className="mx-auto mb-4 h-28 w-auto" label="Los tres personajes del logo, preocupados" />
         <h1 className="page-title">Algo salió mal</h1>
         <p className="mt-2 text-sm text-stone-600">
           No pudimos cargar esta página. Inténtalo de nuevo; si sigue pasando, avísale a tu coordinador.

@@ -1,4 +1,5 @@
-import { Logo } from "@/components/Logo";
+import { BrandLogo } from "@/components/BrandLogo";
+import { LogoPlay } from "@/components/LogoPlay";
 import { Icon, type IconName } from "@/components/Icon";
 import { LoginForm } from "./LoginForm";
 
@@ -19,9 +20,17 @@ export default function LoginPage() {
         <span aria-hidden="true" className="float-slower absolute -bottom-16 right-16 -z-10 h-36 w-36 rounded-full md:-bottom-24 md:right-24 md:h-80 md:w-80 bg-brand-green-400/80" />
         <span aria-hidden="true" className="float-slow absolute bottom-40 -left-20 -z-10 hidden h-56 w-56 rounded-full md:block bg-white/10" />
 
-        <Logo light size="lg" />
+        <div className="flex items-center gap-3">
+          <span className="chip bg-white/15 px-3 py-1.5 text-white ring-1 ring-white/25 backdrop-blur">
+            <span className="rounded-full bg-brand-orange-400 px-1.5 py-0.5 text-[10px] font-bold leading-none text-brand-teal-900">2.0</span>
+            Nueva plataforma
+          </span>
+        </div>
 
         <div className="max-w-lg">
+          <LogoPlay className="mb-8 w-full max-w-[22rem] md:max-w-[26rem]">
+            <BrandLogo variant="stacked" tone="light" anim="intro" className="h-auto w-full" />
+          </LogoPlay>
           <h1 className="enter text-4xl font-semibold leading-[1.1] tracking-tight md:text-5xl">
             La fe se vive mejor en comunidad
           </h1>

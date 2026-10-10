@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSession } from "@/lib/session";
-import { Logo } from "@/components/Logo";
+import { BrandLogo } from "@/components/BrandLogo";
 import { PrintButton } from "@/components/PrintButton";
 import { Icon } from "@/components/Icon";
 import { formatCode } from "@/lib/certificates";
@@ -61,7 +61,7 @@ export default async function CertificadoPage(props: { params: Promise<{ id: str
         {revoked && (
           <p className="mb-4 rounded-xl bg-red-50 px-3 py-2 text-sm font-medium text-red-700">Este certificado fue revocado. Ya no es válido.</p>
         )}
-        <div className="mb-6 flex justify-center"><Logo /></div>
+        <div className="mb-6 flex justify-center"><BrandLogo variant="stacked" anim="intro" className="h-24 w-auto md:h-28" /></div>
         <span aria-hidden="true" className={`mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full ring-4 ${revoked ? "bg-red-50 text-red-500 ring-red-100" : "bg-brand-teal-50 text-brand-teal ring-brand-teal-100"}`}>
           <Icon name="award" className="h-7 w-7" />
         </span>

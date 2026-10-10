@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Logo } from "@/components/Logo";
+import { BrandLogo } from "@/components/BrandLogo";
+import { LogoPlay } from "@/components/LogoPlay";
 import { Icon } from "@/components/Icon";
 
 export const metadata = { title: "No encontramos esa página" };
@@ -10,8 +11,10 @@ export default function NotFound() {
       <span aria-hidden="true" className="float-slow absolute -left-20 top-20 -z-10 h-64 w-64 rounded-full bg-brand-orange-100" />
       <span aria-hidden="true" className="float-slower absolute -right-16 bottom-16 -z-10 h-72 w-72 rounded-full bg-brand-teal-100" />
       <div className="enter max-w-md text-center">
-        <div className="mb-8 flex justify-center">
-          <Logo />
+        <div className="mb-6 flex justify-center">
+          <LogoPlay>
+            <BrandLogo variant="mark" mood="sad" anim="intro" className="h-36 w-auto" label="Los tres personajes del logo, preocupados" />
+          </LogoPlay>
         </div>
         <p className="text-7xl font-semibold tracking-tight text-brand-teal/30">404</p>
         <h1 className="page-title mt-2">No encontramos esa página</h1>

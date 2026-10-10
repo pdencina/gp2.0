@@ -1,17 +1,31 @@
-// Marca: tres círculos que se enlazan (comunidad) y el nombre.
-export function Logo({ light = false, size = "md" }: { light?: boolean; size?: "sm" | "md" | "lg" }) {
-  const dot = size === "lg" ? "h-8 w-8" : size === "sm" ? "h-5 w-5" : "h-6 w-6";
-  const text = size === "lg" ? "text-xl" : size === "sm" ? "text-sm" : "text-base";
+import { BrandLogo, type LogoAnim } from "@/components/BrandLogo";
+
+// Marca de GP 2.0: los tres personajes de Grupos Pequeños, el nombre y la insignia "2.0".
+export function Logo({
+  light = false,
+  size = "md",
+  anim = "idle",
+  badge = true,
+}: {
+  light?: boolean;
+  size?: "sm" | "md" | "lg";
+  anim?: LogoAnim;
+  badge?: boolean;
+}) {
+  const h = size === "lg" ? "h-12" : size === "sm" ? "h-7" : "h-9";
   return (
-    <div className="flex items-center gap-2.5">
-      <div className="flex" aria-hidden="true">
-        <span className={`${dot} rounded-full bg-brand-orange-400`} />
-        <span className={`${dot} -ml-2 rounded-full bg-brand-green-400 ${light ? "ring-2 ring-brand-teal-700/40" : "mix-blend-multiply"}`} />
-        <span className={`${dot} -ml-2 rounded-full ${light ? "bg-white" : "bg-brand-teal-400"}`} />
-      </div>
-      <span className={`${text} font-semibold tracking-tight ${light ? "text-white" : "text-brand-ink"}`}>
-        grupos pequeños
-      </span>
-    </div>
+    <span className="inline-flex items-center gap-2">
+      <BrandLogo variant="horizontal" tone={light ? "light" : "dark"} anim={anim} className={`${h} w-auto`} />
+      {badge && (
+        <span
+          aria-label="versión 2.0"
+          className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none tracking-wide text-white ${
+            light ? "bg-brand-orange-400 text-brand-teal-900 ring-1 ring-white/30" : "bg-brand-orange"
+          }`}
+        >
+          2.0
+        </span>
+      )}
+    </span>
   );
 }

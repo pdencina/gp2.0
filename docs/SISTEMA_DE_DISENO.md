@@ -40,3 +40,23 @@ Contraste AA en botones y enlaces, foco visible en teal, íconos decorativos ocu
 
 ## Fuente
 Inter, cargada con `next/font` (se descarga al compilar y se sirve desde el propio sitio).
+
+## Logo animado
+El logo de Grupos Pequeños (tres personajes que se reúnen: la "g" naranja, la "p" turquesa y el círculo verde) vive como vector, no como imagen, para poder animarlo y verse nítido en cualquier tamaño.
+
+- **Originales** (los que entregó la iglesia): `public/brand/` (wordmark oscuro, wordmark crema, isotipo y versiones blancas). Se conservan tal cual.
+- **Vector**: `lib/brand-paths.ts` (generado por trazado de los originales; no se edita a mano) y `components/BrandLogo.tsx`.
+- **Variantes**: `variant="mark"` (solo los personajes), `"stacked"` (con el nombre debajo) y `"horizontal"` (para menú y barras). `tone="light"` usa el nombre en crema para fondos oscuros.
+- **Con la insignia "2.0"**: el componente `Logo` (menú, ingreso, páginas de error) agrega la insignia; en el diploma y en la verificación pública va sin ella.
+
+Qué hace (`anim`):
+| Valor | Comportamiento |
+|---|---|
+| `intro` | Los tres llegan desde lados distintos y se juntan; después aparecen las caras |
+| `idle` | Flotan con ritmos propios y parpadean de vez en cuando |
+| `loading` | Laten en cadena (pantallas de carga) |
+| `none` | Quieto |
+
+Además: al pasar el mouse **se acercan como en un abrazo** y la sonrisa se ensancha; en el ingreso y en el 404 (`LogoPlay`) **los ojos siguen al puntero** y, al tocarlos, **saltan**. En el 404 y en la pantalla de error la expresión es triste (`mood="sad"`). Todo se apaga con "reducir movimiento".
+
+Otros usos de la marca: favicon (`app/icon.svg`), ícono para iOS (`app/apple-icon.png`) e imagen al compartir el enlace (`app/opengraph-image.png`). Para ver el original junto al vectorizado: `/diseno/logo` (solo en desarrollo).

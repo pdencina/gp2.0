@@ -5,6 +5,7 @@ import "./globals.css";
 const sans = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://gp2-0.vercel.app"),
   title: { default: "Grupos Pequeños ARM Global", template: "%s · Grupos Pequeños" },
   description: "Encuentra tu grupo, mantén el contacto con tu líder y sigue tu camino.",
 };
