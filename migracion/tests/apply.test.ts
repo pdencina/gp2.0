@@ -54,6 +54,8 @@ beforeAll(async () => {
   await db.exec(sql("001_schema.sql"));
   await db.exec(sql("002_importacion.sql"));
   await db.exec(sql("004_rendimiento.sql"));
+  await db.exec(sql("005_panel.sql"));
+  await db.exec(sql("006_gp2_nucleo.sql"));
   plan = transform(parseDump(toDump(OLD_DB)), new Date("2026-10-09T00:00:00Z"));
 
   // Cuentas y datos que ya existían en la plataforma nueva antes de importar
@@ -142,8 +144,9 @@ describe("importación completa sobre el esquema v2", () => {
 
   it("los grupos quedan con su líder y monitor, y el cupo respeta los inscritos", async () => {
     const g = (await db.query<{ status: string; weekday: number; modality: string; leader: string | null; capacity: number; address: string | null }>(
-      `select g.status, g.weekday, g.modality, u.email as leader, g.capacity, g.address
-         from groups g left join auth.users u on u.id = g.leader_id order by g.status, g.address nulls last`
+      `select g.status, g.weekday, g.modality, u.email as leader, g.capacity, gp.address
+         from groups g left join auth.users u on u.id = g.leader_id left join group_private gp on gp.group_id = g.id
+        order by g.status, gp.address nulls last`
     )).rows;
     expect(g).toHaveLength(4);
     expect(g.find((x) => x.status === "en_curso")).toMatchObject({ weekday: 5, modality: "virtual", leader: "ana@x.cl", capacity: 15 });
