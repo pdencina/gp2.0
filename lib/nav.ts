@@ -10,6 +10,7 @@ const ITEMS: { section: string; item: NavItem; roles: Role[] }[] = [
   { section: "Mi espacio", item: { href: "/inicio", label: "Inicio", icon: "home" }, roles: ALL },
   { section: "Mi espacio", item: { href: "/inscripcion", label: "Inscripción", icon: "plus" }, roles: ALL },
   { section: "Mi espacio", item: { href: "/perfil", label: "Mi perfil", icon: "user" }, roles: ALL },
+  { section: "Seguimiento", item: { href: "/panel", label: "Panel", icon: "chart" }, roles: ["admin", "coordinador", "monitor"] },
   { section: "Seguimiento", item: { href: "/grupos", label: "Grupos", icon: "grid" }, roles: MANAGERS },
   { section: "Seguimiento", item: { href: "/alertas", label: "Alertas", icon: "bell" }, roles: MANAGERS },
   { section: "Seguimiento", item: { href: "/equipo", label: "Equipo", icon: "users" }, roles: ["admin", "coordinador", "monitor"] },

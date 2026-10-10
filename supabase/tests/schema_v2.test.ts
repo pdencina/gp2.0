@@ -57,6 +57,7 @@ beforeAll(async () => {
   await db.exec(SUPABASE_STUBS);
   await db.exec(readFileSync(join(__dirname, "../v2/001_schema.sql"), "utf8"));
   await db.exec(readFileSync(join(__dirname, "../v2/004_rendimiento.sql"), "utf8"));
+  await db.exec(readFileSync(join(__dirname, "../v2/005_panel.sql"), "utf8"));
   await db.exec(GRANTS);
 
   // Personas (el trigger crea el perfil como alumno)
@@ -291,6 +292,48 @@ describe("lecciones", () => {
   });
 });
 
+describe("panel de seguimiento", () => {
+  it("el coordinador ve los números de su currículum", async () => {
+    const [r] = await as<{ personas_activas: number; grupos_activos: number }>(COORD, `select * from panel_resumen()`);
+    expect(r.personas_activas).toBe(3);
+    expect(r.grupos_activos).toBeGreaterThanOrEqual(1);
+  });
+
+  it("cada persona ve solo su alcance: otro líder y un ajeno ven cero", async () => {
+    const [other] = await as<{ personas_activas: number }>(LEADER2, `select * from panel_resumen()`);
+    expect(other.personas_activas).toBe(0);
+    const [outsider] = await as<{ personas_activas: number }>(OUTSIDER, `select * from panel_resumen()`);
+    expect(outsider.personas_activas).toBe(0);
+    expect(await as(OUTSIDER, `select * from panel_curriculums() where personas_activas > 0`)).toHaveLength(0);
+  });
+
+  it("la asistencia semanal suma las marcas del grupo", async () => {
+    const rows = await as<{ asistieron: number; total: number }>(COORD, `select asistieron, total from panel_semanal(12)`);
+    expect(rows.reduce((n, r) => n + r.total, 0)).toBe(9); // 3 reuniones x 3 inscritos
+    // presentes y recuperados: el alumno 1 una vez (tras la corrección) y el alumno 2 las tres
+    expect(rows.reduce((n, r) => n + r.asistieron, 0)).toBe(4);
+  });
+
+  it("el resumen calcula el porcentaje de asistencia de las últimas 4 semanas", async () => {
+    const [r] = await as<{ asistencia_4s: string }>(COORD, `select * from panel_resumen()`);
+    expect(Number(r.asistencia_4s)).toBeCloseTo((100 * 4) / 9, 0);
+  });
+
+  it("cada currículum muestra sus grupos y personas", async () => {
+    const rows = await as<{ nombre: string; personas_activas: number }>(COORD, `select nombre, personas_activas from panel_curriculums()`);
+    expect(rows.find((x) => x.nombre === "Hombres")!.personas_activas).toBe(3);
+  });
+
+  it("las consultas del panel no están abiertas al público", async () => {
+    await db.exec(`set role anon`);
+    try {
+      await expect(db.query(`select * from panel_resumen()`)).rejects.toThrow(/permission denied/);
+    } finally {
+      await db.exec(`reset role`);
+    }
+  });
+});
+
 describe("cierre del ciclo y continuación", () => {
   it("el líder no puede cerrar el ciclo", async () => {
     expect(await failure(LEADER, `select * from close_group($1)`, [GROUP_A])).toContain("Solo el coordinador");
@@ -331,6 +374,13 @@ describe("cierre del ciclo y continuación", () => {
     // la persona confirma su lugar
     const [c] = await as<{ confirm_enrollment: string }>(S2, `select confirm_enrollment((select id from enrollments where person_id = auth.uid() and group_id = $1), true)`, [next]);
     expect(c.confirm_enrollment).toBe("en_curso");
+  });
+
+  it("el panel mide la continuidad: quienes aprobaron y ya figuran en el ciclo siguiente", async () => {
+    const rows = await as<{ ciclo: number; aprobados: number; continuaron: number }>(COORD, `select ciclo, aprobados, continuaron from panel_continuidad()`);
+    expect(rows).toEqual([{ ciclo: 1, aprobados: 2, continuaron: 2 }]);
+    const temps = await as<{ inscripciones: number; aprobados: number; no_completaron: number }>(COORD, `select * from panel_temporadas()`);
+    expect(temps[0]).toMatchObject({ aprobados: 2, no_completaron: 1 });
   });
 
   it("el estado de las inscripciones cambia con auditoría", async () => {

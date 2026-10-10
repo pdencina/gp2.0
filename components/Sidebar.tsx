@@ -11,6 +11,7 @@ const ICONS: Record<string, string> = {
   plus: "M12 21a9 9 0 100-18 9 9 0 000 18zM12 8v8M8 12h8",
   user: "M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0",
   grid: "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z",
+  chart: "M4 20V10M10 20V4M16 20v-7M22 20H2",
   bell: "M6 8a6 6 0 1112 0c0 7 3 8 3 8H3s3-1 3-8M10 21h4",
   users: "M9 11a3 3 0 100-6 3 3 0 000 6zM3 20a6 6 0 0112 0M16 11a3 3 0 100-6M21 20a6 6 0 00-4-5.6",
   book: "M4 4h6a3 3 0 013 3v13a2 2 0 00-2-2H4zM20 4h-4a3 3 0 00-3 3M20 4v14h-5",
