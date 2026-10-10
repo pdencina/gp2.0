@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
+import { Icon } from "@/components/Icon";
+import { Callout, EmptyState, PageHeader } from "@/components/ui";
 import { STATUS_LABEL, STATUS_STYLE, hasErrors, type EditorialStatus, type Issue } from "@/lib/versions";
 
 export const dynamic = "force-dynamic";
@@ -43,19 +45,19 @@ export default async function RevisionPage() {
 
   return (
     <div className="enter mx-auto max-w-4xl p-4 pb-16 md:p-8 md:pb-16">
-      <h1 className="page-title">Revisión curricular</h1>
-      <p className="mb-5 mt-1 text-sm text-stone-500">
-        Las versiones de los programas que están en camino a publicarse. Un contenido solo llega a los participantes después de la aprobación pastoral.
-      </p>
+      <PageHeader
+        title="Revisión curricular"
+        subtitle="Las versiones de los programas que están en camino a publicarse. Un contenido solo llega a los participantes después de la aprobación pastoral."
+      />
       {error && (
-        <p className="mb-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
+        <Callout tone="warn" className="mb-4">
           Falta instalar el flujo editorial: ejecuta <code>supabase/v2/009_biblioteca.sql</code> en el SQL Editor de Supabase.
-        </p>
+        </Callout>
       )}
       {!error && rows.length === 0 && (
-        <p className="empty">
-          No hay versiones en preparación. Para empezar una, entra a un currículum y copia su versión.
-        </p>
+        <EmptyState icon="book" title="No hay versiones en preparación" action={{ href: "/curriculums", label: "Ir a los currículums" }}>
+          Para empezar una, entra a un currículum y copia su versión.
+        </EmptyState>
       )}
 
       {ORDER.map((st) => {
@@ -64,7 +66,7 @@ export default async function RevisionPage() {
         return (
           <section key={st} className="mb-6">
             <h2 className="mb-2 text-xs font-medium uppercase tracking-wide text-stone-400">{TITLE[st]}</h2>
-            <ul className="space-y-2">
+            <ul className="stagger space-y-2">
               {list.map((r) => {
                 const iss = issues.get(r.id) ?? [];
                 const errors = iss.filter((i) => i.level === "error").length;
@@ -72,9 +74,14 @@ export default async function RevisionPage() {
                 return (
                   <li key={r.id}>
                     <Link href={`/curriculums/${r.curriculum_id}?v=${r.id}`} className="flex flex-wrap items-center justify-between gap-2 card card-hover p-4">
-                      <span className="text-sm">
-                        <span className="font-medium">{r.curriculums?.name}</span>
-                        <span className="ml-2 text-stone-500">Versión {r.version}{r.label ? ` · ${r.label}` : ""}</span>
+                      <span className="flex items-center gap-3 text-sm">
+                        <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-teal-50 text-brand-teal">
+                          <Icon name="book" className="h-[18px] w-[18px]" />
+                        </span>
+                        <span>
+                          <span className="font-semibold">{r.curriculums?.name}</span>
+                          <span className="block text-xs text-stone-500">Versión {r.version}{r.label ? ` · ${r.label}` : ""}</span>
+                        </span>
                       </span>
                       <span className="flex items-center gap-2 text-xs">
                         {errors > 0 && <span className="chip bg-red-50 text-red-700">{errors} por resolver</span>}

@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { ROLE_VIEWS, canPromote, type Role } from "@/lib/roles";
+import { Flash } from "@/components/Flash";
+import { Avatar, EmptyState, PageHeader } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -39,35 +41,25 @@ export default async function EquipoPage(props: {
 
   return (
     <div className="enter mx-auto max-w-4xl p-4 pb-16 md:p-8 md:pb-16">
-
-      <h1 className="page-title">Tu equipo</h1>
-      <p className="mb-5 mt-1 text-sm text-stone-500">
-        Se sube un peldaño a la vez: alumno → líder → monitor → coordinador.
-      </p>
-
-      {searchParams.error && (
-        <p role="alert" className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-          {searchParams.error}
-        </p>
-      )}
-      {searchParams.ok && (
-        <p role="status" className="mb-4 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">
-          Listo, el cambio de rol quedó registrado.
-        </p>
-      )}
+      <PageHeader
+        title="Tu equipo"
+        subtitle="Se sube un peldaño a la vez: alumno → líder → monitor → coordinador."
+      />
+      <Flash error={searchParams.error} ok={searchParams.ok} />
 
       <section className="card p-4">
         {people.length === 0 ? (
-          <p className="py-6 text-center text-sm text-stone-500">Todavía no hay personas en tu alcance.</p>
+          <EmptyState icon="users" title="Todavía no hay personas en tu alcance" />
         ) : (
           <ul>
             {people.map((p) => {
               const next = canPromote(myRole, p.role);
               return (
-                <li key={p.id} className="flex items-center justify-between gap-3 border-b border-stone-100 py-2.5 text-sm last:border-0">
-                  <span>
-                    {p.full_name || "Sin nombre"}
-                    <span className="ml-2 text-stone-400">{ROLE_VIEWS[p.role].label}</span>
+                <li key={p.id} className="row flex items-center justify-between gap-3 border-b border-stone-100 py-2.5 text-sm last:border-0">
+                  <span className="flex items-center gap-3">
+                    <Avatar name={p.full_name || "Sin nombre"} size="sm" />
+                    <span>{p.full_name || "Sin nombre"}</span>
+                    <span className="chip bg-stone-100 text-stone-600">{ROLE_VIEWS[p.role].label}</span>
                   </span>
                   {next && (
                     <form action={promover}>

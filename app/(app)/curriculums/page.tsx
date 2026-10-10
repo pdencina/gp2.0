@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { getSession, type Person } from "@/lib/session";
 import { AUDIENCE_LABEL } from "@/lib/format";
 import { Flash, fieldClass, primaryBtn } from "@/components/Flash";
+import { Icon } from "@/components/Icon";
+import { Callout, EmptyState, PageHeader } from "@/components/ui";
 import { agregarCoordinador, crearCurriculum, quitarCoordinador } from "@/app/actions/gestion";
 
 export const dynamic = "force-dynamic";
@@ -47,17 +49,13 @@ export default async function CurriculumsPage(props: {
 
   return (
     <div className="enter mx-auto max-w-4xl p-4 pb-16 md:p-8 md:pb-16">
-      <h1 className="page-title">Currículums</h1>
-      <p className="mb-5 mt-1 text-sm text-stone-500">
-        Cada currículum tiene uno o más coordinadores, ciclos con sus lecciones y grupos.
-      </p>
+      <PageHeader title="Currículums" subtitle="Cada currículum tiene uno o más coordinadores, ciclos con sus lecciones y grupos." />
       <Flash error={searchParams.error} ok={searchParams.ok} />
 
       {isAdmin && (
-        <Link href="/curriculums/clasificar" className="mb-4 flex items-center justify-between rounded-xl bg-brand-teal/10 px-4 py-3 text-sm text-brand-teal hover:brightness-95">
-          <span>Clasifica el catálogo: ofertas, categorías, años de ruta y visibilidad.</span>
-          <span className="font-medium">Clasificar →</span>
-        </Link>
+        <Callout tone="info" href="/curriculums/clasificar" action="Clasificar" className="mb-4">
+          Clasifica el catálogo: ofertas, categorías, años de ruta y visibilidad.
+        </Callout>
       )}
 
       {isAdmin && (
@@ -81,19 +79,21 @@ export default async function CurriculumsPage(props: {
         </form>
       )}
 
-      <section className="space-y-3">
+      <section className="stagger space-y-3">
         {curriculums.length === 0 && (
-          <p className="empty">
-            Todavía no hay currículums.
-          </p>
+          <EmptyState icon="book" title="Todavía no hay currículums" />
         )}
         {curriculums.map((c) => {
           const coords = pairs.filter((p) => p.curriculum_id === c.id);
           return (
-            <article key={c.id} className="card p-4">
+            <article key={c.id} className="card card-hover p-4">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
-                  <h2 className="font-medium">{c.name}</h2>
+                  <h2 className="flex items-center gap-2 font-semibold">
+                    <span aria-hidden="true" className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-teal-50 text-brand-teal"><Icon name="book" className="h-4 w-4" /></span>
+                    {c.name}
+                    {!c.active && <span className="chip bg-stone-100 text-xs font-normal text-stone-500">inactivo</span>}
+                  </h2>
                   <p className="text-sm text-stone-500">
                     {AUDIENCE_LABEL[c.audience]}
                     {c.age_min != null || c.age_max != null ? ` · ${c.age_min ?? 0} a ${c.age_max ?? "…"} años` : ""} · Cupo{" "}
@@ -101,8 +101,9 @@ export default async function CurriculumsPage(props: {
                   </p>
                   {c.description && <p className="text-sm text-stone-500">{c.description}</p>}
                 </div>
-                <Link href={`/curriculums/${c.id}`} className="text-sm link">
-                  Ciclos y lecciones →
+                <Link href={`/curriculums/${c.id}`} className="btn btn-secondary btn-sm">
+                  Ciclos y lecciones
+                  <Icon name="arrow-right" className="h-4 w-4" />
                 </Link>
               </div>
 

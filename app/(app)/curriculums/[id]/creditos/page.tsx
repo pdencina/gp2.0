@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
-import { Flash, fieldClass, primaryBtn } from "@/components/Flash";
+import { Flash, Notice, fieldClass, primaryBtn } from "@/components/Flash";
+import { Callout, PageHeader } from "@/components/ui";
 import { revisarCreditos } from "@/app/actions/certificados";
 
 export const dynamic = "force-dynamic";
@@ -37,10 +38,10 @@ export default async function CreditosPage(props: {
   if (error) {
     return (
       <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
-        <h1 className="page-title">{curriculum.name}</h1>
-        <p className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
+        <PageHeader title={curriculum.name} back={{ href: `/curriculums/${id}`, label: "Volver" }} />
+        <Callout tone="warn">
           {/permission|permiso/i.test(error.message) ? error.message : <>Falta instalar la revisión en la base de datos: ejecuta <code>supabase/v2/010_certificados.sql</code> en el SQL Editor de Supabase.</>}
-        </p>
+        </Callout>
       </div>
     );
   }
@@ -57,13 +58,13 @@ export default async function CreditosPage(props: {
 
   return (
     <div className="enter mx-auto max-w-4xl p-4 pb-16 md:p-8 md:pb-16">
-      <Link href={`/curriculums/${id}`} className="text-sm link">← {curriculum.name}</Link>
-      <h1 className="mt-2 page-title">Créditos de la plataforma anterior</h1>
-      <p className="mb-5 mt-1 text-sm text-stone-500">
-        La plataforma anterior daba un ciclo por aprobado a quien no pasó del máximo de ausencias: es asistencia, no una equivalencia con el material nuevo. Aquí una persona decide, módulo por módulo, qué créditos valen como etapa cumplida. Lo validado cuenta para pasar de año y certificar; nada se valida solo.
-      </p>
+      <PageHeader
+        title="Créditos de la plataforma anterior"
+        back={{ href: `/curriculums/${id}`, label: curriculum.name }}
+        subtitle="La plataforma anterior daba un ciclo por aprobado a quien no pasó del máximo de ausencias: es asistencia, no una equivalencia con el material nuevo. Aquí una persona decide, módulo por módulo, qué créditos valen como etapa cumplida. Lo validado cuenta para pasar de año y certificar; nada se valida solo."
+      />
       <Flash error={sp.error} ok={sp.ok} />
-      {sp.aviso && <p role="status" className="mb-4 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">{sp.aviso}</p>}
+      {sp.aviso && <Notice>{sp.aviso}</Notice>}
 
       <div className="mb-6 overflow-x-auto card">
         <table className="w-full min-w-[520px] text-sm">

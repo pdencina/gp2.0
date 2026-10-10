@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
-import { Flash, fieldClass } from "@/components/Flash";
+import { Flash, Notice, fieldClass } from "@/components/Flash";
+import { PageHeader } from "@/components/ui";
 import { aplicarSugerencias, clasificarPrograma } from "@/app/actions/programa";
 import { CATEGORY_LABEL, KIND_LABEL, LIFE_STAGE_LABEL, groupOfferings, suggestOffering, type CatalogProgram } from "@/lib/programs";
 
@@ -24,13 +24,13 @@ export default async function ClasificarPage(props: {
 
   return (
     <div className="enter mx-auto max-w-5xl p-4 pb-16 md:p-8 md:pb-16">
-      <Link href="/curriculums" className="text-sm link">← Currículums</Link>
-      <h1 className="mt-2 page-title">Clasificar el catálogo</h1>
-      <p className="mb-5 mt-1 text-sm text-stone-500">
-        Decide qué se ofrece y cómo se agrupa. Las variantes de una misma oferta (por ejemplo, AR Jóvenes por edades) se muestran juntas y cada persona ve la que le corresponde. Nada de esto cambia grupos ni inscripciones.
-      </p>
+      <PageHeader
+        title="Clasificar el catálogo"
+        back={{ href: "/curriculums", label: "Currículums" }}
+        subtitle="Decide qué se ofrece y cómo se agrupa. Las variantes de una misma oferta (por ejemplo, AR Jóvenes por edades) se muestran juntas y cada persona ve la que le corresponde. Nada de esto cambia grupos ni inscripciones."
+      />
       <Flash error={searchParams.error} ok={searchParams.ok} />
-      {searchParams.n && <p className="mb-4 text-sm text-stone-600">Se actualizaron {searchParams.n} programas con la propuesta.</p>}
+      {searchParams.n && <Notice>Se actualizaron {searchParams.n} programas con la propuesta.</Notice>}
 
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3 card p-4">
         <p className="text-sm text-stone-600">

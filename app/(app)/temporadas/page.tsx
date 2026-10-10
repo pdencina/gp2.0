@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { SEASON_LABEL } from "@/lib/format";
-import { Flash, fieldClass, primaryBtn } from "@/components/Flash";
+import { Flash, Notice, fieldClass, primaryBtn } from "@/components/Flash";
+import { Icon } from "@/components/Icon";
+import { EmptyState, PageHeader } from "@/components/ui";
 import { cambiarEstadoTemporada, crearTemporada } from "@/app/actions/gestion";
 import { definirCalendarioTemporada } from "@/app/actions/calendario";
 
@@ -40,12 +42,12 @@ export default async function TemporadasPage(props: {
 
   return (
     <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
-      <h1 className="page-title">Temporadas</h1>
-      <p className="mb-5 mt-1 text-sm text-stone-500">
-        Una temporada pasa de borrador a inscripciones abiertas, luego en curso y finalmente cerrada.
-      </p>
+      <PageHeader
+        title="Temporadas"
+        subtitle="Una temporada pasa de borrador a inscripciones abiertas, luego en curso y finalmente cerrada."
+      />
       <Flash error={searchParams.error} ok={searchParams.ok} />
-      {searchParams.aviso && <p role="status" className="mb-4 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">{searchParams.aviso}</p>}
+      {searchParams.aviso && <Notice>{searchParams.aviso}</Notice>}
 
       <form action={crearTemporada} className="mb-5 grid gap-2 card p-4 md:grid-cols-[2fr_1fr_1fr_auto]">
         <input name="name" placeholder="Nombre (ej. 2026)" aria-label="Nombre" className={fieldClass} />
@@ -54,21 +56,25 @@ export default async function TemporadasPage(props: {
         <button className={primaryBtn}>Crear</button>
       </form>
 
-      <section className="space-y-3">
+      <section className="stagger space-y-3">
         {seasons.length === 0 && (
-          <p className="empty">
-            Todavía no hay temporadas. Crea la primera arriba.
-          </p>
+          <EmptyState icon="calendar" title="Todavía no hay temporadas">
+            Crea la primera con el formulario de arriba.
+          </EmptyState>
         )}
         {seasons.map((s) => {
           const next = NEXT[s.status];
           return (
-            <article key={s.id} className="card p-4">
+            <article key={s.id} className="card card-hover p-4">
              <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="font-medium">{s.name}</h2>
+                <h2 className="flex items-center gap-2 font-semibold">
+                  <Icon name="calendar" className="h-4 w-4 text-brand-teal" />
+                  {s.name}
+                  <span className={`chip font-normal ${s.status === "en_curso" ? "bg-brand-green-50 text-brand-green-800" : s.status === "inscripciones" ? "bg-brand-teal-50 text-brand-teal-800" : "bg-stone-100 text-stone-600"}`}>{SEASON_LABEL[s.status]}</span>
+                </h2>
                 <p className="text-sm text-stone-500">
-                  {fmt(s.start_date)} al {fmt(s.end_date)} · {SEASON_LABEL[s.status]}
+                  {fmt(s.start_date)} al {fmt(s.end_date)}
                 </p>
                 <p className="text-xs text-stone-400">
                   {weeks.get(s.id)

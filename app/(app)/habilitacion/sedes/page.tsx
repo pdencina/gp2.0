@@ -1,7 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
-import { Flash, fieldClass, primaryBtn } from "@/components/Flash";
+import { Flash, Notice, fieldClass, primaryBtn } from "@/components/Flash";
+import { Callout, PageHeader } from "@/components/ui";
+import { Kpi } from "@/components/charts";
 import {
   asignarSedeGrupos,
   asignarSedeGruposPorLider,
@@ -32,10 +33,10 @@ export default async function SedesPorLotePage(props: {
   if (gapsR.error) {
     return (
       <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
-        <h1 className="page-title">Asignar sedes</h1>
-        <p className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
+        <PageHeader title="Asignar sedes" back={{ href: "/habilitacion", label: "Habilitación" }} />
+        <Callout tone="warn">
           Falta instalar esta herramienta en la base de datos: ejecuta <code>supabase/v2/013_sedes_por_lote.sql</code> en el SQL Editor de Supabase.
-        </p>
+        </Callout>
       </div>
     );
   }
@@ -52,22 +53,19 @@ export default async function SedesPorLotePage(props: {
 
   return (
     <div className="enter mx-auto max-w-4xl p-4 pb-16 md:p-8 md:pb-16">
-      <Link href="/habilitacion" className="text-sm link">← Habilitación</Link>
-      <h1 className="mt-2 page-title">Asignar sedes</h1>
-      <p className="mb-5 mt-1 text-sm text-stone-500">
-        Los grupos y las personas importados no tienen sede, y sin sede solo el administrador puede certificarlos. Aquí se asigna por criterios, no uno por uno. Nunca se cambia una sede que ya está asignada, y cada acción deja una sola anotación en la auditoría.
-      </p>
+      <PageHeader
+        title="Asignar sedes"
+        back={{ href: "/habilitacion", label: "Habilitación" }}
+        subtitle="Los grupos y las personas importados no tienen sede, y sin sede solo el administrador puede certificarlos. Aquí se asigna por criterios, no uno por uno. Nunca se cambia una sede que ya está asignada, y cada acción deja una sola anotación en la auditoría."
+      />
       <Flash error={sp.error} />
-      {sp.aviso && <p role="status" className="mb-4 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">{sp.aviso}</p>}
+      {sp.aviso && <Notice>{sp.aviso}</Notice>}
 
-      <section className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3">
+      <section className="stagger mb-6 grid grid-cols-2 gap-3 md:grid-cols-3">
         {Array.from(gaps.entries()).map(([k]) => {
           const g = ((gapsR.data ?? []) as Gap[]).find((x) => x.clave === k)!;
           return (
-            <div key={k} className="card p-3">
-              <p className="text-xs text-stone-500">{g.etiqueta}</p>
-              <p className="text-xl font-medium">{fmtNum(g.n)}</p>
-            </div>
+            <Kpi key={k} label={g.etiqueta} value={fmtNum(g.n)} />
           );
         })}
       </section>

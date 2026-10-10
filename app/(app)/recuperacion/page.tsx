@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { Flash, fieldClass } from "@/components/Flash";
+import { Icon } from "@/components/Icon";
+import { Callout, EmptyState, PageHeader } from "@/components/ui";
 import { actualizarRecuperacion } from "@/app/actions/calendario";
 
 export const dynamic = "force-dynamic";
@@ -58,20 +60,20 @@ export default async function RecuperacionPage(props: {
 
   return (
     <div className="enter mx-auto max-w-4xl p-4 pb-16 md:p-8 md:pb-16">
-      <h1 className="page-title">Recuperación</h1>
-      <p className="mb-5 mt-1 text-sm text-stone-500">
-        Personas que necesitan ponerse al día porque no hay un grupo que calce con su siguiente unidad. Asigna un responsable y una fecha de seguimiento.
-      </p>
+      <PageHeader
+        title="Recuperación"
+        subtitle="Personas que necesitan ponerse al día porque no hay un grupo que calce con su siguiente unidad. Asigna un responsable y una fecha de seguimiento."
+      />
       <Flash error={sp.error} ok={sp.ok} />
       {error && (
-        <p className="mb-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
+        <Callout tone="warn" className="mb-4">
           No se pudo leer la lista. Si acabas de actualizar, ejecuta <code>supabase/v2/008_calendario.sql</code> en Supabase.
-        </p>
+        </Callout>
       )}
 
       {topDemand.length > 0 && (
         <section className="mb-5 card p-4">
-          <h2 className="mb-2 section-title">Dónde hay más espera</h2>
+          <h2 className="mb-2 section-title flex items-center gap-2"><Icon name="chart" className="h-4 w-4 text-brand-teal" />Dónde hay más espera</h2>
           <ul className="space-y-1 text-sm">
             {topDemand.map(([k, n]) => (
               <li key={k} className="flex justify-between gap-2">
@@ -84,14 +86,16 @@ export default async function RecuperacionPage(props: {
       )}
 
       {plans.length === 0 ? (
-        <p className="empty">Nadie está esperando recuperación. 🎉</p>
+        <EmptyState icon="check-circle" title="Nadie está esperando recuperación">
+          Todas las personas tienen un grupo que calza con su siguiente unidad.
+        </EmptyState>
       ) : (
-        <ul className="space-y-3">
+        <ul className="stagger space-y-3">
           {plans.map((p) => {
             const who = p.curriculum_enrollments?.person_id;
             const late = p.follow_up_on && p.follow_up_on < new Date().toISOString().slice(0, 10);
             return (
-              <li key={p.id} className="card p-4">
+              <li key={p.id} className="card card-hover p-4">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="text-sm">
                     <p className="font-medium">

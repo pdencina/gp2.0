@@ -1,7 +1,8 @@
-import Link from "next/link";
 import { getSession } from "@/lib/session";
 import { scheduleLabel, type GroupOverview } from "@/lib/format";
 import { Flash } from "@/components/Flash";
+import { Icon } from "@/components/Icon";
+import { Callout, EmptyState, PageHeader, ProgressBar } from "@/components/ui";
 import { inscribirme } from "@/app/actions/gestion";
 
 export const dynamic = "force-dynamic";
@@ -44,47 +45,50 @@ export default async function InscripcionPage(props: {
 
   return (
     <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
-      <h1 className="page-title">Inscripción</h1>
-      <p className="mb-5 mt-1 text-sm text-stone-500">Elige un grupo con cupo, el día y la modalidad que mejor te acomoden.</p>
+      <PageHeader title="Inscripción" subtitle="Elige un grupo con cupo, el día y la modalidad que mejor te acomoden." />
       <Flash error={searchParams.error} ok={searchParams.ok} />
 
       {incomplete && (
-        <Link
-          href="/perfil"
-          className="mb-5 flex items-center justify-between rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800 hover:brightness-95"
-        >
-          <span>Para inscribirte, completa tu perfil: género, fecha de nacimiento y aceptar los términos.</span>
-          <span className="font-medium">Completar →</span>
-        </Link>
+        <Callout tone="warn" href="/perfil" action="Completar" className="mb-5">
+          Para inscribirte, completa tu perfil: género, fecha de nacimiento y aceptar los términos.
+        </Callout>
       )}
 
       {groups.length === 0 ? (
-        <p className="empty">
-          Por ahora no hay grupos abiertos a inscripción. Vuelve pronto.
-        </p>
+        <EmptyState icon="users" title="Por ahora no hay grupos abiertos a inscripción">
+          Vuelve pronto: cuando se abran, los verás aquí.
+        </EmptyState>
       ) : (
         <div className="space-y-6">
           {Array.from(byCurriculum.entries()).map(([name, list]) => (
             <section key={name}>
               <h2 className="mb-2 section-title text-stone-600">{name}</h2>
-              <ul className="space-y-2">
+              <ul className="stagger space-y-2.5">
                 {list.map((g) => {
                   const free = g.capacity - g.enrolled;
                   const joined = mineIds.has(g.id);
                   return (
-                    <li key={g.id} className="flex flex-wrap items-center justify-between gap-3 card p-4">
-                      <div className="text-sm">
-                        <div className="font-medium">
-                          {g.name} {g.cycle_number != null && <span className="font-normal text-stone-400">· Ciclo {g.cycle_number}</span>}
-                        </div>
-                        <div className="text-stone-500">{scheduleLabel(g)}</div>
-                        {g.address && <div className="text-stone-500">{g.address}</div>}
-                        <div className={free <= 3 && free > 0 ? "text-amber-700" : "text-stone-500"}>
-                          {free > 0 ? `${free} ${free === 1 ? "cupo" : "cupos"}` : "Completo"}
+                    <li key={g.id} className="card card-hover flex flex-wrap items-center justify-between gap-3 p-4">
+                      <div className="flex items-start gap-3 text-sm">
+                        <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-teal-50 text-brand-teal">
+                          <Icon name={g.modality === "virtual" ? "video" : "pin"} className="h-5 w-5" />
+                        </span>
+                        <div>
+                          <div className="font-semibold">
+                            {g.name} {g.cycle_number != null && <span className="font-normal text-stone-400">· Ciclo {g.cycle_number}</span>}
+                          </div>
+                          <div className="text-stone-500">{scheduleLabel(g)}</div>
+                          {g.address && <div className="text-stone-500">{g.address}</div>}
+                          <div className="mt-1.5 flex items-center gap-2">
+                            <span className="w-20"><ProgressBar value={g.capacity ? (g.enrolled / g.capacity) * 100 : 0} label={`Cupos ocupados: ${g.enrolled} de ${g.capacity}`} /></span>
+                            <span className={`text-xs ${free <= 3 && free > 0 ? "font-semibold text-amber-700" : "text-stone-500"}`}>
+                              {free > 0 ? `${free} ${free === 1 ? "cupo" : "cupos"}` : "Completo"}
+                            </span>
+                          </div>
                         </div>
                       </div>
                       {joined ? (
-                        <span className="rounded bg-green-50 px-2 py-1 text-xs text-green-800">Ya estás inscrito</span>
+                        <span className="chip bg-brand-green-50 text-brand-green-800"><Icon name="check-circle" className="h-3.5 w-3.5" />Ya estás inscrito</span>
                       ) : free > 0 ? (
                         <form action={inscribirme}>
                           <input type="hidden" name="group_id" value={g.id} />

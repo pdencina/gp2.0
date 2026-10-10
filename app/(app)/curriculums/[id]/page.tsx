@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSession, type Person } from "@/lib/session";
 import { Flash, fieldClass, primaryBtn } from "@/components/Flash";
+import { Icon } from "@/components/Icon";
+import { Callout, PageHeader } from "@/components/ui";
 import {
   agregarRevisor,
   cambiarEstadoVersion,
@@ -60,10 +62,10 @@ export default async function CurriculumPage(props: {
   if (vErr) {
     return (
       <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
-        <h1 className="page-title">{curriculum.name}</h1>
-        <p className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
+        <PageHeader title={curriculum.name} back={{ href: "/curriculums", label: "Currículums" }} />
+        <Callout tone="warn">
           Falta instalar las versiones en la base de datos: ejecuta <code>supabase/v2/009_biblioteca.sql</code> en el SQL Editor de Supabase.
-        </p>
+        </Callout>
       </div>
     );
   }
@@ -106,13 +108,11 @@ export default async function CurriculumPage(props: {
 
   return (
     <div className="enter mx-auto max-w-4xl p-4 pb-16 md:p-8 md:pb-16">
-      <Link href="/curriculums" className="text-sm link">
-        ← Currículums
-      </Link>
-      <h1 className="mt-2 page-title">{curriculum.name}</h1>
-      <p className="mb-4 mt-1 text-sm text-stone-500">
-        {curriculum.description || "Módulos, unidades y plan de encuentros"} · {curriculum.duration_years > 1 ? `${curriculum.duration_years} años` : "1 año"}
-      </p>
+      <PageHeader
+        title={curriculum.name}
+        back={{ href: "/curriculums", label: "Currículums" }}
+        subtitle={`${curriculum.description || "Módulos, unidades y plan de encuentros"} · ${curriculum.duration_years > 1 ? `${curriculum.duration_years} años` : "1 año"}`}
+      />
       <Flash error={sp.error} ok={sp.ok} />
 
       {/* Versiones */}
@@ -122,7 +122,7 @@ export default async function CurriculumPage(props: {
             key={v.id}
             href={`/curriculums/${curriculum.id}?v=${v.id}`}
             aria-current={v.id === selected.id ? "page" : undefined}
-            className={`rounded-lg border px-3 py-1.5 text-sm ${v.id === selected.id ? "border-brand-teal bg-brand-teal/10 font-medium text-brand-teal" : "border-stone-200 bg-white text-stone-600 hover:border-stone-300"}`}
+            className={`rounded-xl border px-3.5 py-1.5 text-sm transition ${v.id === selected.id ? "border-brand-teal bg-brand-teal-50 font-semibold text-brand-teal-800 shadow-sm" : "border-stone-200 bg-white text-stone-600 hover:border-brand-teal-200 hover:bg-brand-teal-50/40"}`}
           >
             Versión {v.version}
             {v.is_current ? " · vigente" : ""}
@@ -143,24 +143,26 @@ export default async function CurriculumPage(props: {
             </p>
           </div>
           <div className="flex flex-wrap gap-3 text-sm">
-            <Link href={`/curriculums/${curriculum.id}/plan?v=${selected.id}`} className="link">
-              Plan de 36 encuentros →
+            <Link href={`/curriculums/${curriculum.id}/plan?v=${selected.id}`} className="btn btn-secondary btn-sm">
+              <Icon name="calendar" className="h-4 w-4" />
+              Plan de 36 encuentros
             </Link>
-            <Link href={`/biblioteca?programa=${curriculum.id}`} className="link">
-              Biblioteca →
+            <Link href={`/biblioteca?programa=${curriculum.id}`} className="btn btn-secondary btn-sm">
+              <Icon name="library" className="h-4 w-4" />
+              Biblioteca
             </Link>
           </div>
         </div>
 
         {isLegacy(selected) && (
-          <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          <Callout tone="warn" className="mt-3">
             Esta es la versión que trajo la migración: nunca pasó por revisión pastoral y todavía se puede editar. Para publicar contenido aprobado, crea una versión nueva a partir de ella.
-          </p>
+          </Callout>
         )}
         {!editable && selected.status !== "archivado" && (
-          <p className="mt-3 rounded-lg bg-stone-50 px-3 py-2 text-sm text-stone-600">
+          <Callout tone="info" className="mt-3">
             Esta versión está {selected.status === "publicado" ? "publicada y congelada" : "en revisión o aprobada"}: no se edita. Si hay que cambiar algo, copia la versión.
-          </p>
+          </Callout>
         )}
 
         {/* Listo para revisar */}
@@ -168,7 +170,7 @@ export default async function CurriculumPage(props: {
           <ul className="mt-3 space-y-1 text-sm">
             {issues.map((i) => (
               <li key={i.code} className={i.level === "error" ? "text-red-700" : "text-stone-500"}>
-                <span aria-hidden="true">{i.level === "error" ? "✕" : "•"}</span> {i.detail}
+                <Icon name={i.level === "error" ? "x" : "info"} className="mr-1 inline h-3.5 w-3.5 align-[-2px]" /> {i.detail}
               </li>
             ))}
           </ul>

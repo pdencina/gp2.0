@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { Flash, fieldClass } from "@/components/Flash";
+import { Icon } from "@/components/Icon";
+import { Callout, EmptyState, PageHeader } from "@/components/ui";
 import { cambiarEtapaSede } from "@/app/actions/habilitacion";
 import {
   STAGE_LABEL,
@@ -37,10 +39,10 @@ export default async function HabilitacionPage(props: {
   if (campusR.error && /Could not find|PGRST202|404/i.test(campusR.error.message + (campusR.error.code ?? ""))) {
     return (
       <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
-        <h1 className="page-title">Habilitación</h1>
-        <p className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
+        <PageHeader title="Habilitación" />
+        <Callout tone="warn">
           Falta instalar la habilitación en la base de datos: ejecuta <code>supabase/v2/011_habilitacion.sql</code> en el SQL Editor de Supabase.
-        </p>
+        </Callout>
       </div>
     );
   }
@@ -50,32 +52,38 @@ export default async function HabilitacionPage(props: {
 
   return (
     <div className="enter mx-auto max-w-5xl p-4 pb-16 md:p-8 md:pb-16">
-      <h1 className="page-title">Habilitación</h1>
-      <p className="mb-5 mt-1 text-sm text-stone-500">
-        Cómo va cada sede para usar GP 2.0 y si los datos cuadran con lo que trajo la importación. La etapa de cada sede es un registro del avance: no bloquea ninguna función.
-      </p>
+      <PageHeader
+        title="Habilitación"
+        subtitle="Cómo va cada sede para usar GP 2.0 y si los datos cuadran con lo que trajo la importación. La etapa de cada sede es un registro del avance: no bloquea ninguna función."
+      />
       <Flash error={sp.error} ok={sp.ok} />
 
       <section className="mb-8">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="section-title">Sedes</h2>
+          <h2 className="section-title flex items-center gap-2"><Icon name="globe" className="h-4 w-4 text-brand-teal" />Sedes</h2>
           {isAdmin && (
-            <Link href="/habilitacion/sedes" className="text-sm link">Asignar sedes por lote →</Link>
+            <Link href="/habilitacion/sedes" className="btn btn-secondary btn-sm">
+              Asignar sedes por lote
+              <Icon name="arrow-right" className="h-4 w-4" />
+            </Link>
           )}
         </div>
         {campuses.length === 0 ? (
-          <p className="empty">Todavía no hay sedes con grupos.</p>
+          <EmptyState icon="globe" title="Todavía no hay sedes con grupos" />
         ) : (
-          <ul className="space-y-3">
+          <ul className="stagger space-y-3">
             {campuses.map((c) => (
-              <li key={c.campus_id ?? "sin-sede"} className="card p-4">
+              <li key={c.campus_id ?? "sin-sede"} className="card card-hover p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h3 className="font-medium">
+                  <h3 className="font-semibold">
                     {c.campus}
                     {c.gp2_status && <span className={`ml-2 chip font-normal ${STAGE_STYLE[c.gp2_status]}`}>{STAGE_LABEL[c.gp2_status]}</span>}
                     {c.gp2_status_at && <span className="ml-2 text-xs font-normal text-stone-400">desde el {dateEs(c.gp2_status_at)}</span>}
                   </h3>
-                  <span className={`text-sm ${c.listo ? "text-green-800" : "text-stone-500"}`}>{campusHeadline(c)}</span>
+                  <span className={`flex items-center gap-1.5 text-sm ${c.listo ? "font-medium text-brand-green-800" : "text-stone-500"}`}>
+                    {c.listo && <Icon name="check-circle" className="h-4 w-4" />}
+                    {campusHeadline(c)}
+                  </span>
                 </div>
 
                 <dl className="mt-3 grid grid-cols-3 gap-3 text-sm md:grid-cols-6">
@@ -127,13 +135,13 @@ export default async function HabilitacionPage(props: {
       {isAdmin && (
         <section>
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="section-title">Reconciliación de datos</h2>
+            <h2 className="section-title flex items-center gap-2"><Icon name="shield" className="h-4 w-4 text-brand-teal" />Reconciliación de datos</h2>
             <span className={`chip ${sum.clean ? STATE_STYLE.ok : STATE_STYLE.error}`}>
               {sum.clean ? "Todo cuadra" : `${sum.error} problemas · ${sum.revisar} por revisar`}
             </span>
           </div>
           {reconR.error ? (
-            <p className="rounded-xl bg-amber-50 p-4 text-sm text-amber-800">{reconR.error.message}</p>
+            <Callout tone="warn">{reconR.error.message}</Callout>
           ) : (
             groupByArea(recon).map(([area, rows]) => (
               <div key={area} className="mb-4 overflow-x-auto card">

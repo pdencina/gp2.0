@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { Flash, fieldClass, primaryBtn } from "@/components/Flash";
+import { Icon } from "@/components/Icon";
+import { Callout, EmptyState, PageHeader } from "@/components/ui";
 import { guardarPosicion, proponerDistribucion } from "@/app/actions/curriculo";
 import { STATUS_LABEL, STATUS_STYLE, isEditable, type EditorialStatus } from "@/lib/versions";
 
@@ -96,11 +98,11 @@ export default async function PlanPage(props: {
 
   return (
     <div className="enter mx-auto max-w-4xl p-4 pb-16 md:p-8 md:pb-16">
-      <Link href={`/curriculums/${id}${here}`} className="text-sm link">← {curriculum.name}</Link>
-      <h1 className="mt-2 page-title">Plan de 36 encuentros</h1>
-      <p className="mb-4 mt-1 text-sm text-stone-500">
-        Cómo se reparte el material en las semanas del año. Las 36 semanas son planificación pedagógica: no tienen que coincidir con la cantidad de capítulos del material original.
-      </p>
+      <PageHeader
+        title="Plan de 36 encuentros"
+        back={{ href: `/curriculums/${id}${here}`, label: curriculum.name }}
+        subtitle="Cómo se reparte el material en las semanas del año. Las 36 semanas son planificación pedagógica: no tienen que coincidir con la cantidad de capítulos del material original."
+      />
       <Flash error={sp.error} ok={sp.ok} />
 
       <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
@@ -109,7 +111,7 @@ export default async function PlanPage(props: {
         {versions.length > 1 && (
           <span className="flex gap-1 text-xs">
             {versions.filter((v) => v.id !== version.id).map((v) => (
-              <Link key={v.id} href={`/curriculums/${id}/plan?v=${v.id}&year=${year}`} className="rounded border border-stone-200 px-2 py-0.5 text-stone-500 hover:border-brand-teal">
+              <Link key={v.id} href={`/curriculums/${id}/plan?v=${v.id}&year=${year}`} className="rounded-lg border border-stone-200 px-2 py-0.5 text-stone-500 transition hover:border-brand-teal hover:text-brand-teal">
                 Ver versión {v.version}
               </Link>
             ))}
@@ -124,7 +126,7 @@ export default async function PlanPage(props: {
               key={y}
               href={`/curriculums/${id}/plan?v=${version.id}&year=${y}`}
               aria-current={y === year ? "page" : undefined}
-              className={`rounded-lg border px-3 py-1.5 text-sm ${y === year ? "border-brand-teal bg-brand-teal/10 font-medium text-brand-teal" : "border-stone-200 bg-white text-stone-600"}`}
+              className={`rounded-xl border px-3.5 py-1.5 text-sm transition ${y === year ? "border-brand-teal bg-brand-teal-50 font-semibold text-brand-teal-800 shadow-sm" : "border-stone-200 bg-white text-stone-600 hover:border-brand-teal-200 hover:bg-brand-teal-50/40"}`}
             >
               Año {y}
             </Link>
@@ -133,15 +135,15 @@ export default async function PlanPage(props: {
       )}
 
       {!editable && (
-        <p className="mb-4 rounded-lg bg-stone-50 px-3 py-2 text-sm text-stone-600">
+        <Callout tone="info" className="mb-4">
           Esta versión no se puede editar. Copia la versión desde el currículum para cambiar el plan.
-        </p>
+        </Callout>
       )}
 
       {units.length === 0 ? (
-        <p className="empty">
-          No hay unidades en el año {year} de esta versión. Carga los módulos y unidades del material original primero.
-        </p>
+        <EmptyState icon="book" title={`No hay unidades en el año ${year} de esta versión`}>
+          Carga los módulos y unidades del material original primero.
+        </EmptyState>
       ) : (
         <>
           <section className="mb-4 flex flex-wrap items-center justify-between gap-3 card p-4">
@@ -179,11 +181,12 @@ export default async function PlanPage(props: {
               const assigned = (slot ? unitsOf.get(slot.id) ?? [] : []).map((uid) => unitById.get(uid)).filter(Boolean) as Unit[];
               const defined = slot && (slot.kind !== "contenido" || assigned.length > 0 || slot.title);
               return (
-                <li key={pos} id={`semana-${pos}`} className={`rounded-xl border bg-white p-3 ${defined ? "border-stone-200" : "border-dashed border-stone-300"}`}>
+                <li key={pos} id={`semana-${pos}`} className={`rounded-2xl border bg-white p-3 transition hover:shadow-card ${defined ? "border-stone-200" : "border-dashed border-stone-300"}`}>
                   <details>
                     <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2 text-sm">
                       <span>
-                        <span className="font-medium">Semana {pos}</span>
+                        <span className={`mr-2 inline-flex h-7 min-w-7 items-center justify-center rounded-lg px-1.5 text-xs font-bold tabular ${defined ? "bg-brand-teal-50 text-brand-teal-800" : "bg-stone-100 text-stone-400"}`}>{pos}</span>
+                        <span className="font-semibold">Semana {pos}</span>
                         {slot && slot.kind !== "contenido" && (
                           <span className="ml-2 chip bg-stone-100 text-xs text-stone-600">{KINDS[slot.kind] ?? slot.kind}</span>
                         )}
