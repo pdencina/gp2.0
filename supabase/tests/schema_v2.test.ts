@@ -56,6 +56,7 @@ beforeAll(async () => {
   db = new PGlite();
   await db.exec(SUPABASE_STUBS);
   await db.exec(readFileSync(join(__dirname, "../v2/001_schema.sql"), "utf8"));
+  await db.exec(readFileSync(join(__dirname, "../v2/004_rendimiento.sql"), "utf8"));
   await db.exec(GRANTS);
 
   // Personas (el trigger crea el perfil como alumno)
