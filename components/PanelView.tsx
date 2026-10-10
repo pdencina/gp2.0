@@ -5,6 +5,24 @@ import {
   type Cobertura, type ContinuidadRow, type Formacion, type CurriculumRow, type DistribucionRow, type LiderRow, type Resumen, type Semana, type TemporadaRow,
 } from "@/lib/panel";
 import { Bar, Card, Kpi, Legend, LineChart, StackedColumns } from "@/components/charts";
+import { Icon, type IconName } from "@/components/Icon";
+import { Avatar, EmptyState, PageHeader } from "@/components/ui";
+
+// Cifra de apoyo con ícono: se usa en "Formación" y "Calendario y cobertura"
+function Stat({ label, value, sub, icon, warn }: { label: string; value: string; sub?: string; icon: IconName; warn?: boolean }) {
+  return (
+    <div className="flex items-start gap-3 rounded-2xl border border-stone-100 bg-stone-50/60 p-3 transition hover:border-brand-teal-200 hover:bg-white">
+      <span aria-hidden="true" className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${warn ? "bg-amber-100 text-amber-700" : "bg-brand-teal-50 text-brand-teal"}`}>
+        <Icon name={icon} className="h-4 w-4" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-xs text-stone-500">{label}</p>
+        <p className={`text-xl font-semibold tabular leading-tight ${warn ? "text-amber-700" : ""}`}>{value}</p>
+        {sub && <p className="text-xs text-stone-400">{sub}</p>}
+      </div>
+    </div>
+  );
+}
 
 const SCOPE: Record<string, string> = {
   admin: "Todo el ecosistema de Grupos Pequeños",
@@ -101,32 +119,32 @@ export function PanelView({ role, resumen: r, semanal, curriculums, temporadas, 
 
   return (
     <div className="enter mx-auto max-w-6xl p-4 pb-16 md:p-8 md:pb-16">
-      <header className="mb-5">
-        <h1 className="page-title">Panel</h1>
-        <p className="text-sm text-stone-500">
-          {SCOPE[role]} · {dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1)}
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="Panel"
+        title="Cómo va todo"
+        subtitle={`${SCOPE[role]} · ${dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1)}`}
+      />
 
       {/* Pulso */}
-      <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Kpi label="Personas activas" value={fmt(r?.personas_activas)} sub={`en ${fmt(r?.grupos_activos)} grupos activos`} href="/grupos" />
-        <Kpi label="Asistencia, últimas 4 semanas" value={pct(att)} delta={pointsDelta(att, attPrev)} sub="vs las 4 anteriores" />
-        <Kpi label="Personas en riesgo" value={fmt(atRisk)} sub="cerca o sobre el límite de ausencias" tone={atRisk > 0 ? "alert" : "stone"} href="/alertas" />
-        <Kpi label="Continuidad entre ciclos" value={pct(continuity, 0)} sub="de quienes aprueban siguen al próximo" />
-        <Kpi label="Aprobación histórica" value={pct(aprobacion, 0)} sub="de quienes terminan un ciclo" />
-        <Kpi label="Inscripciones nuevas" value={fmt(r?.nuevos_30d)} sub="en los últimos 30 días" />
-        <Kpi label="Avisos urgentes" value={fmt(urgent)} sub="faltas seguidas o asistencia baja" tone={urgent > 0 ? "alert" : "stone"} href="/alertas" />
+      <div className="stagger mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Kpi label="Personas activas" icon="users" value={fmt(r?.personas_activas)} sub={`en ${fmt(r?.grupos_activos)} grupos activos`} href="/grupos" />
+        <Kpi label="Asistencia, últimas 4 semanas" icon="chart" value={pct(att)} delta={pointsDelta(att, attPrev)} sub="vs las 4 anteriores" />
+        <Kpi label="Personas en riesgo" icon="alert" value={fmt(atRisk)} sub="cerca o sobre el límite de ausencias" tone={atRisk > 0 ? "alert" : "stone"} href="/alertas" />
+        <Kpi label="Continuidad entre ciclos" icon="route" value={pct(continuity, 0)} sub="de quienes aprueban siguen al próximo" />
+        <Kpi label="Aprobación histórica" icon="award" value={pct(aprobacion, 0)} sub="de quienes terminan un ciclo" />
+        <Kpi label="Inscripciones nuevas" icon="plus" value={fmt(r?.nuevos_30d)} sub="en los últimos 30 días" />
+        <Kpi label="Avisos urgentes" icon="bell" value={fmt(urgent)} sub="faltas seguidas o asistencia baja" tone={urgent > 0 ? "alert" : "stone"} href="/alertas" />
         {role !== "monitor" ? (
           <Kpi
             label="Grupos sin responsable"
+            icon="flag"
             value={fmt((r?.sin_lider ?? 0) + (r?.sin_monitor ?? 0))}
             sub={`${fmt(r?.sin_lider)} sin líder · ${fmt(r?.sin_monitor)} sin monitor`}
             tone={(r?.sin_lider ?? 0) + (r?.sin_monitor ?? 0) > 0 ? "alert" : "stone"}
             href="/grupos"
           />
         ) : (
-          <Kpi label="Grupos activos" value={fmt(r?.grupos_activos)} sub="a tu cargo" href="/grupos" />
+          <Kpi label="Grupos activos" icon="grid" value={fmt(r?.grupos_activos)} sub="a tu cargo" href="/grupos" />
         )}
       </div>
 
@@ -139,13 +157,13 @@ export function PanelView({ role, resumen: r, semanal, curriculums, temporadas, 
 
         <Card title="Dónde mirar" subtitle={`${fmt(alerts.length)} avisos en total`} action={{ href: "/alertas", label: "Ver todos →" }}>
           {byKind.length === 0 ? (
-            <p className="py-6 text-center text-sm text-stone-500">Todo en orden por ahora.</p>
+            <EmptyState icon="check-circle" title="Todo en orden por ahora" />
           ) : (
             <ul className="mb-3 space-y-1.5">
               {byKind.map(([kind, n]) => {
                 const sev = alerts.find((a) => a.kind === kind)?.severity ?? 1;
                 return (
-                  <li key={kind} className="flex items-center justify-between text-sm">
+                  <li key={kind} className="row flex items-center justify-between rounded-lg px-1 py-0.5 text-sm">
                     <span className={`chip ${SEVERITY_CLASS[sev]}`}>{ALERT_LABEL[kind as Alert["kind"]]}</span>
                     <span className="font-medium">{fmt(n)}</span>
                   </li>
@@ -159,7 +177,7 @@ export function PanelView({ role, resumen: r, semanal, curriculums, temporadas, 
               <ul className="space-y-1">
                 {groupAlerts.map((a) => (
                   <li key={`${a.kind}-${a.group_id}`} className="text-sm">
-                    <Link href={`/grupos/${a.group_id}`} className="font-medium hover:underline">{a.group_name}</Link>
+                    <Link href={`/grupos/${a.group_id}`} className="font-medium hover:text-brand-teal hover:underline">{a.group_name}</Link>
                     <span className="ml-1 text-xs text-stone-500">{a.detail}</span>
                   </li>
                 ))}
@@ -176,21 +194,18 @@ export function PanelView({ role, resumen: r, semanal, curriculums, temporadas, 
           subtitle="Personas distintas, no inscripciones: una persona cuenta una vez aunque haya cambiado de grupo o de año. La asistencia y el aprendizaje completado se miden aparte."
           className="mb-5"
         >
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-8">
-            {[
-              { label: "Inscritos únicos", value: fmt(formacion.personas_unicas) },
-              { label: "En curso", value: fmt(formacion.activos) },
-              { label: "En pausa", value: fmt(formacion.pausados) },
-              { label: "Completaron", value: fmt(formacion.completados) },
-              { label: "Reincorporados", value: fmt(formacion.reincorporados) },
-              { label: "Asistieron (30 días)", value: fmt(formacion.asistentes_30d) },
-              { label: "Certif. de programa", value: fmt(formacion.certificados_programa) },
-              { label: "Certif. de etapa", value: fmt(formacion.certificados_etapa) },
-            ].map((k) => (
-              <div key={k.label}>
-                <p className="text-xs text-stone-500">{k.label}</p>
-                <p className="text-xl font-medium">{k.value}</p>
-              </div>
+          <div className="stagger grid grid-cols-2 gap-3 md:grid-cols-4">
+            {([
+              { label: "Inscritos únicos", value: fmt(formacion.personas_unicas), icon: "users" },
+              { label: "En curso", value: fmt(formacion.activos), icon: "route" },
+              { label: "En pausa", value: fmt(formacion.pausados), icon: "clock" },
+              { label: "Completaron", value: fmt(formacion.completados), icon: "check-circle" },
+              { label: "Reincorporados", value: fmt(formacion.reincorporados), icon: "heart" },
+              { label: "Asistieron (30 días)", value: fmt(formacion.asistentes_30d), icon: "calendar-check" },
+              { label: "Certif. de programa", value: fmt(formacion.certificados_programa), icon: "award" },
+              { label: "Certif. de etapa", value: fmt(formacion.certificados_etapa), icon: "flag" },
+            ] as { label: string; value: string; icon: IconName }[]).map((k) => (
+              <Stat key={k.label} {...k} />
             ))}
           </div>
         </Card>
@@ -203,19 +218,15 @@ export function PanelView({ role, resumen: r, semanal, curriculums, temporadas, 
           subtitle="Sesiones realizadas frente a las planificadas, y quién sostiene cada grupo. Es asistencia y operación: no mide aprendizaje completado."
           className="mb-5"
         >
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-            {[
-              { label: "Sesiones realizadas", value: `${fmt(cobertura.sesiones_realizadas)} de ${fmt(cobertura.sesiones_planificadas)}`, sub: "planificadas hasta hoy", warn: false },
-              { label: "Por registrar", value: fmt(cobertura.sesiones_atrasadas), sub: "pasaron hace más de 7 días", warn: cobertura.sesiones_atrasadas > 0 },
-              { label: "Grupos con calendario", value: `${fmt(cobertura.con_calendario)} de ${fmt(cobertura.grupos_activos)}`, sub: `${fmt(cobertura.sin_calendario)} sin planificar`, warn: false },
-              { label: "Grupos sin respaldo", value: fmt(cobertura.sin_respaldo), sub: `${fmt(cobertura.sin_lider)} sin líder`, warn: cobertura.sin_respaldo > 0 },
-              { label: "Dirigidas por respaldo", value: fmt(cobertura.sesiones_con_respaldo), sub: `${fmt(cobertura.sesiones_canceladas)} canceladas`, warn: false },
-            ].map((k) => (
-              <div key={k.label}>
-                <p className="text-xs text-stone-500">{k.label}</p>
-                <p className={`text-xl font-medium ${k.warn ? "text-amber-700" : ""}`}>{k.value}</p>
-                <p className="text-xs text-stone-400">{k.sub}</p>
-              </div>
+          <div className="stagger grid grid-cols-2 gap-3 md:grid-cols-3">
+            {([
+              { label: "Sesiones realizadas", value: `${fmt(cobertura.sesiones_realizadas)} de ${fmt(cobertura.sesiones_planificadas)}`, sub: "planificadas hasta hoy", icon: "check-circle", warn: false },
+              { label: "Por registrar", value: fmt(cobertura.sesiones_atrasadas), sub: "pasaron hace más de 7 días", icon: "clock", warn: cobertura.sesiones_atrasadas > 0 },
+              { label: "Grupos con calendario", value: `${fmt(cobertura.con_calendario)} de ${fmt(cobertura.grupos_activos)}`, sub: `${fmt(cobertura.sin_calendario)} sin planificar`, icon: "calendar", warn: false },
+              { label: "Grupos sin respaldo", value: fmt(cobertura.sin_respaldo), sub: `${fmt(cobertura.sin_lider)} sin líder`, icon: "shield", warn: cobertura.sin_respaldo > 0 },
+              { label: "Dirigidas por respaldo", value: fmt(cobertura.sesiones_con_respaldo), sub: `${fmt(cobertura.sesiones_canceladas)} canceladas`, icon: "users", warn: false },
+            ] as { label: string; value: string; sub: string; icon: IconName; warn: boolean }[]).map((k) => (
+              <Stat key={k.label} {...k} />
             ))}
           </div>
         </Card>
@@ -224,7 +235,7 @@ export function PanelView({ role, resumen: r, semanal, curriculums, temporadas, 
       {/* Por currículum */}
       <Card title="Cada currículum" subtitle="Personas y grupos activos, asistencia reciente y cuántos aprueban. Un guion (—) significa que no hay asistencia registrada en ese periodo." className="mb-5">
         {topCurr.length === 0 ? (
-          <p className="py-6 text-center text-sm text-stone-500">Todavía no hay currículums con actividad.</p>
+          <EmptyState icon="book" title="Todavía no hay currículums con actividad" />
         ) : (
           <>
             <CurriculumTable rows={topCurr} />
@@ -241,7 +252,7 @@ export function PanelView({ role, resumen: r, semanal, curriculums, temporadas, 
       <div className="mb-5 grid gap-5 lg:grid-cols-2">
         <Card title="¿Siguen al próximo ciclo?" subtitle="De quienes aprobaron un ciclo, cuántos se inscribieron en el siguiente">
           {contRows.length === 0 ? (
-            <p className="py-6 text-center text-sm text-stone-500">Aún no hay datos suficientes.</p>
+            <EmptyState icon="route" title="Aún no hay datos suficientes" />
           ) : (
             <ul className="space-y-3">
               {contRows.map((c) => {
@@ -274,7 +285,7 @@ export function PanelView({ role, resumen: r, semanal, curriculums, temporadas, 
               </thead>
               <tbody>
                 {lastSeasons.map((t) => (
-                  <tr key={t.temporada} className="border-t border-stone-100">
+                  <tr key={t.temporada} className="border-t border-stone-100 transition hover:bg-brand-teal-50/40">
                     <td className="py-1.5">{t.temporada}</td>
                     <td className="py-1.5 text-right">{fmt(t.personas)}</td>
                     <td className="py-1.5 text-right">{fmt(t.inscripciones)}</td>
@@ -304,8 +315,8 @@ export function PanelView({ role, resumen: r, semanal, curriculums, temporadas, 
               <p className="mb-1 text-xs text-stone-500">Con más carga</p>
               <ul className="space-y-1 text-sm">
                 {heavy.filter((l) => l.grupos > 1).map((l) => (
-                  <li key={l.lider_id} className="flex justify-between gap-2">
-                    <span className="truncate">{l.nombre}</span>
+                  <li key={l.lider_id} className="flex items-center justify-between gap-2">
+                    <span className="flex min-w-0 items-center gap-2"><Avatar name={l.nombre || "Sin nombre"} size="sm" /><span className="truncate">{l.nombre}</span></span>
                     <span className="shrink-0 text-stone-500">{l.grupos} grupos · {fmt(l.inscritos)} personas</span>
                   </li>
                 ))}
@@ -317,9 +328,9 @@ export function PanelView({ role, resumen: r, semanal, curriculums, temporadas, 
               <p className="mb-1 text-xs text-stone-500">Con asistencia baja (menos de 50 %) en sus grupos</p>
               <ul className="space-y-1 text-sm">
                 {lowAtt.map((l) => (
-                  <li key={l.lider_id} className="flex justify-between gap-2">
-                    <span className="truncate">{l.nombre}</span>
-                    <span className="shrink-0 text-amber-700">{pct(num(l.asistencia_4s), 0)}</span>
+                  <li key={l.lider_id} className="flex items-center justify-between gap-2">
+                    <span className="flex min-w-0 items-center gap-2"><Avatar name={l.nombre || "Sin nombre"} size="sm" /><span className="truncate">{l.nombre}</span></span>
+                    <span className="shrink-0 font-semibold text-amber-700">{pct(num(l.asistencia_4s), 0)}</span>
                   </li>
                 ))}
               </ul>
@@ -377,7 +388,7 @@ function CurriculumTable({ rows }: { rows: CurriculumRow[] }) {
             const a = num(c.asistencia_4s);
             const ap = ratio(c.aprobados, c.aprobados + c.no_completaron);
             return (
-              <tr key={c.curriculum_id} className="border-t border-stone-100">
+              <tr key={c.curriculum_id} className="border-t border-stone-100 transition hover:bg-brand-teal-50/40">
                 <td className="py-2 pr-2">
                   {c.nombre}
                   {!c.activo && <span className="ml-2 chip bg-stone-100 text-xs text-stone-500">inactivo</span>}

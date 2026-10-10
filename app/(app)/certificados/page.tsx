@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession, type Person } from "@/lib/session";
-import { Flash, fieldClass, primaryBtn } from "@/components/Flash";
+import { Flash, Notice, fieldClass, primaryBtn } from "@/components/Flash";
+import { Icon } from "@/components/Icon";
+import { Avatar, Callout, EmptyState, PageHeader } from "@/components/ui";
 import {
   agregarPastor,
   emitirCertificado,
@@ -49,8 +51,8 @@ export default async function CertificadosPage(props: {
   if (pErr) {
     return (
       <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
-        <h1 className="page-title">Certificados</h1>
-        <p className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
+        <PageHeader title="Certificados" />
+        <p className="rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
           Falta instalar los certificados en la base de datos: ejecuta <code>supabase/v2/010_certificados.sql</code> en el SQL Editor de Supabase.
         </p>
       </div>
@@ -101,17 +103,17 @@ export default async function CertificadosPage(props: {
 
   return (
     <div className="enter mx-auto max-w-4xl p-4 pb-16 md:p-8 md:pb-16">
-      <h1 className="page-title">Certificados</h1>
-      <p className="mb-5 mt-1 text-sm text-stone-500">
-        Emiten el administrador y los pastores designados en cada sede. Un certificado se emite solo cuando la persona cumple los requisitos de la etapa o del programa.
-      </p>
+      <PageHeader
+        title="Certificados"
+        subtitle="Emiten el administrador y los pastores designados en cada sede. Un certificado se emite solo cuando la persona cumple los requisitos de la etapa o del programa."
+      />
       <Flash error={sp.error} ok={sp.ok} />
-      {sp.aviso && <p role="status" className="mb-4 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">{sp.aviso}</p>}
+      {sp.aviso && <Notice>{sp.aviso}</Notice>}
 
       {programs.length === 0 ? (
-        <p className="empty">
-          Ningún programa entrega certificado todavía. El administrador lo activa en Currículums → Clasificar.
-        </p>
+        <EmptyState icon="award" title="Ningún programa entrega certificado todavía">
+          El administrador lo activa en Currículums → Clasificar.
+        </EmptyState>
       ) : (
         <>
           <form method="get" className="mb-5 flex flex-wrap items-end gap-2">
@@ -130,12 +132,16 @@ export default async function CertificadosPage(props: {
                 </select>
               </label>
             )}
-            <button className="btn btn-secondary">Ver</button>
+            <button className="btn btn-secondary">
+              <Icon name="search" className="h-4 w-4" />
+              Ver
+            </button>
           </form>
 
           <section className="mb-6">
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-              <h2 className="section-title">
+              <h2 className="section-title flex items-center gap-2">
+                <Icon name="award" className="h-4 w-4 text-brand-teal" />
                 Listos para certificar {candidates.length > 0 && <span className="font-normal text-stone-500">({candidates.length}{candidates.length >= 200 ? "+" : ""})</span>}
               </h2>
               {issuable > 1 && (
@@ -146,25 +152,28 @@ export default async function CertificadosPage(props: {
               )}
             </div>
             {candR.error ? (
-              <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800">{candR.error.message}</p>
+              <Callout tone="warn">{candR.error.message}</Callout>
             ) : candidates.length === 0 ? (
-              <p className="empty">
+              <EmptyState icon="users" title="Nadie por certificar por ahora">
                 Nadie cumple todavía los requisitos de {year ? `el año ${year}` : "este programa"}, o ya tienen su certificado.
-              </p>
+              </EmptyState>
             ) : (
-              <ul className="space-y-2">
+              <ul className="stagger space-y-2">
                 {candidates.map((c) => (
-                  <li key={c.ce_id} className="flex flex-wrap items-center justify-between gap-2 card p-3 text-sm">
-                    <span>
-                      <Link href={`/mi-progreso/${c.ce_id}`} className="font-medium hover:underline">{c.person_name || "Sin nombre"}</Link>
-                      <span className="ml-2 text-stone-500">{c.campus ?? "Sin sede"}</span>
+                  <li key={c.ce_id} className="card card-hover flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
+                    <span className="flex items-center gap-3">
+                      <Avatar name={c.person_name || "Sin nombre"} />
+                      <span>
+                        <Link href={`/mi-progreso/${c.ce_id}`} className="font-semibold hover:text-brand-teal hover:underline">{c.person_name || "Sin nombre"}</Link>
+                        <span className="block text-xs text-stone-500">{c.campus ?? "Sin sede"}</span>
+                      </span>
                     </span>
                     {c.can_issue ? (
                       <form action={emitirCertificado}>
                         {scopeFields}
                         <input type="hidden" name="ce" value={c.ce_id} />
                         <input type="hidden" name="year" value={c.formative_year ?? ""} />
-                        <button className="btn btn-primary">Emitir</button>
+                        <button className="btn btn-primary btn-sm"><Icon name="award" className="h-4 w-4" />Emitir</button>
                       </form>
                     ) : (
                       <span className="text-xs text-stone-400">Lo emite el pastor de su sede o el administrador</span>
@@ -176,17 +185,22 @@ export default async function CertificadosPage(props: {
           </section>
 
           <section className="mb-6">
-            <h2 className="mb-2 section-title">Emitidos</h2>
+            <h2 className="mb-2 section-title flex items-center gap-2"><Icon name="check-circle" className="h-4 w-4 text-brand-green" />Emitidos</h2>
             {issued.length === 0 ? (
-              <p className="empty">Todavía no hay certificados emitidos de este programa.</p>
+              <EmptyState icon="file" title="Todavía no hay certificados emitidos de este programa" />
             ) : (
-              <ul className="space-y-2">
+              <ul className="stagger space-y-2">
                 {issued.map((c) => (
-                  <li key={c.id} className="card p-3 text-sm">
+                  <li key={c.id} className="card card-hover p-3 text-sm">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span>
-                        <Link href={`/certificados/${c.id}`} className="font-medium link">{c.profiles?.full_name || "Sin nombre"}</Link>
-                        <span className="ml-2 text-stone-500">{certificateTitle(c, program?.name ?? "")}</span>
+                      <span className="flex items-center gap-3">
+                        <span aria-hidden="true" className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${c.status === "revocado" ? "bg-red-50 text-red-600" : "bg-brand-green-50 text-brand-green"}`}>
+                          <Icon name={c.status === "revocado" ? "x" : "award"} className="h-5 w-5" />
+                        </span>
+                        <span>
+                          <Link href={`/certificados/${c.id}`} className="font-semibold link">{c.profiles?.full_name || "Sin nombre"}</Link>
+                          <span className="block text-xs text-stone-500">{certificateTitle(c, program?.name ?? "")}</span>
+                        </span>
                       </span>
                       <span className="text-xs text-stone-500">
                         {c.status === "revocado" && <span className="mr-2 chip bg-red-50 text-red-700">Revocado</span>}
@@ -195,7 +209,7 @@ export default async function CertificadosPage(props: {
                     </div>
                     {isAdmin && c.status === "emitido" && (
                       <details className="mt-2">
-                        <summary className="cursor-pointer text-xs text-stone-500">Revocar</summary>
+                        <summary className="btn btn-ghost btn-sm cursor-pointer list-none text-stone-500">Revocar</summary>
                         <form action={revocarCertificado} className="mt-2 flex flex-wrap items-center gap-2">
                           {scopeFields}
                           <input type="hidden" name="id" value={c.id} />
@@ -214,21 +228,21 @@ export default async function CertificadosPage(props: {
 
       {isAdmin && (
         <section className="card p-4">
-          <h2 className="mb-1 section-title">Pastores designados por sede</h2>
+          <h2 className="mb-1 section-title flex items-center gap-2"><Icon name="shield" className="h-4 w-4 text-brand-teal" />Pastores designados por sede</h2>
           <p className="mb-3 text-xs text-stone-500">
             Pueden emitir certificados de las personas de su sede (la del grupo en que participan o, si no tienen, la de su perfil). Una persona sin sede solo la certifica el administrador.
           </p>
           {pastors.length === 0 ? (
-            <p className="text-sm text-stone-400">Todavía no hay pastores designados.</p>
+            <p className="mb-3 text-sm text-stone-400">Todavía no hay pastores designados.</p>
           ) : (
             <ul className="mb-3 space-y-1 text-sm">
               {pastors.map((p) => (
-                <li key={`${p.person_id}-${p.campus_id}`} className="flex items-center justify-between gap-2">
-                  <span>{names.get(p.person_id) || "Sin nombre"} <span className="text-stone-500">· {campuses.find((c) => c.id === p.campus_id)?.name}</span></span>
+                <li key={`${p.person_id}-${p.campus_id}`} className="row flex items-center justify-between gap-2 rounded-lg px-1 py-1">
+                  <span className="flex items-center gap-2"><Avatar name={names.get(p.person_id) || "Sin nombre"} size="sm" />{names.get(p.person_id) || "Sin nombre"} <span className="text-stone-500">· {campuses.find((c) => c.id === p.campus_id)?.name}</span></span>
                   <form action={quitarPastor}>
                     <input type="hidden" name="person" value={p.person_id} />
                     <input type="hidden" name="campus" value={p.campus_id} />
-                    <button className="text-xs text-stone-500 hover:text-red-700 hover:underline">Quitar</button>
+                    <button className="rounded-lg px-2 py-1 text-xs text-stone-500 transition hover:bg-red-50 hover:text-red-700">Quitar</button>
                   </form>
                 </li>
               ))}
