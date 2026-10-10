@@ -1,4 +1,5 @@
 import { fieldClass, primaryBtn } from "@/components/Flash";
+import { Icon } from "@/components/Icon";
 import { guardarLeccion } from "@/app/actions/gestion";
 
 type Lesson = {
@@ -11,8 +12,7 @@ type Lesson = {
   video_url: string | null;
 };
 
-const area =
-  "w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm outline-none focus:border-brand-teal focus:ring-2 focus:ring-brand-teal/20";
+const area = "input h-auto py-2";
 
 export function LessonForm({
   cycleId,
@@ -24,7 +24,7 @@ export function LessonForm({
   nextNumber?: number;
 }) {
   return (
-    <form action={guardarLeccion} className="space-y-3 card p-4">
+    <form action={guardarLeccion} className="space-y-4 card p-5">
       <input type="hidden" name="id" value={lesson?.id ?? ""} />
       <input type="hidden" name="cycle_id" value={cycleId} />
 
@@ -66,7 +66,10 @@ export function LessonForm({
         <input name="video_url" type="url" defaultValue={lesson?.video_url ?? ""} className={`${fieldClass} mt-1`} />
       </label>
 
-      <button className={primaryBtn}>{lesson ? "Guardar cambios" : "Crear lección"}</button>
+      <button className={primaryBtn}>
+        <Icon name={lesson ? "check" : "plus"} className="h-4 w-4" />
+        {lesson ? "Guardar cambios" : "Crear lección"}
+      </button>
     </form>
   );
 }

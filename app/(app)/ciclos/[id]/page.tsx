@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { Flash } from "@/components/Flash";
+import { Icon } from "@/components/Icon";
+import { Callout, EmptyState, PageHeader } from "@/components/ui";
 import { LessonForm } from "@/components/LessonForm";
 import { STATUS_LABEL, isEditable, type EditorialStatus } from "@/lib/versions";
 
@@ -48,38 +50,39 @@ export default async function CicloPage(props: {
 
   return (
     <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
-      <Link href={`/curriculums/${cycle.curriculum_id}${cycle.version_id ? `?v=${cycle.version_id}` : ""}`} className="text-sm link">
-        ← {cycle.curriculums?.name}
-      </Link>
-      <h1 className="mt-2 page-title">
-        Módulo {cycle.number}
-        {cycle.title ? ` · ${cycle.title}` : ""}
-      </h1>
-      <p className="mb-5 mt-1 text-sm text-stone-500">
-        {lessons.length} {lessons.length === 1 ? "unidad" : "unidades"}
-        {ver ? ` · Versión ${ver.version} (${STATUS_LABEL[ver.status].toLowerCase()})` : ""}
-      </p>
+      <PageHeader
+        eyebrow={cycle.curriculums?.name}
+        title={`Módulo ${cycle.number}${cycle.title ? ` · ${cycle.title}` : ""}`}
+        back={{ href: `/curriculums/${cycle.curriculum_id}${cycle.version_id ? `?v=${cycle.version_id}` : ""}`, label: cycle.curriculums?.name ?? "Currículum" }}
+        subtitle={`${lessons.length} ${lessons.length === 1 ? "unidad" : "unidades"}${ver ? ` · Versión ${ver.version} (${STATUS_LABEL[ver.status].toLowerCase()})` : ""}`}
+      />
       {!editable && (
-        <p className="mb-4 rounded-lg bg-stone-50 px-3 py-2 text-sm text-stone-600">
+        <Callout tone="info" className="mb-4">
           Esta versión no se puede editar. Copia la versión desde el currículum para hacer cambios.
-        </p>
+        </Callout>
       )}
       <Flash error={searchParams.error} ok={searchParams.ok} />
 
       <section className="mb-6 card p-4">
         {lessons.length === 0 ? (
-          <p className="py-4 text-center text-sm text-stone-500">Todavía no hay unidades.{editable ? " Crea la primera abajo." : ""}</p>
+          <EmptyState icon="book" title="Todavía no hay unidades">
+            {editable ? "Crea la primera con el formulario de abajo." : "Esta versión no tiene unidades cargadas."}
+          </EmptyState>
         ) : (
-          <ul>
+          <ul className="stagger">
             {lessons.map((l) => (
-              <li key={l.id} className="flex items-center justify-between gap-3 border-b border-stone-100 py-2.5 text-sm last:border-0">
-                <Link href={`/lecciones/${l.id}`} className="hover:underline">
-                  <span className="mr-2 text-stone-400">{l.number}.</span>
-                  <span className="font-medium">{l.title}</span>
-                  {l.summary && <span className="ml-2 text-stone-500">{l.summary}</span>}
+              <li key={l.id} className="row flex items-center justify-between gap-3 border-b border-stone-100 py-2.5 text-sm last:border-0">
+                <Link href={`/lecciones/${l.id}`} className="group flex min-w-0 items-start gap-3">
+                  <span aria-hidden="true" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-teal-50 text-xs font-bold tabular text-brand-teal-800 transition group-hover:bg-brand-teal group-hover:text-white">
+                    {l.number}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="font-semibold group-hover:text-brand-teal">{l.title}</span>
+                    {l.summary && <span className="block truncate text-stone-500">{l.summary}</span>}
+                  </span>
                 </Link>
                 {editable && (
-                  <Link href={`/lecciones/${l.id}/editar`} className="shrink-0 text-xs link">
+                  <Link href={`/lecciones/${l.id}/editar`} className="btn btn-ghost btn-sm shrink-0">
                     Editar
                   </Link>
                 )}
@@ -91,7 +94,7 @@ export default async function CicloPage(props: {
 
       {editable && (
         <>
-          <h2 className="mb-2 section-title">Nueva unidad</h2>
+          <h2 className="mb-2 section-title flex items-center gap-2"><Icon name="plus" className="h-4 w-4 text-brand-teal" />Nueva unidad</h2>
           <LessonForm cycleId={cycle.id} nextNumber={nextNumber} />
         </>
       )}

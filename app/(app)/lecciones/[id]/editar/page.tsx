@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { Flash } from "@/components/Flash";
 import { LessonForm } from "@/components/LessonForm";
+import { PageHeader } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -24,10 +24,12 @@ export default async function EditarLeccionPage(props: {
 
   return (
     <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
-      <Link href={`/lecciones/${lesson.id}`} className="text-sm link">
-        ← Ver lección
-      </Link>
-      <h1 className="mb-5 mt-2 page-title">Editar lección {lesson.number}</h1>
+      <PageHeader
+        eyebrow="Contenido"
+        title={`Editar lección ${lesson.number}`}
+        subtitle={lesson.title}
+        back={{ href: `/lecciones/${lesson.id}`, label: "Ver lección" }}
+      />
       <Flash error={searchParams.error} ok={searchParams.ok} />
       <LessonForm cycleId={lesson.cycle_id} lesson={lesson} />
     </div>
