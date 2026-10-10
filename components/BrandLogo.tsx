@@ -84,6 +84,10 @@ function Characters({ uid, mood }: { uid: string; mood: LogoMood }) {
 
 type Variant = "mark" | "stacked" | "horizontal";
 
+/** Color del nombre sobre fondo claro (el del logo original) y dónde se separan las dos palabras */
+const WORDMARK_DARK = "#343434";
+const WORD_SPLIT = 797;
+
 export function BrandLogo({
   variant = "horizontal",
   tone = "dark",
@@ -91,6 +95,7 @@ export function BrandLogo({
   mood = "happy",
   className = "",
   label = "Grupos Pequeños",
+  ink,
 }: {
   variant?: Variant;
   /** Color del nombre: "dark" para fondos claros, "light" para fondos oscuros */
@@ -99,9 +104,13 @@ export function BrandLogo({
   mood?: LogoMood;
   className?: string;
   label?: string | null;
+  /** Color propio del nombre: uno solo, o dos (uno para "grupos" y otro para "pequeños") */
+  ink?: string | [string, string];
 }) {
   const uid = `gp${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
-  const textColor = tone === "light" ? "#F5EFE6" : "#343434";
+  const base = ink ?? (tone === "light" ? "#F5EFE6" : WORDMARK_DARK);
+  const duo = Array.isArray(base);
+  const textColor = duo ? `url(#${uid}-ink)` : (base as string);
   const pad = 14;
 
   let viewBox: string;
@@ -142,6 +151,15 @@ export function BrandLogo({
       aria-hidden={label ? undefined : true}
       focusable="false"
     >
+      {duo && (
+        <defs>
+          {/* Corte duro en el espacio entre las dos palabras */}
+          <linearGradient id={`${uid}-ink`} gradientUnits="userSpaceOnUse" x1={0} x2={WORDMARK.w} y1={0} y2={0}>
+            <stop offset={WORD_SPLIT / WORDMARK.w} stopColor={(base as [string, string])[0]} />
+            <stop offset={WORD_SPLIT / WORDMARK.w} stopColor={(base as [string, string])[1]} />
+          </linearGradient>
+        </defs>
+      )}
       {body}
     </svg>
   );

@@ -1,5 +1,9 @@
 import { BrandLogo, type LogoAnim } from "@/components/BrandLogo";
 
+// En el menú y las páginas el nombre va en dos tonos (gris suave y turquesa) para no pesar tanto como el gris casi
+// negro del original, que a tamaño pequeño tapaba a los personajes de colores.
+const INK: [string, string] = ["#5B6470", "#1E8082"];
+
 // Marca de GP 2.0: los tres personajes de Grupos Pequeños, el nombre y la insignia "2.0".
 export function Logo({
   light = false,
@@ -15,7 +19,7 @@ export function Logo({
   const h = size === "lg" ? "h-12" : size === "sm" ? "h-7" : "h-9";
   return (
     <span className="inline-flex items-center gap-2">
-      <BrandLogo variant="horizontal" tone={light ? "light" : "dark"} anim={anim} className={`${h} w-auto`} />
+      <BrandLogo variant="horizontal" tone={light ? "light" : "dark"} ink={light ? undefined : INK} anim={anim} className={`${h} w-auto`} />
       {badge && (
         <span
           aria-label="versión 2.0"
