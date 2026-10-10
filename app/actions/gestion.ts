@@ -199,7 +199,15 @@ export async function guardarAsistencia(fd: FormData) {
 
   const present = fd.getAll("present").map(String);
   const recovered = fd.getAll("recovered").map(String);
+  const justified = fd.getAll("justified").map(String);
+  const mode = text(fd, "mode");
   const lesson = intOrNull(text(fd, "lesson_number"));
+
+  // Los datos nuevos (justificados, modalidad de la sesión) solo se envían si se usaron:
+  // así la pantalla de siempre sigue funcionando aunque falte instalar 008_calendario.sql.
+  const extra: Record<string, unknown> = {};
+  if (justified.length) extra.justified = justified;
+  if (mode === "presencial" || mode === "virtual") extra.mode = mode;
 
   const { error } = await (await createClient()).rpc("save_attendance", {
     gid: group_id,
@@ -207,6 +215,7 @@ export async function guardarAsistencia(fd: FormData) {
     lesson: lesson && lesson > 0 ? lesson : null,
     present,
     recovered,
+    ...extra,
   });
   if (error) finish(back, error.message);
   revalidatePath(`/grupos/${group_id}`);

@@ -8,6 +8,7 @@ import type { NavSection } from "@/lib/nav";
 
 const ICONS: Record<string, string> = {
   home: "M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10",
+  lifebuoy: "M12 21a9 9 0 100-18 9 9 0 000 18zM12 15a3 3 0 100-6 3 3 0 000 6zM5.6 5.6l3.5 3.5M14.9 14.9l3.5 3.5M18.4 5.6l-3.5 3.5M9.1 14.9l-3.5 3.5",
   route: "M6 19a2 2 0 100-4 2 2 0 000 4zM18 9a2 2 0 100-4 2 2 0 000 4zM8 17h6a4 4 0 000-8h-4a3 3 0 010-6h5",
   plus: "M12 21a9 9 0 100-18 9 9 0 000 18zM12 8v8M8 12h8",
   user: "M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0",

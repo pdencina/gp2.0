@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import type { Alert } from "@/lib/alerts";
-import type { ContinuidadRow, CurriculumRow, DistribucionRow, LiderRow, Resumen, Semana, TemporadaRow } from "@/lib/panel";
+import type { Cobertura, ContinuidadRow, CurriculumRow, DistribucionRow, LiderRow, Resumen, Semana, TemporadaRow } from "@/lib/panel";
 import { PanelView } from "@/components/PanelView";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +10,7 @@ export default async function PanelPage() {
   const { supabase, role } = await getSession();
   if (!["admin", "coordinador", "monitor"].includes(role)) redirect("/inicio");
 
-  const [resumenR, semanalR, currR, tempR, contR, lidR, distR, alertR] = await Promise.all([
+  const [resumenR, semanalR, currR, tempR, contR, lidR, distR, alertR, cobR] = await Promise.all([
     supabase.rpc("panel_resumen"),
     supabase.rpc("panel_semanal", { semanas: 12 }),
     supabase.rpc("panel_curriculums"),
@@ -19,6 +19,7 @@ export default async function PanelPage() {
     supabase.rpc("panel_lideres"),
     supabase.rpc("panel_distribucion"),
     supabase.rpc("my_alerts"),
+    supabase.rpc("panel_cobertura"),
   ]);
 
   const missing = [resumenR, semanalR, currR].some((r) => r.error && /Could not find|404|PGRST202/i.test(r.error.message + (r.error.code ?? "")));
@@ -44,6 +45,7 @@ export default async function PanelPage() {
       lideres={(lidR.data ?? []) as LiderRow[]}
       dist={(distR.data ?? []) as DistribucionRow[]}
       alerts={(alertR.data ?? []) as Alert[]}
+      cobertura={cobR.error ? null : (((cobR.data ?? [])[0] ?? null) as Cobertura | null)}
       today={new Date()}
     />
   );

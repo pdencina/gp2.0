@@ -8,7 +8,8 @@ import { guardarAsistencia } from "@/app/actions/gestion";
 
 export const dynamic = "force-dynamic";
 
-type Mark = "presente" | "ausente" | "recuperado";
+type Mark = "presente" | "ausente" | "recuperado" | "justificado";
+type Planned = { id: string; held_on: string; season_week: number | null };
 
 export default async function ListaPage(props: {
   params: Promise<{ id: string }>;
@@ -20,7 +21,7 @@ export default async function ListaPage(props: {
 
   const { data: group } = await supabase
     .from("group_overview")
-    .select("id, name, status, cycle_id, curriculum_name, cycle_number")
+    .select("id, name, status, cycle_id, curriculum_name, cycle_number, modality")
     .eq("id", params.id)
     .maybeSingle();
   if (!group) notFound();
@@ -44,10 +45,26 @@ export default async function ListaPage(props: {
   // ¿Ya se pasó lista ese día? Se muestra para poder corregirla.
   const { data: meeting } = await supabase
     .from("meetings")
-    .select("id, lesson_number")
+    .select("id, lesson_number, status, season_week, modality")
     .eq("group_id", group.id)
     .eq("held_on", fecha)
     .maybeSingle();
+
+  // Si no hay reunión ese día, la lista ocupa la sesión planificada más cercana (hasta 3 días de diferencia)
+  let claimed: Planned | null = null;
+  if (!meeting) {
+    const shift = (days: number) => new Date(Date.parse(`${fecha}T00:00:00Z`) + days * 86400000).toISOString().slice(0, 10);
+    const { data: near } = await supabase
+      .from("meetings")
+      .select("id, held_on, season_week")
+      .eq("group_id", group.id)
+      .in("status", ["planificada", "reprogramada"])
+      .gte("held_on", shift(-3))
+      .lte("held_on", shift(3));
+    const list = (near ?? []) as Planned[];
+    const gap = (p: Planned) => Math.abs(Date.parse(p.held_on) - Date.parse(fecha));
+    claimed = list.sort((a, b) => gap(a) - gap(b) || (a.season_week ?? 99) - (b.season_week ?? 99))[0] ?? null;
+  }
 
   const initial: Record<string, Mark> = {};
   let lesson = meeting?.lesson_number ?? null;
@@ -63,7 +80,7 @@ export default async function ListaPage(props: {
       .order("held_on", { ascending: false })
       .limit(1)
       .maybeSingle();
-    lesson = last?.lesson_number ? last.lesson_number + 1 : 1;
+    lesson = claimed?.season_week ?? (last?.lesson_number ? last.lesson_number + 1 : 1);
   }
 
   return (
@@ -73,7 +90,8 @@ export default async function ListaPage(props: {
       </Link>
       <h1 className="mt-2 text-2xl font-medium">Pasar lista</h1>
       <p className="mb-4 mt-1 text-sm text-stone-500">
-        {group.name} · {group.curriculum_name} · Ciclo {group.cycle_number}
+        {group.name} · {group.curriculum_name}
+        {group.cycle_number != null ? ` · Ciclo ${group.cycle_number}` : ""}
       </p>
       <Flash error={searchParams.error} />
 
@@ -87,7 +105,13 @@ export default async function ListaPage(props: {
 
       {meeting && (
         <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          Ya pasaste lista este día. Si guardas, se corrige la asistencia.
+          {meeting.status === "realizada" ? "Ya pasaste lista este día. Si guardas, se corrige la asistencia." : "Esta sesión estaba sin registrar. Al guardar queda como realizada."}
+          {meeting.season_week ? ` Es la semana ${meeting.season_week} del calendario.` : ""}
+        </p>
+      )}
+      {claimed && (
+        <p className="mb-4 rounded-lg bg-brand-teal/10 px-3 py-2 text-sm text-brand-teal">
+          Esta lista ocupará la sesión de la semana {claimed.season_week} del calendario (planificada para el {claimed.held_on.split("-").reverse().join("/")}).
         </p>
       )}
 
@@ -110,6 +134,15 @@ export default async function ListaPage(props: {
               inputMode="numeric"
               className={`${fieldClass} w-24`}
             />
+          </label>
+
+          <label className="mb-4 flex items-center gap-3 text-sm">
+            <span className="text-stone-600">Modalidad de hoy</span>
+            <select name="mode" defaultValue={meeting?.modality ?? ""} className={`${fieldClass} w-auto`}>
+              <option value="">Igual que el grupo ({group.modality === "virtual" ? "virtual" : "presencial"})</option>
+              <option value="presencial">Presencial</option>
+              <option value="virtual">Virtual</option>
+            </select>
           </label>
 
           <AttendanceList members={members} initial={initial} />

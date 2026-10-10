@@ -64,3 +64,9 @@ export function shortSeason(name: string): string {
   const m = name.match(/^(\d{4}) · T(\d)$/);
   return m ? `${m[1].slice(2)} T${m[2]}` : name;
 }
+
+// Calendario y cobertura de líder/respaldo (008_calendario.sql). La asistencia no se mezcla con el aprendizaje.
+export type Cobertura = {
+  grupos_activos: number; con_calendario: number; sin_calendario: number; sin_lider: number; sin_respaldo: number;
+  sesiones_planificadas: number; sesiones_realizadas: number; sesiones_atrasadas: number; sesiones_canceladas: number; sesiones_con_respaldo: number;
+};

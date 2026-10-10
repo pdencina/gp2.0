@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ALERT_LABEL, SEVERITY_CLASS, type Alert } from "@/lib/alerts";
 import {
   countryName, fmt, num, pct, pointsDelta, ratio, shortDate, shortSeason,
-  type ContinuidadRow, type CurriculumRow, type DistribucionRow, type LiderRow, type Resumen, type Semana, type TemporadaRow,
+  type Cobertura, type ContinuidadRow, type CurriculumRow, type DistribucionRow, type LiderRow, type Resumen, type Semana, type TemporadaRow,
 } from "@/lib/panel";
 import { Bar, Card, Kpi, Legend, LineChart, StackedColumns } from "@/components/charts";
 
@@ -22,10 +22,11 @@ export type PanelData = {
   lideres: LiderRow[];
   dist: DistribucionRow[];
   alerts: Alert[];
+  cobertura?: Cobertura | null;
   today: Date;
 };
 
-export function PanelView({ role, resumen: r, semanal, curriculums, temporadas, continuidad, lideres, dist, alerts, today }: PanelData) {
+export function PanelView({ role, resumen: r, semanal, curriculums, temporadas, continuidad, lideres, dist, alerts, cobertura, today }: PanelData) {
   const att = num(r?.asistencia_4s);
   const attPrev = num(r?.asistencia_4s_previa);
   const aprobacion = num(r?.aprobacion_historica);
@@ -166,6 +167,31 @@ export function PanelView({ role, resumen: r, semanal, curriculums, temporadas, 
           )}
         </Card>
       </div>
+
+      {/* Calendario y cobertura */}
+      {cobertura && cobertura.grupos_activos > 0 && (
+        <Card
+          title="Calendario y cobertura"
+          subtitle="Sesiones realizadas frente a las planificadas, y quién sostiene cada grupo. Es asistencia y operación: no mide aprendizaje completado."
+          className="mb-5"
+        >
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
+            {[
+              { label: "Sesiones realizadas", value: `${fmt(cobertura.sesiones_realizadas)} de ${fmt(cobertura.sesiones_planificadas)}`, sub: "planificadas hasta hoy", warn: false },
+              { label: "Por registrar", value: fmt(cobertura.sesiones_atrasadas), sub: "pasaron hace más de 7 días", warn: cobertura.sesiones_atrasadas > 0 },
+              { label: "Grupos con calendario", value: `${fmt(cobertura.con_calendario)} de ${fmt(cobertura.grupos_activos)}`, sub: `${fmt(cobertura.sin_calendario)} sin planificar`, warn: false },
+              { label: "Grupos sin respaldo", value: fmt(cobertura.sin_respaldo), sub: `${fmt(cobertura.sin_lider)} sin líder`, warn: cobertura.sin_respaldo > 0 },
+              { label: "Dirigidas por respaldo", value: fmt(cobertura.sesiones_con_respaldo), sub: `${fmt(cobertura.sesiones_canceladas)} canceladas`, warn: false },
+            ].map((k) => (
+              <div key={k.label}>
+                <p className="text-xs text-stone-500">{k.label}</p>
+                <p className={`text-xl font-medium ${k.warn ? "text-amber-700" : ""}`}>{k.value}</p>
+                <p className="text-xs text-stone-400">{k.sub}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* Por currículum */}
       <Card title="Cada currículum" subtitle="Personas y grupos activos, asistencia reciente y cuántos aprueban. Un guion (—) significa que no hay asistencia registrada en ese periodo." className="mb-5">

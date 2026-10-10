@@ -1,5 +1,5 @@
 export type Alert = {
-  kind: "ausente" | "en_riesgo" | "excedido" | "nuevo" | "asistencia_baja" | "sin_reunion" | "sin_lider" | "sin_monitor";
+  kind: "ausente" | "en_riesgo" | "excedido" | "nuevo" | "asistencia_baja" | "sin_reunion" | "sesion_pendiente" | "sin_lider" | "sin_monitor";
   severity: number;
   group_id: string;
   group_name: string;
@@ -16,6 +16,7 @@ export const ALERT_LABEL: Record<Alert["kind"], string> = {
   nuevo: "Persona nueva",
   asistencia_baja: "Asistencia baja",
   sin_reunion: "Sin reunión",
+  sesion_pendiente: "Sesión sin registrar",
   sin_lider: "Sin líder",
   sin_monitor: "Sin monitor",
 };

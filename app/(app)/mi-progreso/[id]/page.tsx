@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSession } from "@/lib/session";
-import { scheduleLabel, ENROLLMENT_LABEL, type GroupOverview } from "@/lib/format";
+import { scheduleLabel, ENROLLMENT_LABEL, todayInChile, type GroupOverview } from "@/lib/format";
+import { dayMonth, weekdayName } from "@/lib/calendar";
 import { Flash, fieldClass, primaryBtn } from "@/components/Flash";
 import {
   cambiarGrupo,
@@ -76,6 +77,20 @@ export default async function ProgresoDetallePage(props: {
   const groups = new Map(((gs ?? []) as GroupOverview[]).map((g) => [g.id, g]));
   const current = memberships.find((m) => m.status === "preinscrito" || m.status === "en_curso");
   const currentGroup = current ? groups.get(current.group_id) : undefined;
+
+  // Próxima reunión planificada del grupo actual
+  const { data: nextMeeting } = current
+    ? await supabase
+        .from("meetings")
+        .select("held_on, season_week")
+        .eq("group_id", current.group_id)
+        .in("status", ["planificada", "reprogramada"])
+        .gte("held_on", todayInChile())
+        .order("held_on")
+        .limit(1)
+        .maybeSingle()
+    : { data: null };
+  const next = nextMeeting as { held_on: string; season_week: number | null } | null;
 
   let compatible: CompatibleGroup[] = [];
   if (ce.status === "activo") {
@@ -185,6 +200,15 @@ export default async function ProgresoDetallePage(props: {
             {currentGroup.backup_leader_name && <p className="text-stone-500">Respaldo: {currentGroup.backup_leader_name}</p>}
             {currentGroup.campus_name && <p className="text-stone-500">Sede: {currentGroup.campus_name}</p>}
             {currentGroup.address && <p className="text-stone-500">Dirección: {currentGroup.address}</p>}
+            {next && (
+              <p className="mt-2 rounded-lg bg-brand-teal/10 px-3 py-2 text-brand-teal">
+                Próxima reunión: {weekdayName(next.held_on)} {dayMonth(next.held_on)}
+                {next.season_week ? ` · semana ${next.season_week}` : ""}
+              </p>
+            )}
+            <Link href={`/grupos/${currentGroup.id}/calendario`} className="mt-2 inline-block text-xs text-brand-teal hover:underline">
+              Ver el calendario del grupo
+            </Link>
           </div>
         ) : ce.status === "activo" ? (
           <p className="text-sm text-amber-700">Todavía no tienes grupo. Elige uno de la lista de abajo.</p>

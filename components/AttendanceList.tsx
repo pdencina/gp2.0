@@ -3,11 +3,12 @@
 import { useState } from "react";
 
 type Member = { id: string; name: string };
-type Mark = "presente" | "ausente" | "recuperado";
+type Mark = "presente" | "ausente" | "recuperado" | "justificado";
 
 const OPTIONS: { value: Mark; label: string; on: string }[] = [
   { value: "presente", label: "Presente", on: "bg-brand-green text-white border-brand-green" },
   { value: "recuperado", label: "Recuperado", on: "bg-brand-teal text-white border-brand-teal" },
+  { value: "justificado", label: "Justificó", on: "bg-amber-500 text-white border-amber-500" },
   { value: "ausente", label: "Ausente", on: "bg-stone-600 text-white border-stone-600" },
 ];
 
@@ -31,6 +32,7 @@ export function AttendanceList({
         <span className="font-medium" aria-live="polite">
           {count("presente") + count("recuperado")} de {members.length} asisten
           {count("recuperado") > 0 && <span className="text-stone-500"> ({count("recuperado")} recuperados)</span>}
+          {count("justificado") > 0 && <span className="text-stone-500"> · {count("justificado")} justificaron su falta</span>}
         </span>
         <button
           type="button"
@@ -54,7 +56,7 @@ export function AttendanceList({
               }`}
             >
               <div className="mb-2 text-base">{m.name}</div>
-              <div role="radiogroup" aria-label={`Asistencia de ${m.name}`} className="grid grid-cols-3 gap-2">
+              <div role="radiogroup" aria-label={`Asistencia de ${m.name}`} className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {OPTIONS.map((o) => (
                   <button
                     key={o.value}
@@ -72,6 +74,7 @@ export function AttendanceList({
               </div>
               {mark === "presente" && <input type="hidden" name="present" value={m.id} />}
               {mark === "recuperado" && <input type="hidden" name="recovered" value={m.id} />}
+              {mark === "justificado" && <input type="hidden" name="justified" value={m.id} />}
             </li>
           );
         })}

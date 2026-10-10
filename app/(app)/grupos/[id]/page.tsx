@@ -50,6 +50,9 @@ export default async function GrupoPage(props: {
   const isCoordinator = (coordRow ?? []).length > 0;
   const canAssign = role === "admin" || isCoordinator;
   const canManage = canAssign || isLeaderOrMonitor;
+  // El respaldo dirige sesiones y pasa lista, pero no administra el grupo
+  const isBackup = group.backup_leader_id === user.id;
+  const canRun = canManage || isBackup;
 
   const { data: rosterRows } = await supabase
     .from("roster")
@@ -59,7 +62,7 @@ export default async function GrupoPage(props: {
   const roster = (rosterRows ?? []) as RosterRow[];
   const active = roster.filter((r) => r.status !== "cancelado");
 
-  const { data: meetingRows } = canManage
+  const { data: meetingRows } = canRun
     ? await supabase
         .from("meeting_summary")
         .select("id, held_on, lesson_number, present, recovered, total")
@@ -71,7 +74,7 @@ export default async function GrupoPage(props: {
 
   // Próxima lección: la siguiente a la última dada
   const lastLesson = meetings.find((m) => m.lesson_number)?.lesson_number ?? 0;
-  const { data: nextLesson } = canManage
+  const { data: nextLesson } = canManage && group.cycle_id
     ? await supabase
         .from("lessons")
         .select("id, number, title, summary")
@@ -111,7 +114,8 @@ export default async function GrupoPage(props: {
       </Link>
       <h1 className="mt-2 text-2xl font-medium">{group.name}</h1>
       <p className="mb-5 mt-1 text-sm text-stone-500">
-        {group.curriculum_name} · Ciclo {group.cycle_number}
+        {group.curriculum_name}
+        {group.cycle_number != null ? ` · Ciclo ${group.cycle_number}` : ""}
         {group.cycle_title ? ` (${group.cycle_title})` : ""} · {scheduleLabel(group)} · {GROUP_STATUS_LABEL[group.status]}
         {group.address ? ` · ${group.address}` : ""}
       </p>
@@ -122,14 +126,24 @@ export default async function GrupoPage(props: {
         </p>
       )}
 
-      {canManage && group.status !== "finalizado" && (
+      {canRun && group.status !== "finalizado" && (
         <Link
           href={`/grupos/${group.id}/lista`}
-          className="mb-5 flex h-12 items-center justify-center rounded-xl bg-brand-orange font-medium text-white hover:brightness-95"
+          className="mb-3 flex h-12 items-center justify-center rounded-xl bg-brand-orange font-medium text-white hover:brightness-95"
         >
           Pasar lista
         </Link>
       )}
+      <Link
+        href={`/grupos/${group.id}/calendario`}
+        className="mb-5 flex items-center justify-between rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm hover:border-brand-teal"
+      >
+        <span>
+          <span className="font-medium">Calendario de sesiones</span>
+          <span className="block text-xs text-stone-500">Fechas, cancelaciones, quién dirige cada sesión y unidades de cada semana</span>
+        </span>
+        <span className="text-brand-teal">Abrir →</span>
+      </Link>
 
       {canManage && (
         <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
@@ -171,6 +185,14 @@ export default async function GrupoPage(props: {
             Monitor: {group.monitor_name ?? "Sin asignar"} · Líder: {group.leader_name ?? "Sin asignar"}
           </p>
         )}
+        <p className="mt-2 text-sm text-stone-600">
+          Respaldo: {group.backup_leader_name ?? "Sin asignar"}
+          {canManage && (
+            <Link href={`/grupos/${group.id}/calendario`} className="ml-2 text-xs text-brand-teal hover:underline">
+              {group.backup_leader_name ? "Cambiar" : "Asignar"}
+            </Link>
+          )}
+        </p>
       </section>
 
       {canManage && (
@@ -242,7 +264,7 @@ export default async function GrupoPage(props: {
         </section>
       )}
 
-      {canManage && (
+      {canRun && (
         <section className="mt-5 rounded-xl border border-stone-200 bg-white p-4">
           <h2 className="mb-3 text-sm font-medium">Últimas reuniones</h2>
           {meetings.length === 0 ? (
