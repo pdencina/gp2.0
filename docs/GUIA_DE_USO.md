@@ -50,6 +50,13 @@ Además de lo del líder:
 - **Habilitación**: reconciliación de datos y etapa de cada sede. Desde ahí, **Asignar sedes por lote** para dar sede a grupos y personas por programa, modalidad, líder, ciudad o grupo, sin repasar uno por uno.
 - **Zona horaria** de cada grupo (en su detalle): quien participa de un grupo online ve además la hora de la reunión en su propia zona.
 
+## Ventana de bienvenida y datos personales
+Al iniciar sesión sale una ventana de bienvenida (una vez por inicio de sesión, no en cada página):
+- **Te saluda** por tu nombre.
+- **Avisa qué datos faltan**: el género, la fecha de nacimiento y la aceptación de los términos son indispensables para inscribirse (se marcan como *para inscribirte*); el teléfono, el país, la ciudad y la sede son recomendados. Si la persona es menor de 18 años, también pide el nombre y un contacto de su tutor. Muestra el porcentaje de perfil completo.
+- **Detecta si cambiaste de lugar**: compara el país de tu perfil con la zona horaria de tu dispositivo (no usa GPS ni pide permisos). Si no coinciden, ofrece *Actualizar mi ubicación* (te lleva al perfil con el país ya propuesto) o *Sigo en…* (no vuelve a preguntar por ese país).
+- En **Mi perfil** lo que falta se resalta en ámbar y arriba se ve el avance. Esa pantalla no se tapa con la ventana.
+
 ## Verificar un certificado
 Cualquier persona puede abrir `/verificar` en el sitio, escribir el código del pie del certificado y ver si es válido. Solo muestra el nombre, el programa, la sede y la fecha.
 

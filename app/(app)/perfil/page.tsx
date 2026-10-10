@@ -3,7 +3,9 @@ import { getSession } from "@/lib/session";
 import { ROLE_VIEWS } from "@/lib/roles";
 import { Flash, fieldClass, primaryBtn } from "@/components/Flash";
 import { Icon } from "@/components/Icon";
-import { Avatar, Callout } from "@/components/ui";
+import { Avatar, Callout, ProgressRing } from "@/components/ui";
+import { COUNTRIES, countryLabel } from "@/lib/places";
+import { profileCheck, type ProfileData } from "@/lib/profile-check";
 import { actualizarPerfil } from "@/app/actions/gestion";
 
 export const dynamic = "force-dynamic";
@@ -22,14 +24,8 @@ type ProfileRow = {
   campus_id: string | null;
 };
 
-const COUNTRIES: [string, string][] = [
-  ["CL", "Chile"], ["VE", "Venezuela"], ["UY", "Uruguay"], ["US", "Estados Unidos"], ["CO", "Colombia"],
-  ["AR", "Argentina"], ["PE", "Perú"], ["MX", "México"], ["BR", "Brasil"], ["EC", "Ecuador"],
-  ["BO", "Bolivia"], ["PY", "Paraguay"], ["ES", "España"], ["DO", "República Dominicana"], ["NI", "Nicaragua"],
-];
-
 export default async function PerfilPage(props: {
-  searchParams: Promise<{ error?: string; ok?: string }>;
+  searchParams: Promise<{ error?: string; ok?: string; pais?: string }>;
 }) {
   const searchParams = await props.searchParams;
   const { supabase, user, role, fullName } = await getSession();
@@ -42,6 +38,12 @@ export default async function PerfilPage(props: {
   const p = (data ?? {}) as Partial<ProfileRow>;
   const { data: campusRows } = await supabase.from("campuses").select("id, name").eq("active", true).order("name");
   const campuses = (campusRows ?? []) as { id: string; name: string }[];
+
+  const check = profileCheck({ ...(p as Partial<ProfileData>), full_name: fullName }, { campusesExist: campuses.length > 0 });
+  const missing = new Set(check.missing.map((m) => m.key));
+  // lo que falta se resalta en ámbar
+  const warn = (...keys: string[]) => (keys.some((k) => missing.has(k)) ? " !border-amber-400 ring-2 ring-amber-200" : "");
+  const detected = /^[A-Z]{2}$/.test((searchParams.pais ?? "").toUpperCase()) ? searchParams.pais!.toUpperCase() : null;
 
   const label = "block text-xs text-stone-500";
   const input = `${fieldClass} mt-1 text-base`;
@@ -57,18 +59,29 @@ export default async function PerfilPage(props: {
             <span className="truncate">{user.email}</span>
           </p>
         </div>
+        <ProgressRing value={check.percent} size={56} stroke={6} tone={check.blocking ? "orange" : "green"} label={`Perfil completo al ${check.percent} %`}>
+          <span className="text-xs font-semibold tabular">{check.percent}%</span>
+        </ProgressRing>
       </header>
       <Flash error={searchParams.error} ok={searchParams.ok} />
-      {!p.terms_accepted_at && (
-        <Callout tone="warn" className="mb-4">
-          Para inscribirte necesitas aceptar los términos y la política de privacidad (al final del formulario).
+      {detected && (
+        <Callout tone="info" className="mb-4">
+          Detectamos que estás en {countryLabel(detected)}. Confirma tu país y tu ciudad y guarda los cambios.
         </Callout>
+      )}
+      {check.missing.length > 0 ? (
+        <Callout tone={check.blocking ? "warn" : "info"} className="mb-4">
+          {check.blocking ? "Para inscribirte te falta completar: " : "Para terminar tu perfil te falta: "}
+          {check.missing.map((m) => m.label.replace(/^(Tu|Tus|El|Un) /, "").toLowerCase()).join(", ")}.
+        </Callout>
+      ) : (
+        <Callout tone="success" className="mb-4">Tu perfil está completo. Gracias por mantener tus datos al día.</Callout>
       )}
 
       <form action={actualizarPerfil} className="enter space-y-4 card p-5">
         <label className={label}>
           Nombre completo
-          <input name="full_name" defaultValue={fullName} autoComplete="name" className={input} />
+          <input name="full_name" defaultValue={fullName} autoComplete="name" className={`${input}${warn("full_name")}`} />
         </label>
 
         <label className={label}>
@@ -85,7 +98,7 @@ export default async function PerfilPage(props: {
             autoComplete="tel"
             defaultValue={p.phone ?? ""}
             placeholder="+56 9 1234 5678"
-            className={input}
+            className={`${input}${warn("phone")}`}
           />
           <span className="mt-1 block text-stone-500">
             Incluye el código de país. Solo tu líder y las personas que te acompañan pueden verlo.
@@ -95,7 +108,7 @@ export default async function PerfilPage(props: {
         <div className="grid gap-4 md:grid-cols-2">
           <label className={label}>
             Género
-            <select name="gender" defaultValue={p.gender ?? ""} className={input}>
+            <select name="gender" defaultValue={p.gender ?? ""} className={`${input}${warn("gender")}`}>
               <option value="">Prefiero no indicarlo</option>
               <option value="hombre">Hombre</option>
               <option value="mujer">Mujer</option>
@@ -103,11 +116,11 @@ export default async function PerfilPage(props: {
           </label>
           <label className={label}>
             Fecha de nacimiento
-            <input name="birth_date" type="date" defaultValue={p.birth_date ?? ""} className={input} />
+            <input name="birth_date" type="date" defaultValue={p.birth_date ?? ""} className={`${input}${warn("birth_date")}`} />
           </label>
           <label className={label}>
             País
-            <select name="country" defaultValue={p.country ?? ""} className={input}>
+            <select name="country" defaultValue={detected ?? p.country ?? ""} className={`${input}${warn("country")}${detected ? " !border-brand-teal ring-2 ring-brand-teal-200" : ""}`}>
               <option value="">Elige tu país</option>
               {COUNTRIES.map(([code, name]) => (
                 <option key={code} value={code}>
@@ -119,7 +132,7 @@ export default async function PerfilPage(props: {
           {campuses.length > 0 && (
             <label className={label}>
               Mi sede
-              <select name="campus_id" defaultValue={p.campus_id ?? ""} className={input}>
+              <select name="campus_id" defaultValue={p.campus_id ?? ""} className={`${input}${warn("campus")}`}>
                 <option value="">Sin sede todavía</option>
                 {campuses.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -131,7 +144,7 @@ export default async function PerfilPage(props: {
           )}
           <label className={label}>
             Ciudad
-            <input name="city" defaultValue={p.city ?? ""} autoComplete="address-level2" className={input} />
+            <input name="city" defaultValue={p.city ?? ""} autoComplete="address-level2" className={`${input}${warn("city")}${detected ? " !border-brand-teal ring-2 ring-brand-teal-200" : ""}`} />
           </label>
         </div>
 
@@ -144,10 +157,10 @@ export default async function PerfilPage(props: {
             <Icon name="shield" className="h-3.5 w-3.5 text-brand-teal" />
             Si eres menor de 18 años
           </legend>
-          <input name="guardian_name" placeholder="Nombre de tu tutor" defaultValue={p.guardian_name ?? ""} className={fieldClass} />
+          <input name="guardian_name" placeholder="Nombre de tu tutor" defaultValue={p.guardian_name ?? ""} className={`${fieldClass}${warn("guardian_name")}`} />
           <div className="grid gap-3 md:grid-cols-2">
-            <input name="guardian_email" type="email" placeholder="Correo del tutor" defaultValue={p.guardian_email ?? ""} className={fieldClass} />
-            <input name="guardian_phone" type="tel" placeholder="Teléfono del tutor" defaultValue={p.guardian_phone ?? ""} className={fieldClass} />
+            <input name="guardian_email" type="email" placeholder="Correo del tutor" defaultValue={p.guardian_email ?? ""} className={`${fieldClass}${warn("guardian_contact")}`} />
+            <input name="guardian_phone" type="tel" placeholder="Teléfono del tutor" defaultValue={p.guardian_phone ?? ""} className={`${fieldClass}${warn("guardian_contact")}`} />
           </div>
         </fieldset>
 
@@ -158,7 +171,7 @@ export default async function PerfilPage(props: {
               Aceptaste los términos y la política de privacidad.
             </p>
           ) : (
-            <label className="flex items-start gap-2 text-stone-700">
+            <label className={`flex items-start gap-2 rounded-xl p-2 text-stone-700${warn("terms") ? " bg-amber-50 ring-2 ring-amber-200" : ""}`}>
               <input type="checkbox" name="accept_terms" className="mt-1" />
               <span>
                 Acepto los términos y la{" "}
