@@ -8,7 +8,8 @@ const MANAGERS: Role[] = ["admin", "coordinador", "monitor", "lider"];
 
 const ITEMS: { section: string; item: NavItem; roles: Role[] }[] = [
   { section: "Mi espacio", item: { href: "/inicio", label: "Inicio", icon: "home" }, roles: ALL },
-  { section: "Mi espacio", item: { href: "/inscripcion", label: "Inscripción", icon: "plus" }, roles: ALL },
+  { section: "Mi espacio", item: { href: "/mi-progreso", label: "Mi progreso", icon: "route" }, roles: ALL },
+  { section: "Mi espacio", item: { href: "/catalogo", label: "Catálogo", icon: "plus" }, roles: ALL },
   { section: "Mi espacio", item: { href: "/perfil", label: "Mi perfil", icon: "user" }, roles: ALL },
   { section: "Seguimiento", item: { href: "/panel", label: "Panel", icon: "chart" }, roles: ["admin", "coordinador", "monitor"] },
   { section: "Seguimiento", item: { href: "/grupos", label: "Grupos", icon: "grid" }, roles: MANAGERS },

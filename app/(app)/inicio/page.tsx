@@ -96,7 +96,7 @@ export default async function InicioPage(props: {
           ? "/grupos"
           : currentLesson
             ? `/lecciones/${currentLesson.id}`
-            : "/inscripcion";
+            : "/catalogo";
   const actionLabel =
     role === "alumno" ? (currentLesson ? "Ver lección de hoy" : "Inscribirme a un grupo") : view.action;
 
@@ -292,7 +292,7 @@ export default async function InicioPage(props: {
           <section className="rounded-xl border border-stone-200 bg-white p-6 text-center">
             <h2 className="font-medium">Aún no estás en un grupo</h2>
             <p className="mt-1 text-sm text-stone-500">Mira los grupos que están abiertos y elige el que mejor te acomode.</p>
-            <Link href="/inscripcion" className="mt-4 inline-block rounded-lg bg-brand-orange px-4 py-2.5 text-sm font-medium text-white hover:brightness-95">
+            <Link href="/catalogo" className="mt-4 inline-block rounded-lg bg-brand-orange px-4 py-2.5 text-sm font-medium text-white hover:brightness-95">
               Ver grupos disponibles
             </Link>
           </section>

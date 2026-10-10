@@ -54,6 +54,13 @@ export default async function CurriculumsPage(props: {
       <Flash error={searchParams.error} ok={searchParams.ok} />
 
       {isAdmin && (
+        <Link href="/curriculums/clasificar" className="mb-4 flex items-center justify-between rounded-xl bg-brand-teal/10 px-4 py-3 text-sm text-brand-teal hover:brightness-95">
+          <span>Clasifica el catálogo: ofertas, categorías, años de ruta y visibilidad.</span>
+          <span className="font-medium">Clasificar →</span>
+        </Link>
+      )}
+
+      {isAdmin && (
         <form action={crearCurriculum} className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
           <h2 className="mb-3 text-sm font-medium">Nuevo currículum</h2>
           <div className="grid gap-2 md:grid-cols-2">

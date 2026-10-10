@@ -77,6 +77,7 @@ beforeAll(async () => {
   db = await newDb();
   for (const f of BASE) await db.exec(sql(f));
   await db.exec(sql("006_gp2_nucleo.sql"));
+  await db.exec(sql("007_catalogo.sql"));
   await db.exec(GRANTS);
 
   await addPeople(db, [
@@ -577,5 +578,50 @@ describe("migración 006 sobre datos reales anteriores", () => {
     const before = (await ldb.query(q)).rows[0];
     await ldb.exec(sql("006_gp2_nucleo.sql"));
     expect((await ldb.query(q)).rows[0]).toEqual(before);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Fase 2 · catálogo de ofertas (007)
+// ---------------------------------------------------------------------------
+describe("catálogo de ofertas (007)", () => {
+  const PRIV = id(140);
+
+  it("solo el administrador cambia la clasificación; el coordinador sigue editando lo demás", async () => {
+    expect(await failure(COORD, `update curriculums set category = 'recreacion' where id = $1`, [CUR])).toContain("Solo el administrador");
+    expect(await failure(COORD, `update curriculums set offering = 'X' where id = $1`, [CUR])).toContain("Solo el administrador");
+    await as(COORD, `update curriculums set description = 'Nueva descripción' where id = $1`, [CUR]);
+    await as(ADMIN, `update curriculums set offering = 'AR Hombres', category = 'formacion', duration_years = 3, certifiable = true where id = $1`, [CUR]);
+    const [c] = (await db.query<{ offering: string; duration_years: number; description: string }>(
+      `select offering, duration_years, description from curriculums where id = $1`, [CUR])).rows;
+    expect(c).toEqual({ offering: "AR Hombres", duration_years: 3, description: "Nueva descripción" });
+  });
+
+  it("un programa oculto no se ofrece, pero lo ven su coordinador, sus líderes y el administrador", async () => {
+    await db.query(`insert into curriculums (id, name, visibility) values ($1, 'Interno', 'privado')`, [PRIV]);
+    await db.query(`insert into curriculum_coordinators values ($1, $2)`, [PRIV, OTHER_COORD]);
+    expect(await as(OUTSIDER, `select id from curriculums where id = $1`, [PRIV])).toHaveLength(0);
+    expect(await as(OTHER_COORD, `select id from curriculums where id = $1`, [PRIV])).toHaveLength(1);
+    expect(await as(ADMIN, `select id from curriculums where id = $1`, [PRIV])).toHaveLength(1);
+
+    await db.query(
+      `insert into groups (id, season_id, curriculum_id, name, leader_id, modality) values ($1, $2, $3, 'G interno', $4, 'virtual')`,
+      [id(141), SEASON2, PRIV, LEADER]);
+    expect(await as(LEADER, `select id from curriculums where id = $1`, [PRIV])).toHaveLength(1);
+    expect(await as(LEADER, `select id from group_overview where id = $1`, [id(141)])).toHaveLength(1);
+    // el grupo de un programa oculto tampoco aparece para un desconocido
+    expect(await as(OUTSIDER, `select id from group_overview where id = $1`, [id(141)])).toHaveLength(0);
+  });
+
+  it("quien ya participa en un programa que luego se oculta lo sigue viendo", async () => {
+    await db.query(`update curriculums set visibility = 'privado' where id = $1`, [CUR2]);
+    await db.query(
+      `insert into groups (id, season_id, curriculum_id, name, modality) values ($1, $2, $3, 'G otro', 'virtual')`,
+      [id(143), SEASON2, CUR2]);
+    await db.exec(`select set_config('app.skip_checks', 'on', false)`);
+    await db.query(`insert into enrollments (person_id, group_id, status) values ($1, $2, 'en_curso')`, [S3, id(143)]);
+    await db.exec(`select set_config('app.skip_checks', 'off', false)`);
+    expect(await as(S3, `select id from curriculums where id = $1`, [CUR2])).toHaveLength(1);
+    expect(await as(OUTSIDER, `select id from curriculums where id = $1`, [CUR2])).toHaveLength(0);
   });
 });

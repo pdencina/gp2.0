@@ -75,7 +75,7 @@ export default async function InscripcionPage(props: {
                     <li key={g.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-stone-200 bg-white p-4">
                       <div className="text-sm">
                         <div className="font-medium">
-                          {g.name} <span className="font-normal text-stone-400">· Ciclo {g.cycle_number}</span>
+                          {g.name} {g.cycle_number != null && <span className="font-normal text-stone-400">· Ciclo {g.cycle_number}</span>}
                         </div>
                         <div className="text-stone-500">{scheduleLabel(g)}</div>
                         {g.address && <div className="text-stone-500">{g.address}</div>}

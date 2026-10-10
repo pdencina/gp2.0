@@ -7,8 +7,8 @@ export type GroupOverview = {
   season_id: string;
   season_name: string;
   season_status: string;
-  cycle_id: string;
-  cycle_number: number;
+  cycle_id: string | null;
+  cycle_number: number | null;
   cycle_title: string | null;
   curriculum_id: string;
   curriculum_name: string;
@@ -24,6 +24,12 @@ export type GroupOverview = {
   capacity: number;
   continues_from: string | null;
   enrolled: number;
+  version_id?: string | null;
+  formative_year?: number;
+  campus_id?: string | null;
+  campus_name?: string | null;
+  backup_leader_id?: string | null;
+  backup_leader_name?: string | null;
 };
 
 const hm = (t: string | null) => (t ? t.slice(0, 5) : "");
