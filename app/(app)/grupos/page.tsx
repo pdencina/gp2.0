@@ -43,23 +43,23 @@ export default async function GruposPage(props: {
   }
 
   return (
-    <div className="mx-auto max-w-4xl p-4 md:p-8">
+    <div className="enter mx-auto max-w-4xl p-4 pb-16 md:p-8 md:pb-16">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-medium">Grupos</h1>
+          <h1 className="page-title">Grupos</h1>
           <p className="mb-5 mt-1 text-sm text-stone-500">
             {groups.length} {groups.length === 1 ? "grupo" : "grupos"} {showFinished ? "finalizados" : "activos"} en tu alcance.
           </p>
         </div>
-        <Link href={showFinished ? "/grupos" : "/grupos?ver=finalizados"} className="mb-5 text-sm text-brand-teal hover:underline">
+        <Link href={showFinished ? "/grupos" : "/grupos?ver=finalizados"} className="mb-5 text-sm link">
           {showFinished ? "Ver los activos" : "Ver los finalizados"}
         </Link>
       </div>
       <Flash error={searchParams.error} ok={searchParams.ok} />
 
       {canCreate && !showFinished && (
-        <form action={crearGrupo} className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
-          <h2 className="mb-3 text-sm font-medium">Nuevo grupo</h2>
+        <form action={crearGrupo} className="mb-5 card p-4">
+          <h2 className="mb-3 section-title">Nuevo grupo</h2>
           {programs.length === 0 || seasons.length === 0 ? (
             <p className="text-sm text-stone-500">
               Antes de crear un grupo necesitas {seasons.length === 0 ? "una temporada" : ""}
@@ -128,7 +128,7 @@ export default async function GruposPage(props: {
         </form>
       )}
 
-      <section className="rounded-xl border border-stone-200 bg-white p-4">
+      <section className="card p-4">
         {groups.length === 0 ? (
           <p className="py-6 text-center text-sm text-stone-500">Todavía no hay grupos para mostrar.</p>
         ) : (
@@ -144,7 +144,7 @@ export default async function GruposPage(props: {
                   </span>
                   <span className="flex flex-wrap items-center gap-3 text-stone-500">
                     {(!g.leader_id || !g.monitor_id) && (
-                      <span className="rounded bg-amber-50 px-2 py-0.5 text-xs text-amber-800">
+                      <span className="chip bg-amber-50 text-xs text-amber-800">
                         {!g.leader_id ? "Sin líder" : "Sin monitor"}
                       </span>
                     )}

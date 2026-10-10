@@ -4,11 +4,11 @@ export const metadata = { title: "Política de privacidad · Grupos Pequeños" }
 
 export default function PrivacidadPage() {
   return (
-    <main className="mx-auto max-w-2xl p-6 md:p-10">
-      <Link href="/login" className="text-sm text-brand-teal hover:underline">
+    <main className="enter mx-auto max-w-2xl p-6 md:p-10">
+      <Link href="/login" className="text-sm link">
         ← Volver
       </Link>
-      <h1 className="mb-4 mt-4 text-2xl font-medium">Política de privacidad</h1>
+      <h1 className="mb-4 mt-4 page-title">Política de privacidad</h1>
       <div className="space-y-3 text-sm leading-relaxed text-stone-700">
         <p>
           Grupos Pequeños ARM Global guarda tu nombre, correo y tu participación en grupos (asistencia y avance)

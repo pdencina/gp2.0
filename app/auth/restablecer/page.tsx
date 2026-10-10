@@ -38,7 +38,7 @@ export default function RestablecerPage() {
         <div className="mb-8">
           <Logo />
         </div>
-        <h1 className="text-2xl font-medium">Elige tu nueva contraseña</h1>
+        <h1 className="page-title">Elige tu nueva contraseña</h1>
         <p className="mb-6 mt-1 text-sm text-stone-500">Al menos 8 caracteres, con letras y números.</p>
         <form onSubmit={onSubmit} className="space-y-3" noValidate>
           <input
@@ -67,7 +67,7 @@ export default function RestablecerPage() {
           <button
             type="submit"
             disabled={loading}
-            className="h-11 w-full rounded-lg bg-brand-orange font-medium text-white disabled:opacity-60"
+            className="h-11 w-full btn btn-primary"
           >
             {loading ? "Guardando…" : "Guardar contraseña"}
           </button>

@@ -42,7 +42,7 @@ export default async function CertificadoPage(props: { params: Promise<{ id: str
   return (
     <div className="mx-auto max-w-3xl p-4 md:p-8 print:max-w-none print:p-0">
       <div className="mb-4 flex items-center justify-between text-sm print:hidden">
-        <Link href={mine ? "/mi-progreso" : "/certificados"} className="text-brand-teal hover:underline">← Volver</Link>
+        <Link href={mine ? "/mi-progreso" : "/certificados"} className="link">← Volver</Link>
         <span className="text-xs text-stone-500">Para guardarlo, usa Imprimir y elige “Guardar como PDF”.</span>
       </div>
 

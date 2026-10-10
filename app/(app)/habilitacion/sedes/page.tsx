@@ -31,8 +31,8 @@ export default async function SedesPorLotePage(props: {
   ]);
   if (gapsR.error) {
     return (
-      <div className="mx-auto max-w-3xl p-4 md:p-8">
-        <h1 className="text-2xl font-medium">Asignar sedes</h1>
+      <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
+        <h1 className="page-title">Asignar sedes</h1>
         <p className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
           Falta instalar esta herramienta en la base de datos: ejecuta <code>supabase/v2/013_sedes_por_lote.sql</code> en el SQL Editor de Supabase.
         </p>
@@ -51,9 +51,9 @@ export default async function SedesPorLotePage(props: {
   );
 
   return (
-    <div className="mx-auto max-w-4xl p-4 md:p-8">
-      <Link href="/habilitacion" className="text-sm text-brand-teal hover:underline">← Habilitación</Link>
-      <h1 className="mt-2 text-2xl font-medium">Asignar sedes</h1>
+    <div className="enter mx-auto max-w-4xl p-4 pb-16 md:p-8 md:pb-16">
+      <Link href="/habilitacion" className="text-sm link">← Habilitación</Link>
+      <h1 className="mt-2 page-title">Asignar sedes</h1>
       <p className="mb-5 mt-1 text-sm text-stone-500">
         Los grupos y las personas importados no tienen sede, y sin sede solo el administrador puede certificarlos. Aquí se asigna por criterios, no uno por uno. Nunca se cambia una sede que ya está asignada, y cada acción deja una sola anotación en la auditoría.
       </p>
@@ -64,7 +64,7 @@ export default async function SedesPorLotePage(props: {
         {Array.from(gaps.entries()).map(([k]) => {
           const g = ((gapsR.data ?? []) as Gap[]).find((x) => x.clave === k)!;
           return (
-            <div key={k} className="rounded-xl border border-stone-200 bg-white p-3">
+            <div key={k} className="card p-3">
               <p className="text-xs text-stone-500">{g.etiqueta}</p>
               <p className="text-xl font-medium">{fmtNum(g.n)}</p>
             </div>
@@ -72,8 +72,8 @@ export default async function SedesPorLotePage(props: {
         })}
       </section>
 
-      <section className="mb-6 rounded-xl border border-stone-200 bg-white p-4">
-        <h2 className="mb-1 text-sm font-medium">Grupos</h2>
+      <section className="mb-6 card p-4">
+        <h2 className="mb-1 section-title">Grupos</h2>
         <p className="mb-3 text-xs text-stone-500">Se aplica a los grupos activos que todavía no tienen sede.</p>
 
         <form action={asignarSedeGruposPorLider} className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-stone-50 p-3">
@@ -81,7 +81,7 @@ export default async function SedesPorLotePage(props: {
             <strong className="font-medium">Según la sede de su líder.</strong>{" "}
             <span className="text-stone-500">Se puede aplicar a {fmtNum(gaps.get("grupos_con_lider_con_sede") ?? 0)} grupos hoy.</span>
           </span>
-          <button className="h-10 rounded-lg border border-brand-teal px-3 text-sm text-brand-teal hover:bg-brand-teal hover:text-white">Aplicar</button>
+          <button className="btn btn-outline">Aplicar</button>
         </form>
 
         <form action={asignarSedeGrupos} className="flex flex-wrap items-end gap-2">
@@ -108,8 +108,8 @@ export default async function SedesPorLotePage(props: {
         </form>
       </section>
 
-      <section className="rounded-xl border border-stone-200 bg-white p-4">
-        <h2 className="mb-1 text-sm font-medium">Personas</h2>
+      <section className="card p-4">
+        <h2 className="mb-1 section-title">Personas</h2>
         <p className="mb-3 text-xs text-stone-500">Se aplica a las personas activas que todavía no tienen sede.</p>
 
         <form action={asignarSedePersonasDesdeGrupos} className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-stone-50 p-3">
@@ -117,7 +117,7 @@ export default async function SedesPorLotePage(props: {
             <strong className="font-medium">Según la sede de su grupo.</strong>{" "}
             <span className="text-stone-500">Se puede aplicar a {fmtNum(gaps.get("personas_con_grupo_con_sede") ?? 0)} personas hoy; conviene hacerlo después de asignar las sedes de los grupos.</span>
           </span>
-          <button className="h-10 rounded-lg border border-brand-teal px-3 text-sm text-brand-teal hover:bg-brand-teal hover:text-white">Aplicar</button>
+          <button className="btn btn-outline">Aplicar</button>
         </form>
 
         <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-stone-400">Por país y ciudad</h3>
@@ -136,7 +136,7 @@ export default async function SedesPorLotePage(props: {
                   </span>
                   <span className="flex items-center gap-2">
                     {campusSelect()}
-                    <button className="h-10 rounded-lg border border-stone-300 px-3 text-sm hover:bg-stone-50">Asignar</button>
+                    <button className="btn btn-secondary">Asignar</button>
                   </span>
                 </form>
               </li>

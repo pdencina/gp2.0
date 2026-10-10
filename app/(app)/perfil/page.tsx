@@ -45,12 +45,12 @@ export default async function PerfilPage(props: {
   const input = `${fieldClass} mt-1 text-base`;
 
   return (
-    <div className="mx-auto max-w-xl p-4 md:p-8">
-      <h1 className="text-2xl font-medium">Mi perfil</h1>
+    <div className="enter mx-auto max-w-xl p-4 pb-16 md:p-8 md:pb-16">
+      <h1 className="page-title">Mi perfil</h1>
       <p className="mb-5 mt-1 text-sm text-stone-500">{ROLE_VIEWS[role].label}</p>
       <Flash error={searchParams.error} ok={searchParams.ok} />
 
-      <form action={actualizarPerfil} className="space-y-4 rounded-xl border border-stone-200 bg-white p-4">
+      <form action={actualizarPerfil} className="space-y-4 card p-4">
         <label className={label}>
           Nombre completo
           <input name="full_name" defaultValue={fullName} autoComplete="name" className={input} />
@@ -158,7 +158,7 @@ export default async function PerfilPage(props: {
       </form>
 
       <p className="mt-5 text-sm">
-        <Link href="/auth/restablecer" className="text-brand-teal hover:underline">
+        <Link href="/auth/restablecer" className="link">
           Cambiar mi contraseña
         </Link>
       </p>

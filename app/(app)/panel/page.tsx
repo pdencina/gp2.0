@@ -26,8 +26,8 @@ export default async function PanelPage() {
   const missing = [resumenR, semanalR, currR].some((r) => r.error && /Could not find|404|PGRST202/i.test(r.error.message + (r.error.code ?? "")));
   if (missing) {
     return (
-      <div className="mx-auto max-w-3xl p-4 md:p-8">
-        <h1 className="text-2xl font-medium">Panel</h1>
+      <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
+        <h1 className="page-title">Panel</h1>
         <p className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
           Falta instalar las consultas del panel en la base de datos: ejecuta <code>supabase/v2/005_panel.sql</code> en el SQL Editor de Supabase.
         </p>

@@ -84,11 +84,11 @@ export default async function ListaPage(props: {
   }
 
   return (
-    <div className="mx-auto max-w-2xl p-4 md:p-8">
-      <Link href={`/grupos/${group.id}`} className="text-sm text-brand-teal hover:underline">
+    <div className="enter mx-auto max-w-2xl p-4 pb-16 md:p-8 md:pb-16">
+      <Link href={`/grupos/${group.id}`} className="text-sm link">
         ← {group.name}
       </Link>
-      <h1 className="mt-2 text-2xl font-medium">Pasar lista</h1>
+      <h1 className="mt-2 page-title">Pasar lista</h1>
       <p className="mb-4 mt-1 text-sm text-stone-500">
         {group.name} · {group.curriculum_name}
         {group.cycle_number != null ? ` · Ciclo ${group.cycle_number}` : ""}
@@ -100,7 +100,7 @@ export default async function ListaPage(props: {
           Fecha
           <input type="date" name="fecha" defaultValue={fecha} max={todayInChile()} className={`${fieldClass} mt-1`} />
         </label>
-        <button className="h-10 rounded-lg border border-stone-300 px-3 text-sm hover:bg-stone-50">Cambiar</button>
+        <button className="btn btn-secondary">Cambiar</button>
       </form>
 
       {meeting && (
@@ -116,7 +116,7 @@ export default async function ListaPage(props: {
       )}
 
       {members.length === 0 ? (
-        <p className="rounded-xl border border-stone-200 bg-white p-6 text-center text-sm text-stone-500">
+        <p className="empty">
           Este grupo todavía no tiene inscritos en curso. Inscríbelos desde el detalle del grupo.
         </p>
       ) : (
@@ -149,7 +149,7 @@ export default async function ListaPage(props: {
 
           <div className="fixed inset-x-0 bottom-0 border-t border-stone-200 bg-white/95 p-3 backdrop-blur md:left-64">
             <div className="mx-auto max-w-2xl">
-              <button className="h-12 w-full rounded-xl bg-brand-orange text-base font-medium text-white hover:brightness-95">
+              <button className="h-12 w-full btn btn-primary">
                 Guardar lista
               </button>
             </div>

@@ -48,8 +48,8 @@ export default async function CertificadosPage(props: {
 
   if (pErr) {
     return (
-      <div className="mx-auto max-w-3xl p-4 md:p-8">
-        <h1 className="text-2xl font-medium">Certificados</h1>
+      <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
+        <h1 className="page-title">Certificados</h1>
         <p className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
           Falta instalar los certificados en la base de datos: ejecuta <code>supabase/v2/010_certificados.sql</code> en el SQL Editor de Supabase.
         </p>
@@ -100,8 +100,8 @@ export default async function CertificadosPage(props: {
   );
 
   return (
-    <div className="mx-auto max-w-4xl p-4 md:p-8">
-      <h1 className="text-2xl font-medium">Certificados</h1>
+    <div className="enter mx-auto max-w-4xl p-4 pb-16 md:p-8 md:pb-16">
+      <h1 className="page-title">Certificados</h1>
       <p className="mb-5 mt-1 text-sm text-stone-500">
         Emiten el administrador y los pastores designados en cada sede. Un certificado se emite solo cuando la persona cumple los requisitos de la etapa o del programa.
       </p>
@@ -109,7 +109,7 @@ export default async function CertificadosPage(props: {
       {sp.aviso && <p role="status" className="mb-4 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">{sp.aviso}</p>}
 
       {programs.length === 0 ? (
-        <p className="rounded-xl border border-stone-200 bg-white p-6 text-center text-sm text-stone-500">
+        <p className="empty">
           Ningún programa entrega certificado todavía. El administrador lo activa en Currículums → Clasificar.
         </p>
       ) : (
@@ -130,12 +130,12 @@ export default async function CertificadosPage(props: {
                 </select>
               </label>
             )}
-            <button className="h-10 rounded-lg border border-stone-300 px-3 text-sm hover:bg-stone-50">Ver</button>
+            <button className="btn btn-secondary">Ver</button>
           </form>
 
           <section className="mb-6">
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-sm font-medium">
+              <h2 className="section-title">
                 Listos para certificar {candidates.length > 0 && <span className="font-normal text-stone-500">({candidates.length}{candidates.length >= 200 ? "+" : ""})</span>}
               </h2>
               {issuable > 1 && (
@@ -148,13 +148,13 @@ export default async function CertificadosPage(props: {
             {candR.error ? (
               <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800">{candR.error.message}</p>
             ) : candidates.length === 0 ? (
-              <p className="rounded-xl border border-stone-200 bg-white p-6 text-center text-sm text-stone-500">
+              <p className="empty">
                 Nadie cumple todavía los requisitos de {year ? `el año ${year}` : "este programa"}, o ya tienen su certificado.
               </p>
             ) : (
               <ul className="space-y-2">
                 {candidates.map((c) => (
-                  <li key={c.ce_id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-stone-200 bg-white p-3 text-sm">
+                  <li key={c.ce_id} className="flex flex-wrap items-center justify-between gap-2 card p-3 text-sm">
                     <span>
                       <Link href={`/mi-progreso/${c.ce_id}`} className="font-medium hover:underline">{c.person_name || "Sin nombre"}</Link>
                       <span className="ml-2 text-stone-500">{c.campus ?? "Sin sede"}</span>
@@ -164,7 +164,7 @@ export default async function CertificadosPage(props: {
                         {scopeFields}
                         <input type="hidden" name="ce" value={c.ce_id} />
                         <input type="hidden" name="year" value={c.formative_year ?? ""} />
-                        <button className="h-9 rounded-lg bg-brand-orange px-3 text-sm font-medium text-white hover:brightness-95">Emitir</button>
+                        <button className="btn btn-primary">Emitir</button>
                       </form>
                     ) : (
                       <span className="text-xs text-stone-400">Lo emite el pastor de su sede o el administrador</span>
@@ -176,20 +176,20 @@ export default async function CertificadosPage(props: {
           </section>
 
           <section className="mb-6">
-            <h2 className="mb-2 text-sm font-medium">Emitidos</h2>
+            <h2 className="mb-2 section-title">Emitidos</h2>
             {issued.length === 0 ? (
-              <p className="rounded-xl border border-stone-200 bg-white p-6 text-center text-sm text-stone-500">Todavía no hay certificados emitidos de este programa.</p>
+              <p className="empty">Todavía no hay certificados emitidos de este programa.</p>
             ) : (
               <ul className="space-y-2">
                 {issued.map((c) => (
-                  <li key={c.id} className="rounded-xl border border-stone-200 bg-white p-3 text-sm">
+                  <li key={c.id} className="card p-3 text-sm">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span>
-                        <Link href={`/certificados/${c.id}`} className="font-medium text-brand-teal hover:underline">{c.profiles?.full_name || "Sin nombre"}</Link>
+                        <Link href={`/certificados/${c.id}`} className="font-medium link">{c.profiles?.full_name || "Sin nombre"}</Link>
                         <span className="ml-2 text-stone-500">{certificateTitle(c, program?.name ?? "")}</span>
                       </span>
                       <span className="text-xs text-stone-500">
-                        {c.status === "revocado" && <span className="mr-2 rounded bg-red-50 px-1.5 py-0.5 text-red-700">Revocado</span>}
+                        {c.status === "revocado" && <span className="mr-2 chip bg-red-50 text-red-700">Revocado</span>}
                         {formatCode(c.code)} · {c.campuses?.name ?? "Sin sede"} · {dateEs(c.issued_at)}
                       </span>
                     </div>
@@ -200,7 +200,7 @@ export default async function CertificadosPage(props: {
                           {scopeFields}
                           <input type="hidden" name="id" value={c.id} />
                           <input name="reason" placeholder="Motivo (obligatorio)" aria-label="Motivo" className={`${fieldClass} md:max-w-xs`} />
-                          <button className="h-10 rounded-lg border border-red-300 px-3 text-sm text-red-700 hover:bg-red-50">Revocar certificado</button>
+                          <button className="btn btn-danger">Revocar certificado</button>
                         </form>
                       </details>
                     )}
@@ -213,8 +213,8 @@ export default async function CertificadosPage(props: {
       )}
 
       {isAdmin && (
-        <section className="rounded-xl border border-stone-200 bg-white p-4">
-          <h2 className="mb-1 text-sm font-medium">Pastores designados por sede</h2>
+        <section className="card p-4">
+          <h2 className="mb-1 section-title">Pastores designados por sede</h2>
           <p className="mb-3 text-xs text-stone-500">
             Pueden emitir certificados de las personas de su sede (la del grupo en que participan o, si no tienen, la de su perfil). Una persona sin sede solo la certifica el administrador.
           </p>
@@ -243,7 +243,7 @@ export default async function CertificadosPage(props: {
               <option value="" disabled>Sede…</option>
               {campuses.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
-            <button className="h-10 rounded-lg border border-brand-teal px-3 text-sm text-brand-teal hover:bg-brand-teal hover:text-white">Designar</button>
+            <button className="btn btn-outline">Designar</button>
           </form>
         </section>
       )}

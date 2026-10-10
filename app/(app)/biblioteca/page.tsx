@@ -55,9 +55,9 @@ export default async function BibliotecaPage(props: {
 
   if (!program) {
     return (
-      <div className="mx-auto max-w-3xl p-4 md:p-8">
-        <h1 className="text-2xl font-medium">Biblioteca</h1>
-        <p className="mt-4 rounded-xl border border-stone-200 bg-white p-6 text-center text-sm text-stone-500">
+      <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
+        <h1 className="page-title">Biblioteca</h1>
+        <p className="mt-4 empty">
           No coordinas ningún programa todavía.
         </p>
       </div>
@@ -78,8 +78,8 @@ export default async function BibliotecaPage(props: {
   ]);
   if (resR.error) {
     return (
-      <div className="mx-auto max-w-3xl p-4 md:p-8">
-        <h1 className="text-2xl font-medium">Biblioteca</h1>
+      <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
+        <h1 className="page-title">Biblioteca</h1>
         <p className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
           Falta instalar la biblioteca en la base de datos: ejecuta <code>supabase/v2/009_biblioteca.sql</code> en el SQL Editor de Supabase.
         </p>
@@ -122,13 +122,13 @@ export default async function BibliotecaPage(props: {
   const archived = resources.filter((r) => r.archived);
 
   const row = (r: Resource) => (
-    <li key={r.id} className="rounded-xl border border-stone-200 bg-white p-3">
+    <li key={r.id} className="card p-3">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0 text-sm">
           <p className="font-medium">
             <Link href={`/api/materiales/${r.id}`} target="_blank" className="hover:underline">{r.name}</Link>
-            <span className="ml-2 rounded bg-stone-100 px-1.5 py-0.5 text-xs font-normal text-stone-600">{kindLabel(r.kind)}</span>
-            <span className={`ml-1 rounded px-1.5 py-0.5 text-xs font-normal ${r.audience === "participantes" ? "bg-green-50 text-green-800" : "bg-amber-50 text-amber-800"}`}>
+            <span className="ml-2 chip bg-stone-100 text-xs font-normal text-stone-600">{kindLabel(r.kind)}</span>
+            <span className={`ml-1 chip font-normal ${r.audience === "participantes" ? "bg-green-50 text-green-800" : "bg-amber-50 text-amber-800"}`}>
               {audienceLabel(r.audience)}
             </span>
           </p>
@@ -142,7 +142,7 @@ export default async function BibliotecaPage(props: {
           <input type="hidden" name="id" value={r.id} />
           <input type="hidden" name="curriculum_id" value={program.id} />
           <input type="hidden" name="archived" value={r.archived ? "no" : "si"} />
-          <button className="text-xs text-stone-500 hover:text-brand-teal hover:underline">{r.archived ? "Restaurar" : "Archivar"}</button>
+          <button className="text-xs text-stone-500 hover:link">{r.archived ? "Restaurar" : "Archivar"}</button>
         </form>
       </div>
       {!r.archived && links.length > 0 && (
@@ -159,7 +159,7 @@ export default async function BibliotecaPage(props: {
                 </optgroup>
               ))}
             </select>
-            <button className="h-10 rounded-lg border border-brand-teal px-3 text-sm text-brand-teal hover:bg-brand-teal hover:text-white">Guardar</button>
+            <button className="btn btn-outline">Guardar</button>
           </form>
         </details>
       )}
@@ -167,8 +167,8 @@ export default async function BibliotecaPage(props: {
   );
 
   return (
-    <div className="mx-auto max-w-4xl p-4 md:p-8">
-      <h1 className="text-2xl font-medium">Biblioteca</h1>
+    <div className="enter mx-auto max-w-4xl p-4 pb-16 md:p-8 md:pb-16">
+      <h1 className="page-title">Biblioteca</h1>
       <p className="mb-5 mt-1 text-sm text-stone-500">
         Todo el material original de cada programa, en un solo lugar. Los archivos son privados: solo los ve quien corresponde, según para quién los marques y si su versión está publicada.
       </p>
@@ -181,8 +181,8 @@ export default async function BibliotecaPage(props: {
             {programs.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
         </label>
-        <button className="h-10 rounded-lg border border-stone-300 px-3 text-sm hover:bg-stone-50">Ver</button>
-        <Link href={`/curriculums/${program.id}`} className="ml-auto text-sm text-brand-teal hover:underline">Currículum y versiones →</Link>
+        <button className="btn btn-secondary">Ver</button>
+        <Link href={`/curriculums/${program.id}`} className="ml-auto text-sm link">Currículum y versiones →</Link>
       </form>
 
       <MaterialForm curriculumId={program.id} links={links} />
@@ -192,9 +192,9 @@ export default async function BibliotecaPage(props: {
         </p>
       )}
 
-      <h2 className="mb-2 mt-6 text-sm font-medium">{active.length} {active.length === 1 ? "material" : "materiales"}</h2>
+      <h2 className="mb-2 mt-6 section-title">{active.length} {active.length === 1 ? "material" : "materiales"}</h2>
       {active.length === 0 ? (
-        <p className="rounded-xl border border-stone-200 bg-white p-6 text-center text-sm text-stone-500">Todavía no hay materiales de este programa.</p>
+        <p className="empty">Todavía no hay materiales de este programa.</p>
       ) : (
         <ul className="space-y-2">{active.map(row)}</ul>
       )}

@@ -47,11 +47,11 @@ export default async function CicloPage(props: {
   const nextNumber = (lessons[lessons.length - 1]?.number ?? 0) + 1;
 
   return (
-    <div className="mx-auto max-w-3xl p-4 md:p-8">
-      <Link href={`/curriculums/${cycle.curriculum_id}${cycle.version_id ? `?v=${cycle.version_id}` : ""}`} className="text-sm text-brand-teal hover:underline">
+    <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
+      <Link href={`/curriculums/${cycle.curriculum_id}${cycle.version_id ? `?v=${cycle.version_id}` : ""}`} className="text-sm link">
         ← {cycle.curriculums?.name}
       </Link>
-      <h1 className="mt-2 text-2xl font-medium">
+      <h1 className="mt-2 page-title">
         Módulo {cycle.number}
         {cycle.title ? ` · ${cycle.title}` : ""}
       </h1>
@@ -66,7 +66,7 @@ export default async function CicloPage(props: {
       )}
       <Flash error={searchParams.error} ok={searchParams.ok} />
 
-      <section className="mb-6 rounded-xl border border-stone-200 bg-white p-4">
+      <section className="mb-6 card p-4">
         {lessons.length === 0 ? (
           <p className="py-4 text-center text-sm text-stone-500">Todavía no hay unidades.{editable ? " Crea la primera abajo." : ""}</p>
         ) : (
@@ -79,7 +79,7 @@ export default async function CicloPage(props: {
                   {l.summary && <span className="ml-2 text-stone-500">{l.summary}</span>}
                 </Link>
                 {editable && (
-                  <Link href={`/lecciones/${l.id}/editar`} className="shrink-0 text-xs text-brand-teal hover:underline">
+                  <Link href={`/lecciones/${l.id}/editar`} className="shrink-0 text-xs link">
                     Editar
                   </Link>
                 )}
@@ -91,7 +91,7 @@ export default async function CicloPage(props: {
 
       {editable && (
         <>
-          <h2 className="mb-2 text-sm font-medium">Nueva unidad</h2>
+          <h2 className="mb-2 section-title">Nueva unidad</h2>
           <LessonForm cycleId={cycle.id} nextNumber={nextNumber} />
         </>
       )}

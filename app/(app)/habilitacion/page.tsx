@@ -36,8 +36,8 @@ export default async function HabilitacionPage(props: {
   ]);
   if (campusR.error && /Could not find|PGRST202|404/i.test(campusR.error.message + (campusR.error.code ?? ""))) {
     return (
-      <div className="mx-auto max-w-3xl p-4 md:p-8">
-        <h1 className="text-2xl font-medium">Habilitación</h1>
+      <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
+        <h1 className="page-title">Habilitación</h1>
         <p className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
           Falta instalar la habilitación en la base de datos: ejecuta <code>supabase/v2/011_habilitacion.sql</code> en el SQL Editor de Supabase.
         </p>
@@ -49,8 +49,8 @@ export default async function HabilitacionPage(props: {
   const sum = summarize(recon.filter((r) => r.estado !== "info"));
 
   return (
-    <div className="mx-auto max-w-5xl p-4 md:p-8">
-      <h1 className="text-2xl font-medium">Habilitación</h1>
+    <div className="enter mx-auto max-w-5xl p-4 pb-16 md:p-8 md:pb-16">
+      <h1 className="page-title">Habilitación</h1>
       <p className="mb-5 mt-1 text-sm text-stone-500">
         Cómo va cada sede para usar GP 2.0 y si los datos cuadran con lo que trajo la importación. La etapa de cada sede es un registro del avance: no bloquea ninguna función.
       </p>
@@ -58,21 +58,21 @@ export default async function HabilitacionPage(props: {
 
       <section className="mb-8">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-sm font-medium">Sedes</h2>
+          <h2 className="section-title">Sedes</h2>
           {isAdmin && (
-            <Link href="/habilitacion/sedes" className="text-sm text-brand-teal hover:underline">Asignar sedes por lote →</Link>
+            <Link href="/habilitacion/sedes" className="text-sm link">Asignar sedes por lote →</Link>
           )}
         </div>
         {campuses.length === 0 ? (
-          <p className="rounded-xl border border-stone-200 bg-white p-6 text-center text-sm text-stone-500">Todavía no hay sedes con grupos.</p>
+          <p className="empty">Todavía no hay sedes con grupos.</p>
         ) : (
           <ul className="space-y-3">
             {campuses.map((c) => (
-              <li key={c.campus_id ?? "sin-sede"} className="rounded-xl border border-stone-200 bg-white p-4">
+              <li key={c.campus_id ?? "sin-sede"} className="card p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className="font-medium">
                     {c.campus}
-                    {c.gp2_status && <span className={`ml-2 rounded px-2 py-0.5 text-xs font-normal ${STAGE_STYLE[c.gp2_status]}`}>{STAGE_LABEL[c.gp2_status]}</span>}
+                    {c.gp2_status && <span className={`ml-2 chip font-normal ${STAGE_STYLE[c.gp2_status]}`}>{STAGE_LABEL[c.gp2_status]}</span>}
                     {c.gp2_status_at && <span className="ml-2 text-xs font-normal text-stone-400">desde el {dateEs(c.gp2_status_at)}</span>}
                   </h3>
                   <span className={`text-sm ${c.listo ? "text-green-800" : "text-stone-500"}`}>{campusHeadline(c)}</span>
@@ -110,12 +110,12 @@ export default async function HabilitacionPage(props: {
                     <label className="flex items-center gap-2 text-xs text-stone-500">
                       <input type="checkbox" name="force" value="si" /> Habilitar aunque haya pendientes
                     </label>
-                    <button className="h-10 rounded-lg border border-brand-teal px-3 text-sm text-brand-teal hover:bg-brand-teal hover:text-white">Guardar</button>
+                    <button className="btn btn-outline">Guardar</button>
                   </form>
                 )}
                 {c.campus_id === null && c.grupos_activos > 0 && (
                   <p className="mt-2 text-xs text-stone-500">
-                    Asigna la sede de cada grupo desde su detalle (<Link href="/grupos" className="text-brand-teal hover:underline">Grupos</Link>).
+                    Asigna la sede de cada grupo desde su detalle (<Link href="/grupos" className="link">Grupos</Link>).
                   </p>
                 )}
               </li>
@@ -127,8 +127,8 @@ export default async function HabilitacionPage(props: {
       {isAdmin && (
         <section>
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-sm font-medium">Reconciliación de datos</h2>
-            <span className={`rounded px-2 py-0.5 text-xs ${sum.clean ? STATE_STYLE.ok : STATE_STYLE.error}`}>
+            <h2 className="section-title">Reconciliación de datos</h2>
+            <span className={`chip ${sum.clean ? STATE_STYLE.ok : STATE_STYLE.error}`}>
               {sum.clean ? "Todo cuadra" : `${sum.error} problemas · ${sum.revisar} por revisar`}
             </span>
           </div>
@@ -136,7 +136,7 @@ export default async function HabilitacionPage(props: {
             <p className="rounded-xl bg-amber-50 p-4 text-sm text-amber-800">{reconR.error.message}</p>
           ) : (
             groupByArea(recon).map(([area, rows]) => (
-              <div key={area} className="mb-4 overflow-x-auto rounded-xl border border-stone-200 bg-white">
+              <div key={area} className="mb-4 overflow-x-auto card">
                 <table className="w-full min-w-[560px] text-sm">
                   <caption className="px-3 pt-3 text-left text-xs font-medium uppercase tracking-wide text-stone-400">{area}</caption>
                   <thead className="text-left text-xs text-stone-500">
@@ -156,7 +156,7 @@ export default async function HabilitacionPage(props: {
                         </td>
                         <td className="p-3 text-right">{fmtNum(r.esperado)}</td>
                         <td className="p-3 text-right">{fmtNum(r.actual)}</td>
-                        <td className="p-3"><span className={`rounded px-2 py-0.5 text-xs ${STATE_STYLE[r.estado]}`}>{STATE_LABEL[r.estado]}</span></td>
+                        <td className="p-3"><span className={`chip ${STATE_STYLE[r.estado]}`}>{STATE_LABEL[r.estado]}</span></td>
                       </tr>
                     ))}
                   </tbody>

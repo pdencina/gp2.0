@@ -39,15 +39,15 @@ export default async function TemporadasPage(props: {
   }
 
   return (
-    <div className="mx-auto max-w-3xl p-4 md:p-8">
-      <h1 className="text-2xl font-medium">Temporadas</h1>
+    <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
+      <h1 className="page-title">Temporadas</h1>
       <p className="mb-5 mt-1 text-sm text-stone-500">
         Una temporada pasa de borrador a inscripciones abiertas, luego en curso y finalmente cerrada.
       </p>
       <Flash error={searchParams.error} ok={searchParams.ok} />
       {searchParams.aviso && <p role="status" className="mb-4 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">{searchParams.aviso}</p>}
 
-      <form action={crearTemporada} className="mb-5 grid gap-2 rounded-xl border border-stone-200 bg-white p-4 md:grid-cols-[2fr_1fr_1fr_auto]">
+      <form action={crearTemporada} className="mb-5 grid gap-2 card p-4 md:grid-cols-[2fr_1fr_1fr_auto]">
         <input name="name" placeholder="Nombre (ej. 2026)" aria-label="Nombre" className={fieldClass} />
         <input name="start_date" type="date" aria-label="Inicio" className={fieldClass} />
         <input name="end_date" type="date" aria-label="Término" className={fieldClass} />
@@ -56,14 +56,14 @@ export default async function TemporadasPage(props: {
 
       <section className="space-y-3">
         {seasons.length === 0 && (
-          <p className="rounded-xl border border-stone-200 bg-white p-6 text-center text-sm text-stone-500">
+          <p className="empty">
             Todavía no hay temporadas. Crea la primera arriba.
           </p>
         )}
         {seasons.map((s) => {
           const next = NEXT[s.status];
           return (
-            <article key={s.id} className="rounded-xl border border-stone-200 bg-white p-4">
+            <article key={s.id} className="card p-4">
              <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="font-medium">{s.name}</h2>
@@ -80,7 +80,7 @@ export default async function TemporadasPage(props: {
                 <form action={cambiarEstadoTemporada}>
                   <input type="hidden" name="id" value={s.id} />
                   <input type="hidden" name="status" value={next.to} />
-                  <button className="h-10 rounded-lg border border-brand-teal px-3 text-sm text-brand-teal hover:bg-brand-teal hover:text-white">
+                  <button className="btn btn-outline">
                     {next.label}
                   </button>
                 </form>

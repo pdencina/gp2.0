@@ -95,9 +95,9 @@ export default async function PlanPage(props: {
   const here = `?v=${version.id}`;
 
   return (
-    <div className="mx-auto max-w-4xl p-4 md:p-8">
-      <Link href={`/curriculums/${id}${here}`} className="text-sm text-brand-teal hover:underline">← {curriculum.name}</Link>
-      <h1 className="mt-2 text-2xl font-medium">Plan de 36 encuentros</h1>
+    <div className="enter mx-auto max-w-4xl p-4 pb-16 md:p-8 md:pb-16">
+      <Link href={`/curriculums/${id}${here}`} className="text-sm link">← {curriculum.name}</Link>
+      <h1 className="mt-2 page-title">Plan de 36 encuentros</h1>
       <p className="mb-4 mt-1 text-sm text-stone-500">
         Cómo se reparte el material en las semanas del año. Las 36 semanas son planificación pedagógica: no tienen que coincidir con la cantidad de capítulos del material original.
       </p>
@@ -105,7 +105,7 @@ export default async function PlanPage(props: {
 
       <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
         <span className="font-medium">Versión {version.version}</span>
-        <span className={`rounded px-2 py-0.5 text-xs ${STATUS_STYLE[version.status]}`}>{STATUS_LABEL[version.status]}</span>
+        <span className={`chip ${STATUS_STYLE[version.status]}`}>{STATUS_LABEL[version.status]}</span>
         {versions.length > 1 && (
           <span className="flex gap-1 text-xs">
             {versions.filter((v) => v.id !== version.id).map((v) => (
@@ -139,12 +139,12 @@ export default async function PlanPage(props: {
       )}
 
       {units.length === 0 ? (
-        <p className="rounded-xl border border-stone-200 bg-white p-6 text-center text-sm text-stone-500">
+        <p className="empty">
           No hay unidades en el año {year} de esta versión. Carga los módulos y unidades del material original primero.
         </p>
       ) : (
         <>
-          <section className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-stone-200 bg-white p-4">
+          <section className="mb-4 flex flex-wrap items-center justify-between gap-3 card p-4">
             <p className="text-sm text-stone-600">
               {units.length} {units.length === 1 ? "unidad" : "unidades"} en {yearCycles.length} {yearCycles.length === 1 ? "módulo" : "módulos"} ·{" "}
               {planId ? (
@@ -161,7 +161,7 @@ export default async function PlanPage(props: {
                 <input type="hidden" name="curriculum_id" value={id} />
                 <input type="hidden" name="version_id" value={version.id} />
                 <input type="hidden" name="year" value={year} />
-                <button className="h-10 rounded-lg border border-brand-teal px-3 text-sm text-brand-teal hover:bg-brand-teal hover:text-white">
+                <button className="btn btn-outline">
                   Proponer una distribución pareja
                 </button>
               </form>
@@ -185,7 +185,7 @@ export default async function PlanPage(props: {
                       <span>
                         <span className="font-medium">Semana {pos}</span>
                         {slot && slot.kind !== "contenido" && (
-                          <span className="ml-2 rounded bg-stone-100 px-1.5 py-0.5 text-xs text-stone-600">{KINDS[slot.kind] ?? slot.kind}</span>
+                          <span className="ml-2 chip bg-stone-100 text-xs text-stone-600">{KINDS[slot.kind] ?? slot.kind}</span>
                         )}
                         {slot?.title && <span className="ml-2 text-stone-600">{slot.title}</span>}
                       </span>

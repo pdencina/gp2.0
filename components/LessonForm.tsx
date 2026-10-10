@@ -24,7 +24,7 @@ export function LessonForm({
   nextNumber?: number;
 }) {
   return (
-    <form action={guardarLeccion} className="space-y-3 rounded-xl border border-stone-200 bg-white p-4">
+    <form action={guardarLeccion} className="space-y-3 card p-4">
       <input type="hidden" name="id" value={lesson?.id ?? ""} />
       <input type="hidden" name="cycle_id" value={cycleId} />
 

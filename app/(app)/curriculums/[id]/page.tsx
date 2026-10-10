@@ -59,8 +59,8 @@ export default async function CurriculumPage(props: {
     .order("version", { ascending: false });
   if (vErr) {
     return (
-      <div className="mx-auto max-w-3xl p-4 md:p-8">
-        <h1 className="text-2xl font-medium">{curriculum.name}</h1>
+      <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
+        <h1 className="page-title">{curriculum.name}</h1>
         <p className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
           Falta instalar las versiones en la base de datos: ejecuta <code>supabase/v2/009_biblioteca.sql</code> en el SQL Editor de Supabase.
         </p>
@@ -105,11 +105,11 @@ export default async function CurriculumPage(props: {
   const years = Math.max(curriculum.duration_years ?? 1, ...cycles.map((c) => c.formative_year));
 
   return (
-    <div className="mx-auto max-w-4xl p-4 md:p-8">
-      <Link href="/curriculums" className="text-sm text-brand-teal hover:underline">
+    <div className="enter mx-auto max-w-4xl p-4 pb-16 md:p-8 md:pb-16">
+      <Link href="/curriculums" className="text-sm link">
         ← Currículums
       </Link>
-      <h1 className="mt-2 text-2xl font-medium">{curriculum.name}</h1>
+      <h1 className="mt-2 page-title">{curriculum.name}</h1>
       <p className="mb-4 mt-1 text-sm text-stone-500">
         {curriculum.description || "Módulos, unidades y plan de encuentros"} · {curriculum.duration_years > 1 ? `${curriculum.duration_years} años` : "1 año"}
       </p>
@@ -130,12 +130,12 @@ export default async function CurriculumPage(props: {
         ))}
       </nav>
 
-      <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
+      <section className="mb-5 card p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2 className="font-medium">
               {selected.label || `Versión ${selected.version}`}
-              <span className={`ml-2 rounded px-2 py-0.5 text-xs font-normal ${STATUS_STYLE[selected.status]}`}>{STATUS_LABEL[selected.status]}</span>
+              <span className={`ml-2 chip font-normal ${STATUS_STYLE[selected.status]}`}>{STATUS_LABEL[selected.status]}</span>
             </h2>
             <p className="text-xs text-stone-500">
               {selected.source_note}
@@ -143,10 +143,10 @@ export default async function CurriculumPage(props: {
             </p>
           </div>
           <div className="flex flex-wrap gap-3 text-sm">
-            <Link href={`/curriculums/${curriculum.id}/plan?v=${selected.id}`} className="text-brand-teal hover:underline">
+            <Link href={`/curriculums/${curriculum.id}/plan?v=${selected.id}`} className="link">
               Plan de 36 encuentros →
             </Link>
-            <Link href={`/biblioteca?programa=${curriculum.id}`} className="text-brand-teal hover:underline">
+            <Link href={`/biblioteca?programa=${curriculum.id}`} className="link">
               Biblioteca →
             </Link>
           </div>
@@ -193,7 +193,7 @@ export default async function CurriculumPage(props: {
                     ? primaryBtn
                     : s.tone === "warn"
                       ? "h-10 rounded-lg border border-amber-500 px-4 text-sm text-amber-800 hover:bg-amber-50"
-                      : "h-10 rounded-lg border border-stone-300 px-4 text-sm text-stone-600 hover:bg-stone-50"
+                      : "btn btn-secondary"
                 }
               >
                 {s.label}
@@ -209,13 +209,13 @@ export default async function CurriculumPage(props: {
             Crear una versión nueva a partir de esta
             <input name="label" placeholder="Nombre (ej. Edición 2027)" className={`${fieldClass} mt-1`} />
           </label>
-          <button className="h-10 rounded-lg border border-brand-teal px-4 text-sm text-brand-teal hover:bg-brand-teal hover:text-white">Copiar versión</button>
+          <button className="btn btn-outline">Copiar versión</button>
         </form>
       </section>
 
       {/* Módulos */}
-      <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
-        <h2 className="mb-2 text-sm font-medium">Módulos y unidades</h2>
+      <section className="mb-5 card p-4">
+        <h2 className="mb-2 section-title">Módulos y unidades</h2>
         {cycles.length === 0 ? (
           <p className="py-4 text-center text-sm text-stone-500">Todavía no hay módulos en esta versión.</p>
         ) : (
@@ -242,10 +242,10 @@ export default async function CurriculumPage(props: {
                       <select name="formative_year" defaultValue={c.formative_year} aria-label={`Año del módulo ${c.number}`} className="h-8 rounded border border-stone-300 bg-white px-1 text-xs">
                         {Array.from({ length: years }, (_, i) => i + 1).map((y) => <option key={y} value={y}>Año {y}</option>)}
                       </select>
-                      <button className="text-xs text-brand-teal hover:underline">Cambiar</button>
+                      <button className="text-xs link">Cambiar</button>
                     </form>
                   )}
-                  <Link href={`/ciclos/${c.id}`} className="text-brand-teal hover:underline">
+                  <Link href={`/ciclos/${c.id}`} className="link">
                     Unidades →
                   </Link>
                 </span>
@@ -290,8 +290,8 @@ export default async function CurriculumPage(props: {
 
       {/* Años y requisitos */}
       {(years > 1 || curriculum.certifiable) && (
-        <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
-          <h2 className="mb-1 text-sm font-medium">Años y requisitos de certificación</h2>
+        <section className="mb-5 card p-4">
+          <h2 className="mb-1 section-title">Años y requisitos de certificación</h2>
           <p className="mb-3 text-xs text-stone-500">
             Cada año es una etapa. Se cumple cuando la persona tiene acreditado al menos este porcentaje de sus unidades (un módulo heredado sin unidades cuenta como una etapa, y vale cuando alguien valida su crédito). Los certificados ya emitidos guardan la regla con la que se emitieron.
           </p>
@@ -306,7 +306,7 @@ export default async function CurriculumPage(props: {
                   <span className="text-xs text-stone-500">{cycles.filter((c) => c.formative_year === y).length} módulos</span>
                   <input name="min_pct" type="number" min={1} max={100} step="0.5" defaultValue={minPct.get(y) ?? 100} aria-label={`Porcentaje mínimo del año ${y}`} className={`${fieldClass} w-24`} />
                   <span className="text-xs text-stone-500">% mínimo</span>
-                  <button className="h-9 rounded-lg border border-brand-teal px-3 text-sm text-brand-teal hover:bg-brand-teal hover:text-white">Guardar</button>
+                  <button className="btn btn-outline">Guardar</button>
                 </form>
               </li>
             ))}
@@ -319,12 +319,12 @@ export default async function CurriculumPage(props: {
             <form action={recalcularAnios}>
               <input type="hidden" name="curriculum_id" value={curriculum.id} />
               <input type="hidden" name="version_id" value={selected.id} />
-              <button className="h-10 rounded-lg border border-stone-300 px-3 text-sm text-stone-700 hover:bg-stone-50">Recalcular el año de cada persona</button>
+              <button className="btn btn-secondary">Recalcular el año de cada persona</button>
             </form>
             <form action={sincronizarGrupos}>
               <input type="hidden" name="curriculum_id" value={curriculum.id} />
               <input type="hidden" name="version_id" value={selected.id} />
-              <button className="h-10 rounded-lg border border-stone-300 px-3 text-sm text-stone-700 hover:bg-stone-50">Sincronizar el año de los grupos</button>
+              <button className="btn btn-secondary">Sincronizar el año de los grupos</button>
             </form>
           </div>
           <p className="mt-2 text-xs text-stone-500">
@@ -334,13 +334,13 @@ export default async function CurriculumPage(props: {
       )}
 
       {/* Revisores */}
-      <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
-        <h2 className="mb-1 text-sm font-medium">Revisión pastoral</h2>
+      <section className="mb-5 card p-4">
+        <h2 className="mb-1 section-title">Revisión pastoral</h2>
         <p className="mb-2 text-xs text-stone-500">Quienes pueden aprobar y publicar versiones de este programa, además del administrador.</p>
         {reviewerIds.length === 0 && <p className="text-sm text-stone-400">Solo el administrador.</p>}
         <div className="flex flex-wrap gap-2">
           {reviewerIds.map((rid) => (
-            <span key={rid} className="inline-flex items-center gap-1 rounded bg-stone-100 px-2 py-0.5 text-sm">
+            <span key={rid} className="inline-flex items-center gap-1 chip bg-stone-100 text-sm">
               {nameOf(rid)}
               {isAdmin && (
                 <form action={quitarRevisor} className="inline">
@@ -363,15 +363,15 @@ export default async function CurriculumPage(props: {
                 <option key={p.id} value={p.id}>{p.full_name || "Sin nombre"}</option>
               ))}
             </select>
-            <button className="h-10 rounded-lg border border-brand-teal px-3 text-sm text-brand-teal hover:bg-brand-teal hover:text-white">Agregar</button>
+            <button className="btn btn-outline">Agregar</button>
           </form>
         )}
       </section>
 
       {/* Bitácora */}
       {events.length > 0 && (
-        <section className="rounded-xl border border-stone-200 bg-white p-4">
-          <h2 className="mb-2 text-sm font-medium">Historial de esta versión</h2>
+        <section className="card p-4">
+          <h2 className="mb-2 section-title">Historial de esta versión</h2>
           <ul className="space-y-1.5 text-sm">
             {events.map((e) => (
               <li key={e.id} className="flex flex-wrap justify-between gap-2">

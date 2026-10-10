@@ -48,8 +48,8 @@ export function MaterialForm({ curriculumId, links }: { curriculumId: string; li
   const canSubmit = mode === "enlace" || state === "listo";
 
   return (
-    <form action={registrarMaterial} className="rounded-xl border border-stone-200 bg-white p-4">
-      <h2 className="mb-3 text-sm font-medium">Agregar un material</h2>
+    <form action={registrarMaterial} className="card p-4">
+      <h2 className="mb-3 section-title">Agregar un material</h2>
       <input type="hidden" name="curriculum_id" value={curriculumId} />
       {mode === "archivo" && file && (
         <>

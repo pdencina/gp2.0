@@ -42,8 +42,8 @@ export default async function RevisionPage() {
   );
 
   return (
-    <div className="mx-auto max-w-4xl p-4 md:p-8">
-      <h1 className="text-2xl font-medium">Revisión curricular</h1>
+    <div className="enter mx-auto max-w-4xl p-4 pb-16 md:p-8 md:pb-16">
+      <h1 className="page-title">Revisión curricular</h1>
       <p className="mb-5 mt-1 text-sm text-stone-500">
         Las versiones de los programas que están en camino a publicarse. Un contenido solo llega a los participantes después de la aprobación pastoral.
       </p>
@@ -53,7 +53,7 @@ export default async function RevisionPage() {
         </p>
       )}
       {!error && rows.length === 0 && (
-        <p className="rounded-xl border border-stone-200 bg-white p-6 text-center text-sm text-stone-500">
+        <p className="empty">
           No hay versiones en preparación. Para empezar una, entra a un currículum y copia su versión.
         </p>
       )}
@@ -71,15 +71,15 @@ export default async function RevisionPage() {
                 const warnings = iss.length - errors;
                 return (
                   <li key={r.id}>
-                    <Link href={`/curriculums/${r.curriculum_id}?v=${r.id}`} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-stone-200 bg-white p-4 hover:border-brand-teal">
+                    <Link href={`/curriculums/${r.curriculum_id}?v=${r.id}`} className="flex flex-wrap items-center justify-between gap-2 card card-hover p-4">
                       <span className="text-sm">
                         <span className="font-medium">{r.curriculums?.name}</span>
                         <span className="ml-2 text-stone-500">Versión {r.version}{r.label ? ` · ${r.label}` : ""}</span>
                       </span>
                       <span className="flex items-center gap-2 text-xs">
-                        {errors > 0 && <span className="rounded bg-red-50 px-2 py-0.5 text-red-700">{errors} por resolver</span>}
-                        {warnings > 0 && !hasErrors(iss) && <span className="rounded bg-stone-100 px-2 py-0.5 text-stone-600">{warnings} avisos</span>}
-                        <span className={`rounded px-2 py-0.5 ${STATUS_STYLE[r.status]}`}>{STATUS_LABEL[r.status]}</span>
+                        {errors > 0 && <span className="chip bg-red-50 text-red-700">{errors} por resolver</span>}
+                        {warnings > 0 && !hasErrors(iss) && <span className="chip bg-stone-100 text-stone-600">{warnings} avisos</span>}
+                        <span className={`chip ${STATUS_STYLE[r.status]}`}>{STATUS_LABEL[r.status]}</span>
                       </span>
                     </Link>
                   </li>

@@ -31,6 +31,7 @@ export async function middleware(request: NextRequest) {
     path.startsWith("/auth") ||
     path.startsWith("/privacidad") ||
     path.startsWith("/verificar") ||
+    (process.env.NODE_ENV !== "production" && path.startsWith("/diseno")) || // galería del sistema de diseño (solo en desarrollo)
     path === "/api/health" ||
     path === "/robots.txt";
 

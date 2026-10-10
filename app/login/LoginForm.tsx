@@ -5,11 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { authMessage, passwordProblem } from "@/lib/authErrors";
+import { Icon } from "@/components/Icon";
 
 type Mode = "login" | "registro" | "recuperar";
 
-const input =
-  "h-11 w-full rounded-lg border border-stone-300 bg-white px-3 text-sm outline-none focus:border-brand-teal focus:ring-2 focus:ring-brand-teal/20";
+const input = "input h-12";
 
 export function LoginForm() {
   const router = useRouter();
@@ -103,9 +103,9 @@ export function LoginForm() {
   const [title, subtitle, cta] = titles[mode];
 
   return (
-    <div className="w-full max-w-sm">
-      <h2 className="text-2xl font-medium">{title}</h2>
-      <p className="mb-6 mt-1 text-sm text-stone-500">{subtitle}</p>
+    <div className="enter w-full max-w-sm">
+      <h2 className="text-[1.65rem] font-semibold tracking-tight">{title}</h2>
+      <p className="mb-7 mt-1.5 text-sm text-stone-500">{subtitle}</p>
 
       <form onSubmit={onSubmit} className="space-y-3" noValidate>
         {mode === "registro" && (
@@ -143,10 +143,10 @@ export function LoginForm() {
               <button
                 type="button"
                 onClick={() => setShow(!show)}
-                className="absolute right-3 top-3 text-xs text-stone-500"
+                className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 transition hover:bg-stone-100 hover:text-stone-700"
                 aria-label={show ? "Ocultar contraseña" : "Mostrar contraseña"}
               >
-                {show ? "Ocultar" : "Ver"}
+                <Icon name="eye" className="h-[18px] w-[18px]" />
               </button>
             </div>
             {mode === "registro" && (
@@ -165,7 +165,7 @@ export function LoginForm() {
             />
             <span>
               Acepto la{" "}
-              <Link href="/privacidad" target="_blank" className="text-brand-teal underline">
+              <Link href="/privacidad" target="_blank" className="link underline">
                 política de privacidad
               </Link>
               .
@@ -178,7 +178,7 @@ export function LoginForm() {
             <button
               type="button"
               onClick={() => switchMode("recuperar")}
-              className="text-xs text-brand-teal hover:underline"
+              className="link text-xs"
             >
               ¿Olvidaste tu contraseña?
             </button>
@@ -186,20 +186,22 @@ export function LoginForm() {
         )}
 
         {error && (
-          <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-            {error}
+          <p role="alert" className="pop-in flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-800">
+            <Icon name="alert" className="mt-0.5 h-4 w-4 text-red-600" />
+            <span>{error}</span>
           </p>
         )}
         {info && (
-          <p role="status" className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">
-            {info}
+          <p role="status" className="pop-in flex items-start gap-2 rounded-xl border border-brand-green/25 bg-brand-green-50 px-3.5 py-2.5 text-sm text-brand-green-800">
+            <Icon name="check-circle" className="mt-0.5 h-4 w-4 text-brand-green" />
+            <span>{info}</span>
           </p>
         )}
 
         <button
           type="submit"
           disabled={loading}
-          className="h-11 w-full rounded-lg bg-brand-orange font-medium text-white transition hover:brightness-95 disabled:opacity-60"
+          className="btn btn-primary btn-lg w-full"
         >
           {loading ? "Un momento…" : cta}
         </button>
@@ -207,12 +209,14 @@ export function LoginForm() {
 
       {mode === "login" && (
         <>
-          <div className="my-5 text-center text-xs text-stone-400">o</div>
+          <div className="my-5 flex items-center gap-3 text-xs text-stone-400">
+            <span className="h-px flex-1 bg-stone-200" />o<span className="h-px flex-1 bg-stone-200" />
+          </div>
           <button
             type="button"
             onClick={onMagicLink}
             disabled={loading}
-            className="h-10 w-full rounded-lg border border-stone-300 text-sm hover:bg-stone-50 disabled:opacity-60"
+            className="btn btn-secondary w-full"
           >
             Ingresar con un enlace por correo
           </button>
@@ -223,12 +227,12 @@ export function LoginForm() {
         {mode === "login" ? (
           <>
             ¿Primera vez?{" "}
-            <button onClick={() => switchMode("registro")} className="font-medium text-brand-teal hover:underline">
+            <button onClick={() => switchMode("registro")} className="link">
               Crea tu cuenta
             </button>
           </>
         ) : (
-          <button onClick={() => switchMode("login")} className="font-medium text-brand-teal hover:underline">
+          <button onClick={() => switchMode("login")} className="link">
             Volver a ingresar
           </button>
         )}

@@ -19,6 +19,7 @@ Cada persona ve solo lo que le corresponde: las reglas viven en la base de datos
 | Estado y criterios de aceptación | [docs/GP2_FASE6_CIERRE.md](docs/GP2_FASE6_CIERRE.md) |
 | Diagnóstico y plan de GP 2.0 | [docs/GP2_DIAGNOSTICO_Y_PLAN.md](docs/GP2_DIAGNOSTICO_Y_PLAN.md) |
 | Cada fase | [1 núcleo](docs/GP2_FASE1_NUCLEO.md) · [2 catálogo](docs/GP2_FASE2_CATALOGO.md) · [3 calendario](docs/GP2_FASE3_CALENDARIO.md) · [4 biblioteca](docs/GP2_FASE4_BIBLIOTECA.md) · [5 certificados](docs/GP2_FASE5_CERTIFICADOS.md) |
+| Cómo se ve y se mueve (colores, componentes, animaciones) | [docs/SISTEMA_DE_DISENO.md](docs/SISTEMA_DE_DISENO.md) |
 | Producción (seguridad, respaldos, correo) | [docs/PRODUCCION.md](docs/PRODUCCION.md) |
 | Migración desde la plataforma anterior | [docs/MIGRACION.md](docs/MIGRACION.md) |
 

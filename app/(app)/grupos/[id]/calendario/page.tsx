@@ -58,8 +58,8 @@ export default async function CalendarioPage(props: {
     .order("held_on");
   if (error) {
     return (
-      <div className="mx-auto max-w-3xl p-4 md:p-8">
-        <h1 className="text-2xl font-medium">Calendario</h1>
+      <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
+        <h1 className="page-title">Calendario</h1>
         <p className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
           Falta instalar el calendario en la base de datos: ejecuta <code>supabase/v2/008_calendario.sql</code> en el SQL Editor de Supabase.
         </p>
@@ -103,7 +103,7 @@ export default async function CalendarioPage(props: {
     const att = attendance.get(s.id);
     const canOpenList = canRun && group.status !== "finalizado" && s.status !== "cancelada" && s.held_on <= today;
     return (
-      <li key={s.id} className="rounded-xl border border-stone-200 bg-white p-3">
+      <li key={s.id} className="card p-3">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="text-sm">
             <p className="font-medium">
@@ -122,13 +122,13 @@ export default async function CalendarioPage(props: {
               {att ? `Asistieron ${att.present + att.recovered} de ${att.total}.` : ""}
             </p>
           </div>
-          <span className={`rounded px-2 py-0.5 text-xs ${SESSION_STYLE[s.status]}`}>{SESSION_LABEL[s.status]}</span>
+          <span className={`chip ${SESSION_STYLE[s.status]}`}>{SESSION_LABEL[s.status]}</span>
         </div>
 
         {(canOpenList || (canManage && s.status !== "cancelada" && s.status !== "realizada") || (canManage && s.status === "cancelada") || (canManage && s.status === "realizada" && units.length > 0)) && (
           <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-stone-100 pt-2 text-sm">
             {canOpenList && (
-              <Link href={`/grupos/${id}/lista?fecha=${s.held_on}`} className="rounded-lg border border-brand-teal px-3 py-1.5 text-brand-teal hover:bg-brand-teal hover:text-white">
+              <Link href={`/grupos/${id}/lista?fecha=${s.held_on}`} className="btn btn-outline">
                 {s.status === "realizada" ? "Corregir lista" : "Pasar lista"}
               </Link>
             )}
@@ -154,7 +154,7 @@ export default async function CalendarioPage(props: {
                       <input type="hidden" name="group_id" value={id} />
                       <input type="hidden" name="mid" value={s.id} />
                       <input name="reason" placeholder="Motivo (feriado, retiro…)" aria-label="Motivo" className={`${fieldClass} w-auto md:w-64`} />
-                      <button className="h-10 rounded-lg border border-red-300 px-3 text-sm text-red-700 hover:bg-red-50">Cancelar sesión</button>
+                      <button className="btn btn-danger">Cancelar sesión</button>
                     </form>
                   )}
                   {group.backup_leader_id && s.facilitator_id !== group.backup_leader_id && (
@@ -162,7 +162,7 @@ export default async function CalendarioPage(props: {
                       <input type="hidden" name="group_id" value={id} />
                       <input type="hidden" name="mid" value={s.id} />
                       <input type="hidden" name="person" value={group.backup_leader_id} />
-                      <button className="h-10 rounded-lg border border-brand-teal px-3 text-sm text-brand-teal hover:bg-brand-teal hover:text-white">
+                      <button className="btn btn-outline">
                         Que la dirija {group.backup_leader_name ?? "el respaldo"}
                       </button>
                     </form>
@@ -177,9 +177,9 @@ export default async function CalendarioPage(props: {
   };
 
   return (
-    <div className="mx-auto max-w-3xl p-4 md:p-8">
-      <Link href={`/grupos/${id}`} className="text-sm text-brand-teal hover:underline">← {group.name}</Link>
-      <h1 className="mt-2 text-2xl font-medium">Calendario</h1>
+    <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
+      <Link href={`/grupos/${id}`} className="text-sm link">← {group.name}</Link>
+      <h1 className="mt-2 page-title">Calendario</h1>
       <p className="mb-5 mt-1 text-sm text-stone-500">
         {group.name} · {group.curriculum_name} · {scheduleLabel(group)}
       </p>
@@ -188,8 +188,8 @@ export default async function CalendarioPage(props: {
 
       {numbered.length === 0 ? (
         canManage ? (
-          <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
-            <h2 className="mb-1 text-sm font-medium">Planificar las 36 sesiones</h2>
+          <section className="mb-5 card p-4">
+            <h2 className="mb-1 section-title">Planificar las 36 sesiones</h2>
             <p className="mb-3 text-sm text-stone-500">
               Si el administrador ya definió el calendario de la temporada (con sus feriados), se usa tal cual y cae en el día de reunión del grupo. Si no, indica la fecha de la primera reunión y las fechas que se saltan.
             </p>
@@ -209,7 +209,7 @@ export default async function CalendarioPage(props: {
             </form>
           </section>
         ) : (
-          <p className="rounded-xl border border-stone-200 bg-white p-6 text-center text-sm text-stone-500">Este grupo todavía no tiene su calendario.</p>
+          <p className="empty">Este grupo todavía no tiene su calendario.</p>
         )
       ) : (
         <>
@@ -220,7 +220,7 @@ export default async function CalendarioPage(props: {
               { label: "Canceladas", value: String(sum.cancelled), tone: "" },
               { label: "Próxima", value: sum.next ? `${dayMonth(sum.next.held_on).slice(0, 5)}` : "—", tone: "" },
             ].map((k) => (
-              <div key={k.label} className="rounded-xl border border-stone-200 bg-white p-3">
+              <div key={k.label} className="card p-3">
                 <p className="text-xs text-stone-500">{k.label}</p>
                 <p className={`text-lg font-medium ${k.tone}`}>{k.value}</p>
               </div>
@@ -237,14 +237,14 @@ export default async function CalendarioPage(props: {
 
       {extras.length > 0 && (
         <section className="mt-6">
-          <h2 className="mb-2 text-sm font-medium text-stone-600">Reuniones extra</h2>
+          <h2 className="mb-2 section-title text-stone-600">Reuniones extra</h2>
           <ul className="space-y-2">{extras.map(renderSession)}</ul>
         </section>
       )}
 
       {/* Líder y respaldo */}
-      <section className="mt-6 rounded-xl border border-stone-200 bg-white p-4">
-        <h2 className="mb-1 text-sm font-medium">Líder y respaldo</h2>
+      <section className="mt-6 card p-4">
+        <h2 className="mb-1 section-title">Líder y respaldo</h2>
         <p className="mb-3 text-sm text-stone-600">
           Líder: {group.leader_name ?? "Sin asignar"} · Respaldo: {group.backup_leader_name ?? "Sin asignar"}
         </p>
@@ -255,7 +255,7 @@ export default async function CalendarioPage(props: {
           <>
             <form method="get" className="flex flex-wrap items-center gap-2">
               <input name="q" defaultValue={q} placeholder="Buscar por nombre (3 letras o más)" aria-label="Buscar respaldo" className={`${fieldClass} md:max-w-xs`} />
-              <button className="h-10 rounded-lg border border-stone-300 px-3 text-sm hover:bg-stone-50">Buscar</button>
+              <button className="btn btn-secondary">Buscar</button>
             </form>
             {q.length >= 3 && candidates.length === 0 && <p className="mt-2 text-sm text-stone-500">Nadie coincide con “{q}”.</p>}
             {candidates.length > 0 && (
@@ -266,7 +266,7 @@ export default async function CalendarioPage(props: {
                     <form action={asignarRespaldo}>
                       <input type="hidden" name="group_id" value={id} />
                       <input type="hidden" name="person" value={c.id} />
-                      <button className="text-brand-teal hover:underline">Dejar como respaldo</button>
+                      <button className="link">Dejar como respaldo</button>
                     </form>
                   </li>
                 ))}

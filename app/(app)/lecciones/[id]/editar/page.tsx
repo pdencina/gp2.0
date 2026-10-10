@@ -23,11 +23,11 @@ export default async function EditarLeccionPage(props: {
   if (!lesson) notFound();
 
   return (
-    <div className="mx-auto max-w-3xl p-4 md:p-8">
-      <Link href={`/lecciones/${lesson.id}`} className="text-sm text-brand-teal hover:underline">
+    <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
+      <Link href={`/lecciones/${lesson.id}`} className="text-sm link">
         ← Ver lección
       </Link>
-      <h1 className="mb-5 mt-2 text-2xl font-medium">Editar lección {lesson.number}</h1>
+      <h1 className="mb-5 mt-2 page-title">Editar lección {lesson.number}</h1>
       <Flash error={searchParams.error} ok={searchParams.ok} />
       <LessonForm cycleId={lesson.cycle_id} lesson={lesson} />
     </div>

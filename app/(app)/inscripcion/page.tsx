@@ -43,8 +43,8 @@ export default async function InscripcionPage(props: {
   }
 
   return (
-    <div className="mx-auto max-w-3xl p-4 md:p-8">
-      <h1 className="text-2xl font-medium">Inscripción</h1>
+    <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
+      <h1 className="page-title">Inscripción</h1>
       <p className="mb-5 mt-1 text-sm text-stone-500">Elige un grupo con cupo, el día y la modalidad que mejor te acomoden.</p>
       <Flash error={searchParams.error} ok={searchParams.ok} />
 
@@ -59,20 +59,20 @@ export default async function InscripcionPage(props: {
       )}
 
       {groups.length === 0 ? (
-        <p className="rounded-xl border border-stone-200 bg-white p-6 text-center text-sm text-stone-500">
+        <p className="empty">
           Por ahora no hay grupos abiertos a inscripción. Vuelve pronto.
         </p>
       ) : (
         <div className="space-y-6">
           {Array.from(byCurriculum.entries()).map(([name, list]) => (
             <section key={name}>
-              <h2 className="mb-2 text-sm font-medium text-stone-600">{name}</h2>
+              <h2 className="mb-2 section-title text-stone-600">{name}</h2>
               <ul className="space-y-2">
                 {list.map((g) => {
                   const free = g.capacity - g.enrolled;
                   const joined = mineIds.has(g.id);
                   return (
-                    <li key={g.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-stone-200 bg-white p-4">
+                    <li key={g.id} className="flex flex-wrap items-center justify-between gap-3 card p-4">
                       <div className="text-sm">
                         <div className="font-medium">
                           {g.name} {g.cycle_number != null && <span className="font-normal text-stone-400">· Ciclo {g.cycle_number}</span>}
@@ -88,7 +88,7 @@ export default async function InscripcionPage(props: {
                       ) : free > 0 ? (
                         <form action={inscribirme}>
                           <input type="hidden" name="group_id" value={g.id} />
-                          <button className="h-10 rounded-lg bg-brand-orange px-4 text-sm font-medium text-white hover:brightness-95">
+                          <button className="btn btn-primary">
                             Inscribirme
                           </button>
                         </form>

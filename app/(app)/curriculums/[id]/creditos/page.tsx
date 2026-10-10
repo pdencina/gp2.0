@@ -36,8 +36,8 @@ export default async function CreditosPage(props: {
   const { data, error } = await supabase.rpc("stage_credit_summary", { cid: id });
   if (error) {
     return (
-      <div className="mx-auto max-w-3xl p-4 md:p-8">
-        <h1 className="text-2xl font-medium">{curriculum.name}</h1>
+      <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
+        <h1 className="page-title">{curriculum.name}</h1>
         <p className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
           {/permission|permiso/i.test(error.message) ? error.message : <>Falta instalar la revisión en la base de datos: ejecuta <code>supabase/v2/010_certificados.sql</code> en el SQL Editor de Supabase.</>}
         </p>
@@ -56,16 +56,16 @@ export default async function CreditosPage(props: {
   const base = `/curriculums/${id}/creditos`;
 
   return (
-    <div className="mx-auto max-w-4xl p-4 md:p-8">
-      <Link href={`/curriculums/${id}`} className="text-sm text-brand-teal hover:underline">← {curriculum.name}</Link>
-      <h1 className="mt-2 text-2xl font-medium">Créditos de la plataforma anterior</h1>
+    <div className="enter mx-auto max-w-4xl p-4 pb-16 md:p-8 md:pb-16">
+      <Link href={`/curriculums/${id}`} className="text-sm link">← {curriculum.name}</Link>
+      <h1 className="mt-2 page-title">Créditos de la plataforma anterior</h1>
       <p className="mb-5 mt-1 text-sm text-stone-500">
         La plataforma anterior daba un ciclo por aprobado a quien no pasó del máximo de ausencias: es asistencia, no una equivalencia con el material nuevo. Aquí una persona decide, módulo por módulo, qué créditos valen como etapa cumplida. Lo validado cuenta para pasar de año y certificar; nada se valida solo.
       </p>
       <Flash error={sp.error} ok={sp.ok} />
       {sp.aviso && <p role="status" className="mb-4 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">{sp.aviso}</p>}
 
-      <div className="mb-6 overflow-x-auto rounded-xl border border-stone-200 bg-white">
+      <div className="mb-6 overflow-x-auto card">
         <table className="w-full min-w-[520px] text-sm">
           <thead className="bg-stone-50 text-left text-xs text-stone-500">
             <tr>
@@ -87,7 +87,7 @@ export default async function CreditosPage(props: {
                 <td className="p-3 text-right">{r.rechazado.toLocaleString("es-CL")}</td>
                 <td className="p-3 text-right">
                   {r.por_revisar + r.validado + r.rechazado > 0 && (
-                    <Link href={`${base}?modulo=${r.stage_id}`} className="text-brand-teal hover:underline">Revisar →</Link>
+                    <Link href={`${base}?modulo=${r.stage_id}`} className="link">Revisar →</Link>
                   )}
                 </td>
               </tr>
@@ -100,8 +100,8 @@ export default async function CreditosPage(props: {
       </div>
 
       {selected && (
-        <section className="rounded-xl border border-stone-200 bg-white p-4">
-          <h2 className="mb-1 text-sm font-medium">Módulo {selected.number}{selected.title ? ` · ${selected.title}` : ""}</h2>
+        <section className="card p-4">
+          <h2 className="mb-1 section-title">Módulo {selected.number}{selected.title ? ` · ${selected.title}` : ""}</h2>
 
           <nav aria-label="Estado" className="mb-3 flex flex-wrap gap-2 text-sm">
             {(["por_revisar", "validado", "rechazado"] as const).map((e) => (
@@ -124,7 +124,7 @@ export default async function CreditosPage(props: {
             <div className="flex flex-wrap items-center gap-2">
               <input name="note" placeholder="Nota (opcional, queda registrada)" aria-label="Nota" className={`${fieldClass} md:max-w-xs`} />
               <button name="decision" value="validado" className={primaryBtn}>Validar</button>
-              <button name="decision" value="rechazado" className="h-10 rounded-lg border border-stone-300 px-4 text-sm text-stone-700 hover:bg-stone-100">Rechazar</button>
+              <button name="decision" value="rechazado" className="btn btn-secondary">Rechazar</button>
               <button name="decision" value="por_revisar" className="h-10 rounded-lg px-3 text-sm text-stone-500 hover:underline">Dejar por revisar</button>
             </div>
 
@@ -144,9 +144,9 @@ export default async function CreditosPage(props: {
           </form>
 
           <div className="flex justify-between text-sm">
-            {page > 0 ? <Link href={`${base}?modulo=${selected.stage_id}&estado=${estado}&pagina=${page - 1}`} className="text-brand-teal hover:underline">← Anteriores</Link> : <span />}
+            {page > 0 ? <Link href={`${base}?modulo=${selected.stage_id}&estado=${estado}&pagina=${page - 1}`} className="link">← Anteriores</Link> : <span />}
             {(page + 1) * PAGE < totalFor(selected) && (
-              <Link href={`${base}?modulo=${selected.stage_id}&estado=${estado}&pagina=${page + 1}`} className="text-brand-teal hover:underline">Siguientes →</Link>
+              <Link href={`${base}?modulo=${selected.stage_id}&estado=${estado}&pagina=${page + 1}`} className="link">Siguientes →</Link>
             )}
           </div>
         </section>

@@ -2,6 +2,228 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-brand-sand text-brand-ink antialiased;
+/* ============================================================================
+   Base
+   ============================================================================ */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-brand-sand font-sans text-brand-ink antialiased;
+    font-feature-settings: "cv11", "ss01", "tnum" 0;
+  }
+  ::selection {
+    @apply bg-brand-teal/20;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand-teal/60 ring-offset-2 ring-offset-brand-sand;
+  }
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    @apply ring-0 ring-offset-0;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply tracking-tight;
+  }
+  /* cifras alineadas en tablas y tarjetas de números */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
 }
+
+/* ============================================================================
+   Componentes
+   ============================================================================ */
+@layer components {
+  /* ---- Contenedores ---- */
+  .card {
+    @apply rounded-2xl border border-stone-200/80 bg-white shadow-card;
+  }
+  .card-hover {
+    @apply transition duration-200 ease-out hover:-translate-y-0.5 hover:border-brand-teal/40 hover:shadow-lift;
+  }
+  .empty {
+    @apply rounded-2xl border border-dashed border-stone-300 bg-white/60 p-8 text-center text-sm text-stone-500;
+  }
+  .page {
+    @apply mx-auto w-full max-w-5xl p-4 pb-16 md:p-8 md:pb-16;
+  }
+  .page-title {
+    @apply text-2xl font-semibold tracking-tight text-brand-ink md:text-[1.75rem];
+  }
+  .page-sub {
+    @apply mt-1 text-sm text-stone-500;
+  }
+  .section-title {
+    @apply text-sm font-semibold text-brand-ink;
+  }
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-wider text-stone-400;
+  }
+
+  /* ---- Botones ---- */
+  .btn {
+    @apply inline-flex h-10 select-none items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 text-sm font-semibold transition duration-150 ease-out active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply bg-brand-orange text-white shadow-sm hover:bg-brand-orange-700 hover:shadow-md;
+  }
+  .btn-secondary {
+    @apply border border-stone-300 bg-white text-stone-700 hover:border-stone-400 hover:bg-stone-50;
+  }
+  .btn-outline {
+    @apply border border-brand-teal/60 bg-white text-brand-teal hover:bg-brand-teal hover:text-white;
+  }
+  .btn-ghost {
+    @apply text-stone-600 hover:bg-stone-100;
+  }
+  .btn-danger {
+    @apply border border-red-300 bg-white text-red-700 hover:bg-red-50;
+  }
+  .btn-sm {
+    @apply h-9 rounded-lg px-3 text-[13px];
+  }
+  .btn-lg {
+    @apply h-12 rounded-2xl px-6 text-base;
+  }
+  .link {
+    @apply font-medium text-brand-teal underline-offset-2 hover:underline;
+  }
+
+  /* ---- Formularios ---- */
+  .input {
+    @apply h-11 w-full rounded-xl border border-stone-300 bg-white px-3.5 text-sm text-brand-ink shadow-sm outline-none transition placeholder:text-stone-400 hover:border-stone-400 focus:border-brand-teal focus:ring-4 focus:ring-brand-teal/15;
+  }
+  textarea.input {
+    @apply h-auto py-2.5;
+  }
+  select.input {
+    @apply pr-8;
+  }
+  .label {
+    @apply mb-1 block text-xs font-medium text-stone-600;
+  }
+
+  /* ---- Etiquetas ---- */
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  /* ---- Listas ---- */
+  .row {
+    @apply flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 py-3 text-sm last:border-0;
+  }
+
+  /* ---- Barras de progreso ---- */
+  .progress {
+    @apply h-2 overflow-hidden rounded-full bg-stone-100;
+  }
+  .progress > span {
+    @apply block h-full origin-left rounded-full bg-gradient-to-r from-brand-green-400 to-brand-green;
+    animation: grow-x 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* ---- Esqueletos de carga ---- */
+  .skeleton {
+    @apply relative overflow-hidden rounded-xl bg-stone-200/70;
+  }
+  .skeleton::after {
+    content: "";
+    @apply absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent;
+    animation: shimmer 1.4s infinite;
+  }
+}
+
+/* ============================================================================
+   Movimiento
+   Pensado para dar vida sin distraer: entradas suaves, números que cuentan, barras que crecen.
+   Todo se apaga con "reducir movimiento" del sistema.
+   ============================================================================ */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes pop-in {
+  0% { opacity: 0; transform: scale(0.94); }
+  60% { transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes grow-x {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+@keyframes float-slow {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(0, -14px, 0) scale(1.03); }
+}
+@keyframes float-slower {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(10px, 12px, 0) scale(0.97); }
+}
+@keyframes ring-draw {
+  from { stroke-dashoffset: var(--ring-circ); }
+}
+@keyframes pulse-dot {
+  0% { box-shadow: 0 0 0 0 rgba(194, 80, 26, 0.45); }
+  70%, 100% { box-shadow: 0 0 0 8px rgba(194, 80, 26, 0); }
+}
+
+/* Cada página entra con un suave deslizamiento */
+.enter {
+  animation: fade-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+/* Las listas y cuadrículas entran escalonadas: <ul class="stagger"> */
+.stagger > * {
+  animation: fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.stagger > *:nth-child(1) { animation-delay: 0.02s; }
+.stagger > *:nth-child(2) { animation-delay: 0.07s; }
+.stagger > *:nth-child(3) { animation-delay: 0.12s; }
+.stagger > *:nth-child(4) { animation-delay: 0.17s; }
+.stagger > *:nth-child(5) { animation-delay: 0.22s; }
+.stagger > *:nth-child(6) { animation-delay: 0.27s; }
+.stagger > *:nth-child(7) { animation-delay: 0.32s; }
+.stagger > *:nth-child(8) { animation-delay: 0.37s; }
+.stagger > *:nth-child(n + 9) { animation-delay: 0.42s; }
+
+.pop-in { animation: pop-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.float-slow { animation: float-slow 9s ease-in-out infinite; }
+.float-slower { animation: float-slower 12s ease-in-out infinite; }
+.pulse-dot { animation: pulse-dot 1.8s ease-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes slide-in-left {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+.slide-in-left { animation: slide-in-left 0.28s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.fade-in { animation: fade-in 0.2s ease-out both; }
+
+@keyframes draw-line { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes rise { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+.grow-x { transform-origin: left; animation: grow-x 0.9s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.draw-line { stroke-dasharray: 1; animation: draw-line 1.3s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.bar-rise { transform-box: fill-box; transform-origin: 50% 100%; animation: rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) both; }

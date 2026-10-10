@@ -38,9 +38,9 @@ export default async function EquipoPage(props: {
   const people = (data ?? []) as { id: string; full_name: string; role: Role }[];
 
   return (
-    <div className="mx-auto max-w-4xl p-4 md:p-8">
+    <div className="enter mx-auto max-w-4xl p-4 pb-16 md:p-8 md:pb-16">
 
-      <h1 className="text-2xl font-medium">Tu equipo</h1>
+      <h1 className="page-title">Tu equipo</h1>
       <p className="mb-5 mt-1 text-sm text-stone-500">
         Se sube un peldaño a la vez: alumno → líder → monitor → coordinador.
       </p>
@@ -56,7 +56,7 @@ export default async function EquipoPage(props: {
         </p>
       )}
 
-      <section className="rounded-xl border border-stone-200 bg-white p-4">
+      <section className="card p-4">
         {people.length === 0 ? (
           <p className="py-6 text-center text-sm text-stone-500">Todavía no hay personas en tu alcance.</p>
         ) : (
@@ -72,7 +72,7 @@ export default async function EquipoPage(props: {
                   {next && (
                     <form action={promover}>
                       <input type="hidden" name="id" value={p.id} />
-                      <button className="rounded-lg border border-brand-teal px-3 py-1.5 text-xs font-medium text-brand-teal hover:bg-brand-teal hover:text-white">
+                      <button className="btn btn-outline">
                         Promover a {ROLE_VIEWS[next].label.toLowerCase()}
                       </button>
                     </form>

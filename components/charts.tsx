@@ -1,24 +1,26 @@
 import Link from "next/link";
+import { CountUp } from "@/components/CountUp";
+import { Icon, type IconName } from "@/components/Icon";
 
 // Gráficos sencillos en SVG y HTML. Se dibujan en el servidor, sin librerías.
 
 type Tone = "teal" | "orange" | "green" | "stone" | "red";
 const BAR: Record<Tone, string> = {
-  teal: "bg-brand-teal", orange: "bg-brand-orange", green: "bg-brand-green", stone: "bg-stone-300", red: "bg-red-400",
+  teal: "bg-brand-teal-400", orange: "bg-brand-orange-400", green: "bg-brand-green-400", stone: "bg-stone-300", red: "bg-red-400",
 };
 
 export function Card({ title, subtitle, action, children, className = "" }: {
   title: string; subtitle?: string; action?: { href: string; label: string }; children: React.ReactNode; className?: string;
 }) {
   return (
-    <section className={`rounded-xl border border-stone-200 bg-white p-4 md:p-5 ${className}`}>
-      <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+    <section className={`card enter p-4 md:p-5 ${className}`}>
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h2 className="text-sm font-medium">{title}</h2>
-          {subtitle && <p className="text-xs text-stone-500">{subtitle}</p>}
+          <h2 className="section-title">{title}</h2>
+          {subtitle && <p className="mt-0.5 text-xs text-stone-500">{subtitle}</p>}
         </div>
         {action && (
-          <Link href={action.href} className="text-sm text-brand-teal hover:underline">
+          <Link href={action.href} className="link inline-flex items-center gap-1 text-sm">
             {action.label}
           </Link>
         )}
@@ -28,17 +30,40 @@ export function Card({ title, subtitle, action, children, className = "" }: {
   );
 }
 
-export function Kpi({ label, value, sub, delta, href, tone = "stone" }: {
-  label: string; value: string; sub?: string; href?: string; tone?: "stone" | "alert" | "good";
+// Una cifra que cuenta al aparecer. Si el texto es un número (con puntos de miles, coma decimal o %), se anima.
+function animatable(value: string): { n: number; decimals: number; suffix: string } | null {
+  const m = value.trim().match(/^(\d{1,3}(?:\.\d{3})*|\d+)(?:,(\d+))?\s?(%?)$/);
+  if (!m) return null;
+  const n = Number(`${m[1].replace(/\./g, "")}${m[2] ? `.${m[2]}` : ""}`);
+  return Number.isFinite(n) ? { n, decimals: m[2]?.length ?? 0, suffix: m[3] ? " %" : "" } : null;
+}
+
+export function Kpi({ label, value, sub, delta, href, tone = "stone", icon }: {
+  label: string; value: string; sub?: string; href?: string; tone?: "stone" | "alert" | "good"; icon?: IconName;
   delta?: { text: string; tone: "up" | "down" | "flat" } | null;
 }) {
+  const anim = animatable(value);
   const body = (
-    <div className={`h-full rounded-xl border bg-white p-4 ${tone === "alert" ? "border-amber-300" : "border-stone-200"} ${href ? "transition hover:border-brand-teal" : ""}`}>
-      <div className="text-xs text-stone-500">{label}</div>
-      <div className={`mt-1 text-2xl font-medium ${tone === "alert" ? "text-amber-700" : ""}`}>{value}</div>
-      <div className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-stone-500">
+    <div
+      className={`card enter group h-full p-4 ${tone === "alert" ? "border-amber-300 bg-amber-50/40" : ""} ${
+        href ? "card-hover" : ""
+      }`}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="text-xs font-medium text-stone-500">{label}</div>
+        {icon && (
+          <span className={`flex h-7 w-7 items-center justify-center rounded-lg ${tone === "alert" ? "bg-amber-100 text-amber-700" : "bg-brand-teal-50 text-brand-teal"}`}>
+            <Icon name={icon} className="h-4 w-4" />
+          </span>
+        )}
+      </div>
+      <div className={`mt-1.5 text-[1.65rem] font-semibold leading-none tracking-tight tabular ${tone === "alert" ? "text-amber-700" : ""}`}>
+        {anim ? <CountUp value={anim.n} decimals={anim.decimals} suffix={anim.suffix} /> : value}
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-x-2 text-xs text-stone-500">
         {delta && (
-          <span className={delta.tone === "up" ? "text-green-700" : delta.tone === "down" ? "text-red-700" : "text-stone-500"}>
+          <span className={`font-semibold ${delta.tone === "up" ? "text-brand-green" : delta.tone === "down" ? "text-red-700" : "text-stone-500"}`}>
+            {delta.tone === "up" ? "▲ " : delta.tone === "down" ? "▼ " : ""}
             {delta.text}
           </span>
         )}
@@ -54,7 +79,7 @@ export function Bar({ value, max = 100, tone = "teal", label }: { value: number 
   const w = value === null ? 0 : Math.max(0, Math.min(100, (value / max) * 100));
   return (
     <div className="h-2 w-full overflow-hidden rounded-full bg-stone-100" role="img" aria-label={label ?? `${w.toFixed(0)} %`}>
-      <div className={`h-full rounded-full ${BAR[tone]}`} style={{ width: `${w}%` }} />
+      <div className={`grow-x h-full rounded-full ${BAR[tone]}`} style={{ width: `${w}%` }} />
     </div>
   );
 }
@@ -83,8 +108,8 @@ export function LineChart({ points, partialLast = false }: {
           <text x={L - 6} y={y(g) + 4} textAnchor="end" className="fill-stone-400" fontSize={11}>{g}%</text>
         </g>
       ))}
-      <path d={area} className="fill-brand-teal/10" />
-      <path d={path} className="fill-none stroke-brand-teal" strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
+      <path d={area} className="fade-in fill-brand-teal/10" />
+      <path d={path} pathLength={1} className="draw-line fill-none stroke-brand-teal" strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
       {partialLast && last.value !== null && prev?.value !== null && prev && (
         <line x1={x(points.length - 2)} y1={y(prev.value!)} x2={x(points.length - 1)} y2={y(last.value)} className="stroke-brand-teal" strokeWidth={2} strokeDasharray="4 4" />
       )}
@@ -120,13 +145,13 @@ export function StackedColumns({ data }: { data: { label: string; ok: number; no
         const seg = (v: number, cls: string, name: string) => {
           if (v <= 0) return null;
           yy -= h(v);
-          return <rect key={name} x={cx - bw / 2} y={yy} width={bw} height={h(v)} className={cls}><title>{`${d.label} · ${name}: ${v.toLocaleString("es-CL")}`}</title></rect>;
+          return <rect key={name} x={cx - bw / 2} y={yy} width={bw} height={h(v)} rx={3} className={`bar-rise ${cls}`}><title>{`${d.label} · ${name}: ${v.toLocaleString("es-CL")}`}</title></rect>;
         };
         return (
           <g key={d.label}>
-            {seg(d.ok, "fill-brand-green", "aprobaron")}
+            {seg(d.ok, "fill-brand-green-400", "aprobaron")}
             {seg(d.no, "fill-stone-300", "no completaron")}
-            {seg(d.rest, "fill-brand-teal", "en curso")}
+            {seg(d.rest, "fill-brand-teal-400", "en curso")}
             {(i % 2 === 0 || data.length < 10) && (
               <text x={cx} y={H - 10} textAnchor="middle" className="fill-stone-500" fontSize={10}>{d.label}</text>
             )}

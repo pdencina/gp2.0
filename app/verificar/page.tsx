@@ -30,9 +30,9 @@ export default async function VerificarPage(props: { searchParams: Promise<{ cod
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center p-6">
+    <main className="enter mx-auto flex min-h-screen max-w-lg flex-col justify-center p-6">
       <div className="mb-6 flex justify-center"><Logo /></div>
-      <h1 className="text-center text-2xl font-medium">Verificar un certificado</h1>
+      <h1 className="page-title text-center">Verificar un certificado</h1>
       <p className="mb-6 mt-1 text-center text-sm text-stone-500">Escribe el código que aparece al pie del certificado.</p>
 
       <form method="get" className="mb-6 flex gap-2">
@@ -42,9 +42,9 @@ export default async function VerificarPage(props: { searchParams: Promise<{ cod
           placeholder="A1B2-C3D4-E5F6"
           autoComplete="off"
           aria-label="Código del certificado"
-          className="h-12 w-full rounded-lg border border-stone-300 bg-white px-3 font-mono text-base uppercase outline-none focus:border-brand-teal focus:ring-2 focus:ring-brand-teal/20"
+          className="input h-12 font-mono text-base uppercase"
         />
-        <button className="h-12 rounded-lg bg-brand-orange px-5 text-sm font-medium text-white hover:brightness-95">Verificar</button>
+        <button className="btn btn-primary">Verificar</button>
       </form>
 
       {typed && !isValidCode(typed) && (

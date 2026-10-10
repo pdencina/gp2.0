@@ -53,13 +53,13 @@ export default async function LeccionPage(props: { params: Promise<{ id: string 
   const questions = (lesson.questions ?? "").split("\n").map((q) => q.trim()).filter(Boolean);
 
   return (
-    <div className="mx-auto max-w-2xl p-4 md:p-8">
+    <div className="enter mx-auto max-w-2xl p-4 pb-16 md:p-8 md:pb-16">
       <div className="flex items-center justify-between text-sm">
-        <Link href={canEdit ? `/ciclos/${lesson.cycle_id}` : "/inicio"} className="text-brand-teal hover:underline">
+        <Link href={canEdit ? `/ciclos/${lesson.cycle_id}` : "/inicio"} className="link">
           ← {canEdit ? "Lecciones del ciclo" : "Inicio"}
         </Link>
         {canEdit && (
-          <Link href={`/lecciones/${lesson.id}/editar`} className="text-brand-teal hover:underline">
+          <Link href={`/lecciones/${lesson.id}/editar`} className="link">
             Editar
           </Link>
         )}
@@ -107,7 +107,7 @@ export default async function LeccionPage(props: { params: Promise<{ id: string 
           <ul className="space-y-2">
             {materials.map((m) => (
               <li key={m.id}>
-                <a href={`/api/materiales/${m.id}`} target="_blank" rel="noopener noreferrer" className="text-brand-teal hover:underline">
+                <a href={`/api/materiales/${m.id}`} target="_blank" rel="noopener noreferrer" className="link">
                   {m.name}
                 </a>
                 {m.description && <span className="ml-2 text-sm text-stone-500">{m.description}</span>}

@@ -1,20 +1,32 @@
+import { Icon } from "@/components/Icon";
+
 export function Flash({ error, ok }: { error?: string; ok?: string }) {
   if (error)
     return (
-      <p role="alert" className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-        {error}
+      <p role="alert" className="pop-in mb-4 flex items-start gap-2.5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <Icon name="alert" className="mt-0.5 h-4 w-4 text-red-600" />
+        <span>{error}</span>
       </p>
     );
   if (ok)
     return (
-      <p role="status" className="mb-4 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">
-        Listo, el cambio quedó guardado.
+      <p role="status" className="pop-in mb-4 flex items-start gap-2.5 rounded-2xl border border-brand-green/25 bg-brand-green-50 px-4 py-3 text-sm text-brand-green-800">
+        <Icon name="check-circle" className="mt-0.5 h-4 w-4 text-brand-green" />
+        <span>Listo, el cambio quedó guardado.</span>
       </p>
     );
   return null;
 }
 
-export const fieldClass =
-  "h-10 w-full rounded-lg border border-stone-300 bg-white px-3 text-sm outline-none focus:border-brand-teal focus:ring-2 focus:ring-brand-teal/20";
-export const primaryBtn =
-  "h-10 rounded-lg bg-brand-orange px-4 text-sm font-medium text-white hover:brightness-95";
+/** Mensaje de éxito con texto propio (los "avisos" de las acciones). */
+export function Notice({ children }: { children: React.ReactNode }) {
+  return (
+    <p role="status" className="pop-in mb-4 flex items-start gap-2.5 rounded-2xl border border-brand-green/25 bg-brand-green-50 px-4 py-3 text-sm text-brand-green-800">
+      <Icon name="check-circle" className="mt-0.5 h-4 w-4 text-brand-green" />
+      <span>{children}</span>
+    </p>
+  );
+}
+
+export const fieldClass = "input";
+export const primaryBtn = "btn btn-primary";

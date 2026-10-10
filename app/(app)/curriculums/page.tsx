@@ -46,8 +46,8 @@ export default async function CurriculumsPage(props: {
     : [];
 
   return (
-    <div className="mx-auto max-w-4xl p-4 md:p-8">
-      <h1 className="text-2xl font-medium">Currículums</h1>
+    <div className="enter mx-auto max-w-4xl p-4 pb-16 md:p-8 md:pb-16">
+      <h1 className="page-title">Currículums</h1>
       <p className="mb-5 mt-1 text-sm text-stone-500">
         Cada currículum tiene uno o más coordinadores, ciclos con sus lecciones y grupos.
       </p>
@@ -61,8 +61,8 @@ export default async function CurriculumsPage(props: {
       )}
 
       {isAdmin && (
-        <form action={crearCurriculum} className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
-          <h2 className="mb-3 text-sm font-medium">Nuevo currículum</h2>
+        <form action={crearCurriculum} className="mb-5 card p-4">
+          <h2 className="mb-3 section-title">Nuevo currículum</h2>
           <div className="grid gap-2 md:grid-cols-2">
             <input name="name" placeholder="Nombre (ej. Hombres)" aria-label="Nombre" className={fieldClass} />
             <select name="audience" aria-label="Audiencia" defaultValue="todos" className={fieldClass}>
@@ -83,14 +83,14 @@ export default async function CurriculumsPage(props: {
 
       <section className="space-y-3">
         {curriculums.length === 0 && (
-          <p className="rounded-xl border border-stone-200 bg-white p-6 text-center text-sm text-stone-500">
+          <p className="empty">
             Todavía no hay currículums.
           </p>
         )}
         {curriculums.map((c) => {
           const coords = pairs.filter((p) => p.curriculum_id === c.id);
           return (
-            <article key={c.id} className="rounded-xl border border-stone-200 bg-white p-4">
+            <article key={c.id} className="card p-4">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
                   <h2 className="font-medium">{c.name}</h2>
@@ -101,7 +101,7 @@ export default async function CurriculumsPage(props: {
                   </p>
                   {c.description && <p className="text-sm text-stone-500">{c.description}</p>}
                 </div>
-                <Link href={`/curriculums/${c.id}`} className="text-sm text-brand-teal hover:underline">
+                <Link href={`/curriculums/${c.id}`} className="text-sm link">
                   Ciclos y lecciones →
                 </Link>
               </div>
@@ -110,7 +110,7 @@ export default async function CurriculumsPage(props: {
                 <span className="text-stone-500">Coordinadores: </span>
                 {coords.length === 0 && <span className="text-stone-400">Sin asignar</span>}
                 {coords.map((p) => (
-                  <span key={p.coordinator_id} className="mr-2 inline-flex items-center gap-1 rounded bg-stone-100 px-2 py-0.5">
+                  <span key={p.coordinator_id} className="mr-2 inline-flex items-center gap-1 chip bg-stone-100">
                     {nameOf(p.coordinator_id)}
                     {isAdmin && (
                       <form action={quitarCoordinador} className="inline">
@@ -139,7 +139,7 @@ export default async function CurriculumsPage(props: {
                           </option>
                         ))}
                     </select>
-                    <button className="h-10 rounded-lg border border-brand-teal px-3 text-sm text-brand-teal hover:bg-brand-teal hover:text-white">
+                    <button className="btn btn-outline">
                       Agregar
                     </button>
                   </form>

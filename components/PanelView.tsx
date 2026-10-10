@@ -100,9 +100,9 @@ export function PanelView({ role, resumen: r, semanal, curriculums, temporadas, 
   const dateLabel = today.toLocaleDateString("es-CL", { weekday: "long", day: "numeric", month: "long", timeZone: "America/Santiago" });
 
   return (
-    <div className="mx-auto max-w-6xl p-4 md:p-8">
+    <div className="enter mx-auto max-w-6xl p-4 pb-16 md:p-8 md:pb-16">
       <header className="mb-5">
-        <h1 className="text-2xl font-medium">Panel</h1>
+        <h1 className="page-title">Panel</h1>
         <p className="text-sm text-stone-500">
           {SCOPE[role]} · {dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1)}
         </p>
@@ -146,7 +146,7 @@ export function PanelView({ role, resumen: r, semanal, curriculums, temporadas, 
                 const sev = alerts.find((a) => a.kind === kind)?.severity ?? 1;
                 return (
                   <li key={kind} className="flex items-center justify-between text-sm">
-                    <span className={`rounded px-2 py-0.5 text-xs ${SEVERITY_CLASS[sev]}`}>{ALERT_LABEL[kind as Alert["kind"]]}</span>
+                    <span className={`chip ${SEVERITY_CLASS[sev]}`}>{ALERT_LABEL[kind as Alert["kind"]]}</span>
                     <span className="font-medium">{fmt(n)}</span>
                   </li>
                 );
@@ -230,7 +230,7 @@ export function PanelView({ role, resumen: r, semanal, curriculums, temporadas, 
             <CurriculumTable rows={topCurr} />
             {restCurr.length > 0 && (
               <details className="mt-3">
-                <summary className="cursor-pointer text-sm text-brand-teal hover:underline">Ver los otros {restCurr.length} currículums</summary>
+                <summary className="cursor-pointer text-sm link">Ver los otros {restCurr.length} currículums</summary>
                 <div className="mt-3"><CurriculumTable rows={restCurr} /></div>
               </details>
             )}
@@ -380,7 +380,7 @@ function CurriculumTable({ rows }: { rows: CurriculumRow[] }) {
               <tr key={c.curriculum_id} className="border-t border-stone-100">
                 <td className="py-2 pr-2">
                   {c.nombre}
-                  {!c.activo && <span className="ml-2 rounded bg-stone-100 px-1.5 py-0.5 text-xs text-stone-500">inactivo</span>}
+                  {!c.activo && <span className="ml-2 chip bg-stone-100 text-xs text-stone-500">inactivo</span>}
                 </td>
                 <td className="py-2 text-right">{fmt(c.grupos_activos)}</td>
                 <td className="py-2 text-right font-medium">{fmt(c.personas_activas)}</td>

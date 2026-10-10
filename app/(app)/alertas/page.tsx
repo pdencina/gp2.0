@@ -32,8 +32,8 @@ export default async function AlertasPage(props: {
   };
 
   return (
-    <div className="mx-auto max-w-3xl p-4 md:p-8">
-      <h1 className="text-2xl font-medium">Necesitan tu atención</h1>
+    <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
+      <h1 className="page-title">Necesitan tu atención</h1>
       <p className="mb-5 mt-1 text-sm text-stone-500">
         {alerts.length === 0
           ? "Todo en orden por ahora."
@@ -43,17 +43,17 @@ export default async function AlertasPage(props: {
 
       <ul className="space-y-3">
         {alerts.map((a, i) => (
-          <li key={`${a.kind}-${a.group_id}-${a.person_id ?? i}`} className="rounded-xl border border-stone-200 bg-white p-4">
+          <li key={`${a.kind}-${a.group_id}-${a.person_id ?? i}`} className="card p-4">
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div>
-                <span className={`rounded px-2 py-0.5 text-xs ${SEVERITY_CLASS[a.severity]}`}>{ALERT_LABEL[a.kind]}</span>
+                <span className={`chip ${SEVERITY_CLASS[a.severity]}`}>{ALERT_LABEL[a.kind]}</span>
                 <p className="mt-2 font-medium">{a.person_name || a.group_name}</p>
                 <p className="text-sm text-stone-500">
                   {a.person_name ? `${a.group_name} · ` : ""}
                   {a.detail}
                 </p>
               </div>
-              <Link href={`/grupos/${a.group_id}`} className="text-sm text-brand-teal hover:underline">
+              <Link href={`/grupos/${a.group_id}`} className="text-sm link">
                 Ver grupo →
               </Link>
             </div>
@@ -77,7 +77,7 @@ export default async function AlertasPage(props: {
 
             {a.person_id && (
               <details className="mt-3">
-                <summary className="inline-block cursor-pointer rounded-lg border border-brand-teal px-3 py-1.5 text-sm text-brand-teal hover:bg-brand-teal hover:text-white">
+                <summary className="cursor-pointer btn btn-outline">
                   Registrar contacto
                 </summary>
                 <form action={registrarContacto} className="mt-3 grid gap-2 md:grid-cols-[auto_1fr_auto]">
@@ -89,7 +89,7 @@ export default async function AlertasPage(props: {
                     <option value="visita">Visita</option>
                   </select>
                   <input name="note" placeholder="Nota (opcional)" aria-label="Nota" className={fieldClass} />
-                  <button className="h-10 rounded-lg bg-brand-orange px-4 text-sm font-medium text-white hover:brightness-95">
+                  <button className="btn btn-primary">
                     Guardar
                   </button>
                 </form>

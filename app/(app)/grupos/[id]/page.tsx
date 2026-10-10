@@ -119,11 +119,11 @@ export default async function GrupoPage(props: {
   );
 
   return (
-    <div className="mx-auto max-w-4xl p-4 md:p-8">
-      <Link href="/grupos" className="text-sm text-brand-teal hover:underline">
+    <div className="enter mx-auto max-w-4xl p-4 pb-16 md:p-8 md:pb-16">
+      <Link href="/grupos" className="text-sm link">
         ← Grupos
       </Link>
-      <h1 className="mt-2 text-2xl font-medium">{group.name}</h1>
+      <h1 className="mt-2 page-title">{group.name}</h1>
       <p className="mb-5 mt-1 text-sm text-stone-500">
         {group.curriculum_name}
         {group.cycle_number != null ? ` · Ciclo ${group.cycle_number}` : ""}
@@ -140,14 +140,14 @@ export default async function GrupoPage(props: {
       {canRun && group.status !== "finalizado" && (
         <Link
           href={`/grupos/${group.id}/lista`}
-          className="mb-3 flex h-12 items-center justify-center rounded-xl bg-brand-orange font-medium text-white hover:brightness-95"
+          className="mb-3 flex h-12 items-center justify-center btn btn-primary"
         >
           Pasar lista
         </Link>
       )}
       <Link
         href={`/grupos/${group.id}/calendario`}
-        className="mb-5 flex items-center justify-between rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm hover:border-brand-teal"
+        className="mb-5 flex items-center justify-between card card-hover px-4 py-3 text-sm"
       >
         <span>
           <span className="font-medium">Calendario de sesiones</span>
@@ -157,8 +157,8 @@ export default async function GrupoPage(props: {
       </Link>
 
       {canManage && (
-        <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
-          <h2 className="mb-1 text-sm font-medium">Próxima lección</h2>
+        <section className="mb-5 card p-4">
+          <h2 className="mb-1 section-title">Próxima lección</h2>
           {nextLesson ? (
             <Link href={`/lecciones/${nextLesson.id}`} className="block text-sm hover:underline">
               <span className="text-stone-400">{nextLesson.number}.</span> <span className="font-medium">{nextLesson.title}</span>
@@ -170,8 +170,8 @@ export default async function GrupoPage(props: {
         </section>
       )}
 
-      <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
-        <h2 className="mb-3 text-sm font-medium">Responsables</h2>
+      <section className="mb-5 card p-4">
+        <h2 className="mb-3 section-title">Responsables</h2>
         {canAssign ? (
           <form action={asignarResponsables} className="grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
             <input type="hidden" name="id" value={group.id} />
@@ -187,7 +187,7 @@ export default async function GrupoPage(props: {
                 {options(leaders, group.leader_id, group.leader_name)}
               </select>
             </label>
-            <button className="h-10 rounded-lg border border-brand-teal px-3 text-sm text-brand-teal hover:bg-brand-teal hover:text-white">
+            <button className="btn btn-outline">
               Guardar
             </button>
           </form>
@@ -208,7 +208,7 @@ export default async function GrupoPage(props: {
                 ))}
               </select>
             </label>
-            <button className="mt-5 h-10 rounded-lg border border-brand-teal px-3 text-sm text-brand-teal hover:bg-brand-teal hover:text-white">Guardar sede</button>
+            <button className="mt-5 btn btn-outline">Guardar sede</button>
           </form>
         ) : (
           group.campus_name && <p className="mt-2 text-sm text-stone-600">Sede: {group.campus_name}</p>
@@ -228,13 +228,13 @@ export default async function GrupoPage(props: {
                 {!TIMEZONES.some(([v]) => v === timezone) && <option value={timezone}>{timezoneLabel(timezone)}</option>}
               </select>
             </label>
-            <button className="mt-5 h-10 rounded-lg border border-brand-teal px-3 text-sm text-brand-teal hover:bg-brand-teal hover:text-white">Guardar zona</button>
+            <button className="mt-5 btn btn-outline">Guardar zona</button>
           </form>
         )}
         <p className="mt-2 text-sm text-stone-600">
           Respaldo: {group.backup_leader_name ?? "Sin asignar"}
           {canManage && (
-            <Link href={`/grupos/${group.id}/calendario`} className="ml-2 text-xs text-brand-teal hover:underline">
+            <Link href={`/grupos/${group.id}/calendario`} className="ml-2 text-xs link">
               {group.backup_leader_name ? "Cambiar" : "Asignar"}
             </Link>
           )}
@@ -242,9 +242,9 @@ export default async function GrupoPage(props: {
       </section>
 
       {canManage && (
-        <section className="rounded-xl border border-stone-200 bg-white p-4">
+        <section className="card p-4">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-medium">Inscritos</h2>
+            <h2 className="section-title">Inscritos</h2>
             <span className="text-xs text-stone-500">
               {group.enrolled}/{group.capacity}
             </span>
@@ -263,7 +263,7 @@ export default async function GrupoPage(props: {
                   </option>
                 ))}
               </select>
-              <button disabled={full} className="h-10 rounded-lg bg-brand-orange px-4 text-sm font-medium text-white disabled:opacity-50">
+              <button disabled={full} className="btn btn-primary">
                 Inscribir
               </button>
             </form>
@@ -277,7 +277,7 @@ export default async function GrupoPage(props: {
                 <li key={r.enrollment_id} className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 py-2.5 text-sm last:border-0">
                   <span>
                     {r.person_name || "Sin nombre"}
-                    <span className="ml-2 rounded bg-stone-100 px-1.5 py-0.5 text-xs text-stone-600">
+                    <span className="ml-2 chip bg-stone-100 text-xs text-stone-600">
                       {ENROLLMENT_LABEL[r.status]}
                     </span>
                     {r.phone && (
@@ -285,7 +285,7 @@ export default async function GrupoPage(props: {
                         href={whatsappLink(r.phone)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="ml-3 text-xs text-brand-teal hover:underline"
+                        className="ml-3 text-xs link"
                       >
                         WhatsApp
                       </a>
@@ -311,8 +311,8 @@ export default async function GrupoPage(props: {
       )}
 
       {canRun && (
-        <section className="mt-5 rounded-xl border border-stone-200 bg-white p-4">
-          <h2 className="mb-3 text-sm font-medium">Últimas reuniones</h2>
+        <section className="mt-5 card p-4">
+          <h2 className="mb-3 section-title">Últimas reuniones</h2>
           {meetings.length === 0 ? (
             <p className="py-4 text-center text-sm text-stone-500">Todavía no se ha pasado lista.</p>
           ) : (
@@ -343,8 +343,8 @@ export default async function GrupoPage(props: {
       )}
 
       {(role === "admin" || isCoordinator) && group.status !== "finalizado" && (
-        <section className="mt-5 rounded-xl border border-stone-200 bg-white p-4">
-          <h2 className="mb-1 text-sm font-medium">Cerrar el ciclo</h2>
+        <section className="mt-5 card p-4">
+          <h2 className="mb-1 section-title">Cerrar el ciclo</h2>
           <p className="mb-3 text-sm text-stone-500">
             Quien tenga más ausencias que las permitidas queda como "No completó"; el resto, como "Aprobado". Esto no se puede deshacer.
           </p>
@@ -356,15 +356,15 @@ export default async function GrupoPage(props: {
       )}
 
       {(role === "admin" || isCoordinator) && group.status === "finalizado" && (
-        <section className="mt-5 rounded-xl border border-stone-200 bg-white p-4">
-          <h2 className="mb-1 text-sm font-medium">Ciclo siguiente</h2>
+        <section className="mt-5 card p-4">
+          <h2 className="mb-1 section-title">Ciclo siguiente</h2>
           <p className="mb-3 text-sm text-stone-500">
             Crea el grupo del ciclo siguiente con las mismas personas a cargo y preinscribe a quienes aprobaron. Cada persona
             confirma su lugar.
           </p>
           <form action={crearContinuacion}>
             <input type="hidden" name="group_id" value={group.id} />
-            <button className="h-10 rounded-lg bg-brand-orange px-4 text-sm font-medium text-white hover:brightness-95">
+            <button className="btn btn-primary">
               Crear grupo del ciclo siguiente
             </button>
           </form>

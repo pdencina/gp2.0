@@ -125,11 +125,11 @@ export default async function ProgresoDetallePage(props: {
   const back = mine ? "/mi-progreso" : "/grupos";
 
   return (
-    <div className="mx-auto max-w-3xl p-4 md:p-8">
-      <Link href={back} className="text-sm text-brand-teal hover:underline">← {mine ? "Mi progreso" : "Volver"}</Link>
+    <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
+      <Link href={back} className="text-sm link">← {mine ? "Mi progreso" : "Volver"}</Link>
       <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-2xl font-medium">{name}</h1>
-        <span className={`rounded px-2 py-0.5 text-xs ${CE_STYLE[ce.status]}`}>{CE_LABEL[ce.status]}</span>
+        <h1 className="page-title">{name}</h1>
+        <span className={`chip ${CE_STYLE[ce.status]}`}>{CE_LABEL[ce.status]}</span>
       </div>
       <p className="mb-5 mt-1 text-sm text-stone-500">
         {personName ? `${personName} · ` : ""}Desde {dateEs(ce.started_at)}
@@ -139,8 +139,8 @@ export default async function ProgresoDetallePage(props: {
       {searchParams.aviso && <p role="status" className="mb-4 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">{searchParams.aviso}</p>}
 
       {/* Avance */}
-      <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
-        <h2 className="mb-2 text-sm font-medium">Avance</h2>
+      <section className="mb-5 card p-4">
+        <h2 className="mb-2 section-title">Avance</h2>
         {p.units_total > 0 ? (
           <>
             <div className="h-2.5 overflow-hidden rounded-full bg-stone-100" role="progressbar" aria-valuenow={p.units_done} aria-valuemin={0} aria-valuemax={p.units_total} aria-label="Avance">
@@ -194,16 +194,16 @@ export default async function ProgresoDetallePage(props: {
 
       {/* Ruta de varios años */}
       {years.length > 1 && (
-        <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
-          <h2 className="mb-1 text-sm font-medium">Tu ruta</h2>
+        <section className="mb-5 card p-4">
+          <h2 className="mb-1 section-title">Tu ruta</h2>
           <p className="mb-3 text-sm text-stone-600">{routeSummary(years)}</p>
           <ol className="mb-3 grid gap-2 sm:grid-cols-3">
             {years.map((y) => (
               <li key={y.formative_year} className={`rounded-lg border p-3 text-sm ${y.is_current ? "border-brand-teal bg-brand-teal/5" : "border-stone-200"}`}>
                 <p className="font-medium">
                   Año {y.formative_year}
-                  {y.met && <span className="ml-2 rounded bg-green-50 px-1.5 py-0.5 text-xs font-normal text-green-800">Cumplido</span>}
-                  {y.is_current && !y.met && <span className="ml-2 rounded bg-brand-teal/10 px-1.5 py-0.5 text-xs font-normal text-brand-teal">Aquí vas</span>}
+                  {y.met && <span className="ml-2 chip bg-green-50 text-xs font-normal text-green-800">Cumplido</span>}
+                  {y.is_current && !y.met && <span className="ml-2 chip bg-brand-teal/10 text-xs font-normal text-brand-teal">Aquí vas</span>}
                 </p>
                 {y.items_total > 0 ? (
                   <>
@@ -231,8 +231,8 @@ export default async function ProgresoDetallePage(props: {
       )}
 
       {grid.length > 0 && (
-        <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
-          <h2 className="mb-2 text-sm font-medium">Tus encuentros del año {currentYear?.formative_year ?? ce.formative_year}</h2>
+        <section className="mb-5 card p-4">
+          <h2 className="mb-2 section-title">Tus encuentros del año {currentYear?.formative_year ?? ce.formative_year}</h2>
           <ol className="grid grid-cols-6 gap-1.5 sm:grid-cols-9">
             {grid.map((g) => (
               <li
@@ -252,12 +252,12 @@ export default async function ProgresoDetallePage(props: {
       )}
 
       {certs.length > 0 && (
-        <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
-          <h2 className="mb-2 text-sm font-medium">Certificados</h2>
+        <section className="mb-5 card p-4">
+          <h2 className="mb-2 section-title">Certificados</h2>
           <ul className="space-y-1.5 text-sm">
             {certs.map((c) => (
               <li key={c.id} className="flex flex-wrap items-center justify-between gap-2">
-                <Link href={`/certificados/${c.id}`} className="text-brand-teal hover:underline">
+                <Link href={`/certificados/${c.id}`} className="link">
                   {certificateTitle(c, name)}
                 </Link>
                 <span className="text-xs text-stone-500">
@@ -272,8 +272,8 @@ export default async function ProgresoDetallePage(props: {
 
       {/* Créditos de la plataforma anterior */}
       {stageCredits.length > 0 && (
-        <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
-          <h2 className="mb-1 text-sm font-medium">De la plataforma anterior</h2>
+        <section className="mb-5 card p-4">
+          <h2 className="mb-1 section-title">De la plataforma anterior</h2>
           <p className="mb-2 text-xs text-stone-500">
             Estas etapas figuraban como aprobadas. Tu coordinador las revisará para convertirlas en unidades acreditadas.
           </p>
@@ -290,8 +290,8 @@ export default async function ProgresoDetallePage(props: {
       )}
 
       {/* Mi grupo */}
-      <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
-        <h2 className="mb-2 text-sm font-medium">Mi grupo</h2>
+      <section className="mb-5 card p-4">
+        <h2 className="mb-2 section-title">Mi grupo</h2>
         {currentGroup ? (
           <div className="text-sm">
             <p className="font-medium">{currentGroup.name}</p>
@@ -307,7 +307,7 @@ export default async function ProgresoDetallePage(props: {
                 {next.season_week ? ` · semana ${next.season_week}` : ""}
               </p>
             )}
-            <Link href={`/grupos/${currentGroup.id}/calendario`} className="mt-2 inline-block text-xs text-brand-teal hover:underline">
+            <Link href={`/grupos/${currentGroup.id}/calendario`} className="mt-2 inline-block text-xs link">
               Ver el calendario del grupo
             </Link>
           </div>
@@ -320,8 +320,8 @@ export default async function ProgresoDetallePage(props: {
 
       {/* Elegir o cambiar de grupo */}
       {ce.status === "activo" && (
-        <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
-          <h2 className="mb-1 text-sm font-medium">{current ? "Cambiar de grupo, horario o modalidad" : "Elegir un grupo"}</h2>
+        <section className="mb-5 card p-4">
+          <h2 className="mb-1 section-title">{current ? "Cambiar de grupo, horario o modalidad" : "Elegir un grupo"}</h2>
           <p className="mb-3 text-xs text-stone-500">Tu avance se mantiene. Estos grupos reciben gente de este programa hoy; no aseguramos que coincidan con la unidad que te toca.</p>
           {compatible.length > 1 && (
             <form method="get" className="mb-3 flex flex-wrap items-end gap-2">
@@ -349,7 +349,7 @@ export default async function ProgresoDetallePage(props: {
                   {dayOptions.map((d) => <option key={d} value={d}>{WEEKDAYS[d]}</option>)}
                 </select>
               </label>
-              <button className="h-10 rounded-lg border border-stone-300 px-3 text-sm hover:bg-stone-50">Filtrar</button>
+              <button className="btn btn-secondary">Filtrar</button>
             </form>
           )}
           {compatible.length > 0 && shown.length === 0 && (
@@ -364,7 +364,7 @@ export default async function ProgresoDetallePage(props: {
                 <form action={pedirRecuperacion} className="mt-3 flex flex-wrap items-center gap-2">
                   <input type="hidden" name="ce" value={id} />
                   <input name="note" placeholder="Cuéntanos qué horario te acomodaría (opcional)" aria-label="Nota" className={`${fieldClass} md:max-w-sm`} />
-                  <button className="h-10 rounded-lg border border-brand-teal px-3 text-sm text-brand-teal hover:bg-brand-teal hover:text-white">Pedir que me ayuden a ponerme al día</button>
+                  <button className="btn btn-outline">Pedir que me ayuden a ponerme al día</button>
                 </form>
               )}
             </div>
@@ -398,19 +398,19 @@ export default async function ProgresoDetallePage(props: {
 
       {/* Pausar / reanudar */}
       {ce.status === "activo" && (
-        <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
-          <h2 className="mb-1 text-sm font-medium">Necesito una pausa</h2>
+        <section className="mb-5 card p-4">
+          <h2 className="mb-1 section-title">Necesito una pausa</h2>
           <p className="mb-3 text-xs text-stone-500">Se guarda todo lo que llevas. Cuando vuelvas, sigues desde la primera unidad pendiente.</p>
           <form action={pausarInscripcion} className="flex flex-wrap items-center gap-2">
             <input type="hidden" name="ce" value={id} />
             <input name="reason" placeholder="Motivo (opcional)" aria-label="Motivo" className={`${fieldClass} md:max-w-xs`} />
-            <button className="h-10 rounded-lg border border-stone-300 px-3 text-sm text-stone-600 hover:bg-stone-100">Pausar</button>
+            <button className="btn btn-secondary">Pausar</button>
           </form>
         </section>
       )}
       {ce.status === "pausado" && (
         <section className="mb-5 rounded-xl bg-amber-50 p-4">
-          <h2 className="mb-1 text-sm font-medium text-amber-900">En pausa{ce.paused_at ? ` desde ${dateEs(ce.paused_at)}` : ""}</h2>
+          <h2 className="mb-1 section-title text-amber-900">En pausa{ce.paused_at ? ` desde ${dateEs(ce.paused_at)}` : ""}</h2>
           {ce.pause_reason && <p className="mb-2 text-sm text-amber-800">{ce.pause_reason}</p>}
           <form action={reanudarInscripcion}>
             <input type="hidden" name="ce" value={id} />
@@ -421,8 +421,8 @@ export default async function ProgresoDetallePage(props: {
 
       {/* Historial de grupos */}
       {memberships.length > 0 && (
-        <section className="rounded-xl border border-stone-200 bg-white p-4">
-          <h2 className="mb-2 text-sm font-medium">Historial de grupos</h2>
+        <section className="card p-4">
+          <h2 className="mb-2 section-title">Historial de grupos</h2>
           <ul className="space-y-1.5 text-sm">
             {memberships.map((m) => {
               const g = groups.get(m.group_id);
