@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { Flash, fieldClass } from "@/components/Flash";
+import { Icon } from "@/components/Icon";
+import { EmptyState, PageHeader } from "@/components/ui";
 import { MaterialForm, type LinkOption } from "@/components/MaterialForm";
 import { archivarMaterial, vincularMaterial } from "@/app/actions/curriculo";
 import { AUDIENCES, formatSize, kindLabel } from "@/lib/materials";
@@ -56,10 +58,10 @@ export default async function BibliotecaPage(props: {
   if (!program) {
     return (
       <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
-        <h1 className="page-title">Biblioteca</h1>
-        <p className="mt-4 empty">
-          No coordinas ningún programa todavía.
-        </p>
+        <PageHeader title="Biblioteca" />
+        <EmptyState icon="library" title="No coordinas ningún programa todavía">
+          Cuando te asignen un programa, aquí podrás cargar y ordenar su material.
+        </EmptyState>
       </div>
     );
   }
@@ -79,8 +81,8 @@ export default async function BibliotecaPage(props: {
   if (resR.error) {
     return (
       <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
-        <h1 className="page-title">Biblioteca</h1>
-        <p className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
+        <PageHeader title="Biblioteca" />
+        <p className="rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
           Falta instalar la biblioteca en la base de datos: ejecuta <code>supabase/v2/009_biblioteca.sql</code> en el SQL Editor de Supabase.
         </p>
       </div>
@@ -122,13 +124,17 @@ export default async function BibliotecaPage(props: {
   const archived = resources.filter((r) => r.archived);
 
   const row = (r: Resource) => (
-    <li key={r.id} className="card p-3">
+    <li key={r.id} className="card card-hover p-3.5">
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0 text-sm">
-          <p className="font-medium">
-            <Link href={`/api/materiales/${r.id}`} target="_blank" className="hover:underline">{r.name}</Link>
-            <span className="ml-2 chip bg-stone-100 text-xs font-normal text-stone-600">{kindLabel(r.kind)}</span>
-            <span className={`ml-1 chip font-normal ${r.audience === "participantes" ? "bg-green-50 text-green-800" : "bg-amber-50 text-amber-800"}`}>
+        <div className="flex min-w-0 items-start gap-3 text-sm">
+          <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-teal-50 text-brand-teal">
+            <Icon name={r.file_path ? "file" : "link"} className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 font-semibold">
+            <Link href={`/api/materiales/${r.id}`} target="_blank" className="hover:text-brand-teal hover:underline">{r.name}</Link>
+            <span className="chip bg-stone-100 text-xs font-normal text-stone-600">{kindLabel(r.kind)}</span>
+            <span className={`chip font-normal ${r.audience === "participantes" ? "bg-brand-green-50 text-brand-green-800" : "bg-amber-50 text-amber-800"}`}>
               {audienceLabel(r.audience)}
             </span>
           </p>
@@ -137,12 +143,13 @@ export default async function BibliotecaPage(props: {
           </p>
           {r.description && <p className="text-xs text-stone-500">{r.description}</p>}
           {r.source_note && <p className="text-xs text-stone-400">Origen: {r.source_note}</p>}
+          </div>
         </div>
         <form action={archivarMaterial}>
           <input type="hidden" name="id" value={r.id} />
           <input type="hidden" name="curriculum_id" value={program.id} />
           <input type="hidden" name="archived" value={r.archived ? "no" : "si"} />
-          <button className="text-xs text-stone-500 hover:link">{r.archived ? "Restaurar" : "Archivar"}</button>
+          <button className="btn btn-ghost btn-sm">{r.archived ? "Restaurar" : "Archivar"}</button>
         </form>
       </div>
       {!r.archived && links.length > 0 && (
@@ -168,10 +175,10 @@ export default async function BibliotecaPage(props: {
 
   return (
     <div className="enter mx-auto max-w-4xl p-4 pb-16 md:p-8 md:pb-16">
-      <h1 className="page-title">Biblioteca</h1>
-      <p className="mb-5 mt-1 text-sm text-stone-500">
-        Todo el material original de cada programa, en un solo lugar. Los archivos son privados: solo los ve quien corresponde, según para quién los marques y si su versión está publicada.
-      </p>
+      <PageHeader
+        title="Biblioteca"
+        subtitle="Todo el material original de cada programa, en un solo lugar. Los archivos son privados: solo los ve quien corresponde, según para quién los marques y si su versión está publicada."
+      />
       <Flash error={sp.error} ok={sp.ok} />
 
       <form method="get" className="mb-5 flex flex-wrap items-end gap-2">
@@ -182,7 +189,10 @@ export default async function BibliotecaPage(props: {
           </select>
         </label>
         <button className="btn btn-secondary">Ver</button>
-        <Link href={`/curriculums/${program.id}`} className="ml-auto text-sm link">Currículum y versiones →</Link>
+        <Link href={`/curriculums/${program.id}`} className="btn btn-ghost ml-auto">
+          Currículum y versiones
+          <Icon name="arrow-right" className="h-4 w-4" />
+        </Link>
       </form>
 
       <MaterialForm curriculumId={program.id} links={links} />
@@ -194,9 +204,11 @@ export default async function BibliotecaPage(props: {
 
       <h2 className="mb-2 mt-6 section-title">{active.length} {active.length === 1 ? "material" : "materiales"}</h2>
       {active.length === 0 ? (
-        <p className="empty">Todavía no hay materiales de este programa.</p>
+        <EmptyState icon="file" title="Todavía no hay materiales de este programa">
+          Sube un archivo o agrega un enlace con el formulario de arriba.
+        </EmptyState>
       ) : (
-        <ul className="space-y-2">{active.map(row)}</ul>
+        <ul className="stagger space-y-2.5">{active.map(row)}</ul>
       )}
 
       {archived.length > 0 && (

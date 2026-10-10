@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import { getSession, type Person } from "@/lib/session";
 import { ENROLLMENT_LABEL, GROUP_STATUS_LABEL, scheduleLabel, type GroupOverview } from "@/lib/format";
 import { whatsappLink } from "@/lib/phone";
-import { Flash, fieldClass } from "@/components/Flash";
+import { Flash, Notice, fieldClass } from "@/components/Flash";
+import { Icon } from "@/components/Icon";
+import { Avatar, EmptyState, PageHeader, ProgressBar } from "@/components/ui";
 import { LocalTime } from "@/components/LocalTime";
 import { TIMEZONES, timezoneLabel } from "@/lib/format";
 import {
@@ -120,45 +122,67 @@ export default async function GrupoPage(props: {
 
   return (
     <div className="enter mx-auto max-w-4xl p-4 pb-16 md:p-8 md:pb-16">
-      <Link href="/grupos" className="text-sm link">
-        ← Grupos
-      </Link>
-      <h1 className="mt-2 page-title">{group.name}</h1>
-      <p className="mb-5 mt-1 text-sm text-stone-500">
-        {group.curriculum_name}
-        {group.cycle_number != null ? ` · Ciclo ${group.cycle_number}` : ""}
-        {group.cycle_title ? ` (${group.cycle_title})` : ""} · {scheduleLabel(group)} · {GROUP_STATUS_LABEL[group.status]}
-        {group.address ? ` · ${group.address}` : ""}
-      </p>
+      <PageHeader
+        title={group.name}
+        back={{ href: "/grupos", label: "Grupos" }}
+        subtitle={
+          <>
+            {group.curriculum_name}
+            {group.cycle_number != null ? ` · Ciclo ${group.cycle_number}` : ""}
+            {group.cycle_title ? ` (${group.cycle_title})` : ""}
+          </>
+        }
+      />
+      <div className="enter -mt-3 mb-5 flex flex-wrap items-center gap-2 text-sm">
+        <span className="chip bg-stone-100 px-3 py-1.5 text-stone-700">
+          <Icon name="clock" className="h-3.5 w-3.5 text-brand-teal" />
+          {scheduleLabel(group)}
+        </span>
+        <span className="chip bg-stone-100 px-3 py-1.5 text-stone-700">
+          <Icon name={group.modality === "virtual" ? "video" : "pin"} className="h-3.5 w-3.5 text-brand-teal" />
+          {group.modality === "virtual" ? "Online" : group.address ?? "Presencial"}
+        </span>
+        <span className={`chip px-3 py-1.5 ${group.status === "finalizado" ? "bg-stone-100 text-stone-600" : "bg-brand-green-50 text-brand-green-800"}`}>
+          {GROUP_STATUS_LABEL[group.status]}
+        </span>
+        <span className="chip bg-brand-teal-50 px-3 py-1.5 text-brand-teal-800">
+          <Icon name="users" className="h-3.5 w-3.5" />
+          {group.enrolled}/{group.capacity}
+        </span>
+      </div>
       <Flash error={searchParams.error} ok={searchParams.ok} />
       {searchParams.lista && (
-        <p role="status" className="mb-4 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">
+        <Notice>
           Lista guardada: {searchParams.lista} {searchParams.lista === "1" ? "asistente" : "asistentes"}.
-        </p>
+        </Notice>
       )}
 
       {canRun && group.status !== "finalizado" && (
         <Link
           href={`/grupos/${group.id}/lista`}
-          className="mb-3 flex h-12 items-center justify-center btn btn-primary"
+          className="mb-3 flex h-12 items-center justify-center gap-2 btn btn-primary"
         >
+          <Icon name="check-circle" className="h-5 w-5" />
           Pasar lista
         </Link>
       )}
       <Link
         href={`/grupos/${group.id}/calendario`}
-        className="mb-5 flex items-center justify-between card card-hover px-4 py-3 text-sm"
+        className="group mb-5 flex items-center gap-3 card card-hover px-4 py-3 text-sm"
       >
-        <span>
-          <span className="font-medium">Calendario de sesiones</span>
+        <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-teal-50 text-brand-teal">
+          <Icon name="calendar" className="h-5 w-5" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="font-semibold">Calendario de sesiones</span>
           <span className="block text-xs text-stone-500">Fechas, cancelaciones, quién dirige cada sesión y unidades de cada semana</span>
         </span>
-        <span className="text-brand-teal">Abrir →</span>
+        <Icon name="chevron-right" className="h-5 w-5 shrink-0 text-stone-300 transition group-hover:translate-x-0.5 group-hover:text-brand-teal" />
       </Link>
 
       {canManage && (
         <section className="mb-5 card p-4">
-          <h2 className="mb-1 section-title">Próxima lección</h2>
+          <h2 className="mb-2 section-title flex items-center gap-2"><Icon name="book" className="h-4 w-4 text-brand-teal" />Próxima lección</h2>
           {nextLesson ? (
             <Link href={`/lecciones/${nextLesson.id}`} className="block text-sm hover:underline">
               <span className="text-stone-400">{nextLesson.number}.</span> <span className="font-medium">{nextLesson.title}</span>
@@ -171,7 +195,7 @@ export default async function GrupoPage(props: {
       )}
 
       <section className="mb-5 card p-4">
-        <h2 className="mb-3 section-title">Responsables</h2>
+        <h2 className="mb-3 section-title flex items-center gap-2"><Icon name="user" className="h-4 w-4 text-brand-teal" />Responsables</h2>
         {canAssign ? (
           <form action={asignarResponsables} className="grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
             <input type="hidden" name="id" value={group.id} />
@@ -244,9 +268,10 @@ export default async function GrupoPage(props: {
       {canManage && (
         <section className="card p-4">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="section-title">Inscritos</h2>
-            <span className="text-xs text-stone-500">
-              {group.enrolled}/{group.capacity}
+            <h2 className="section-title flex items-center gap-2"><Icon name="users" className="h-4 w-4 text-brand-teal" />Inscritos</h2>
+            <span className="w-28">
+              <ProgressBar value={group.capacity ? (group.enrolled / group.capacity) * 100 : 0} label={`Cupos: ${group.enrolled} de ${group.capacity}`} />
+              <span className="mt-1 block text-right text-xs text-stone-500 tabular">{group.enrolled}/{group.capacity}</span>
             </span>
           </div>
 
@@ -270,14 +295,17 @@ export default async function GrupoPage(props: {
           )}
 
           {active.length === 0 ? (
-            <p className="py-4 text-center text-sm text-stone-500">Este grupo todavía no tiene inscritos.</p>
+            <EmptyState icon="users" title="Este grupo todavía no tiene inscritos">
+              Elige a una persona en la lista de arriba para inscribirla.
+            </EmptyState>
           ) : (
             <ul>
               {active.map((r) => (
-                <li key={r.enrollment_id} className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 py-2.5 text-sm last:border-0">
-                  <span>
-                    {r.person_name || "Sin nombre"}
-                    <span className="ml-2 chip bg-stone-100 text-xs text-stone-600">
+                <li key={r.enrollment_id} className="row flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 py-2.5 text-sm last:border-0">
+                  <span className="flex items-center gap-3">
+                    <Avatar name={r.person_name || "Sin nombre"} size="sm" />
+                    <span>{r.person_name || "Sin nombre"}</span>
+                    <span className="chip bg-stone-100 text-xs text-stone-600">
                       {ENROLLMENT_LABEL[r.status]}
                     </span>
                     {r.phone && (
@@ -299,7 +327,7 @@ export default async function GrupoPage(props: {
                       <form action={cancelarInscripcion}>
                         <input type="hidden" name="enrollment_id" value={r.enrollment_id} />
                         <input type="hidden" name="back" value={`/grupos/${group.id}`} />
-                        <button className="hover:text-red-700 hover:underline">Quitar</button>
+                        <button className="rounded-lg px-2 py-1 transition hover:bg-red-50 hover:text-red-700">Quitar</button>
                       </form>
                     )}
                   </span>
@@ -312,9 +340,11 @@ export default async function GrupoPage(props: {
 
       {canRun && (
         <section className="mt-5 card p-4">
-          <h2 className="mb-3 section-title">Últimas reuniones</h2>
+          <h2 className="mb-3 section-title flex items-center gap-2"><Icon name="chart" className="h-4 w-4 text-brand-teal" />Últimas reuniones</h2>
           {meetings.length === 0 ? (
-            <p className="py-4 text-center text-sm text-stone-500">Todavía no se ha pasado lista.</p>
+            <EmptyState icon="check-circle" title="Todavía no se ha pasado lista">
+              Cuando registres la primera reunión, verás aquí la asistencia.
+            </EmptyState>
           ) : (
             <ul>
               {meetings.map((m) => {
@@ -324,14 +354,17 @@ export default async function GrupoPage(props: {
                   <li key={m.id} className="border-b border-stone-100 last:border-0">
                     <Link
                       href={`/grupos/${group.id}/lista?fecha=${m.held_on}`}
-                      className="flex items-center justify-between py-2.5 text-sm hover:bg-stone-50"
+                      className="flex items-center justify-between gap-4 rounded-lg px-1 py-2.5 text-sm transition hover:bg-stone-50"
                     >
                       <span>
                         {m.held_on.split("-").reverse().join("/")}
                         {m.lesson_number ? <span className="ml-2 text-stone-400">Lección {m.lesson_number}</span> : null}
                       </span>
-                      <span className={pct < 60 ? "text-amber-700" : "text-stone-600"}>
-                        {attended}/{m.total} · {pct}%
+                      <span className="flex w-40 items-center gap-2">
+                        <ProgressBar value={pct} label={`Asistencia ${pct}%`} className="flex-1" />
+                        <span className={`w-20 text-right text-xs tabular ${pct < 60 ? "font-semibold text-amber-700" : "text-stone-600"}`}>
+                          {attended}/{m.total} · {pct}%
+                        </span>
                       </span>
                     </Link>
                   </li>
@@ -350,7 +383,7 @@ export default async function GrupoPage(props: {
           </p>
           <form action={cerrarGrupo}>
             <input type="hidden" name="group_id" value={group.id} />
-            <button className="h-10 rounded-lg border border-stone-400 px-4 text-sm hover:bg-stone-50">Cerrar el ciclo del grupo</button>
+            <button className="btn btn-outline">Cerrar el ciclo del grupo</button>
           </form>
         </section>
       )}

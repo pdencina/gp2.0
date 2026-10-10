@@ -6,7 +6,9 @@ import { dayMonth, weekdayName } from "@/lib/calendar";
 import { LocalTime } from "@/components/LocalTime";
 import { avanzarAnio } from "@/app/actions/certificados";
 import { certificateTitle, formatCode, normalizeYear, routeSummary, type CertificateRow, type YearStatus } from "@/lib/certificates";
-import { Flash, fieldClass, primaryBtn } from "@/components/Flash";
+import { Flash, Notice, fieldClass, primaryBtn } from "@/components/Flash";
+import { Icon } from "@/components/Icon";
+import { ProgressBar, ProgressRing } from "@/components/ui";
 import {
   cambiarGrupo,
   pausarInscripcion,
@@ -126,29 +128,65 @@ export default async function ProgresoDetallePage(props: {
 
   return (
     <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
-      <Link href={back} className="text-sm link">← {mine ? "Mi progreso" : "Volver"}</Link>
-      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-        <h1 className="page-title">{name}</h1>
-        <span className={`chip ${CE_STYLE[ce.status]}`}>{CE_LABEL[ce.status]}</span>
-      </div>
-      <p className="mb-5 mt-1 text-sm text-stone-500">
-        {personName ? `${personName} · ` : ""}Desde {dateEs(ce.started_at)}
-        {ce.formative_year > 1 ? ` · Año ${ce.formative_year}` : ""}
-      </p>
+      <Link href={back} className="enter mb-3 inline-flex items-center gap-1 text-sm font-medium text-stone-500 transition hover:text-brand-teal">
+        <Icon name="arrow-left" className="h-4 w-4" />
+        {mine ? "Mi progreso" : "Volver"}
+      </Link>
+
+      <section className="card enter relative mb-5 overflow-hidden p-5 md:p-6">
+        <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-brand-teal-400 via-brand-green-400 to-brand-orange-400" />
+        <div className="flex flex-wrap items-center gap-5">
+          <ProgressRing value={p.units_total > 0 ? (p.units_done / p.units_total) * 100 : 0} size={96} stroke={9} label={`Avance de ${name}`}>
+            {p.units_total > 0 ? `${Math.round((p.units_done / p.units_total) * 100)}%` : <Icon name="route" className="h-7 w-7 text-stone-400" />}
+          </ProgressRing>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="page-title">{name}</h1>
+              <span className={`chip ${CE_STYLE[ce.status]}`}>{CE_LABEL[ce.status]}</span>
+              {ce.formative_year > 1 && <span className="chip bg-stone-100 text-stone-600">Año {ce.formative_year}</span>}
+            </div>
+            <p className="mt-1 text-sm text-stone-500">
+              {personName ? `${personName} · ` : ""}Desde {dateEs(ce.started_at)}
+            </p>
+            <p className="mt-2 text-sm text-stone-700">
+              {p.units_total > 0
+                ? p.next_unit_title
+                  ? <>Sigue: <strong className="font-semibold">{p.next_unit_title}</strong></>
+                  : "¡Completaste todas las unidades!"
+                : progressSummary(p)}
+            </p>
+          </div>
+        </div>
+        {(currentGroup || next) && (
+          <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-stone-100 pt-4 text-sm">
+            {currentGroup && (
+              <span className="chip bg-stone-100 px-3 py-1.5 text-stone-700">
+                <Icon name={currentGroup.modality === "virtual" ? "video" : "pin"} className="h-3.5 w-3.5 text-brand-teal" />
+                {currentGroup.name} · {scheduleLabel(currentGroup)}
+              </span>
+            )}
+            {next && (
+              <span className="chip bg-brand-teal-50 px-3 py-1.5 text-brand-teal-800">
+                <Icon name="calendar-check" className="h-3.5 w-3.5" />
+                Próxima: {weekdayName(next.held_on)} {dayMonth(next.held_on).slice(0, 5)}
+                {next.season_week ? ` · semana ${next.season_week}` : ""}
+              </span>
+            )}
+          </div>
+        )}
+      </section>
+
       <Flash error={searchParams.error} ok={searchParams.ok} />
-      {searchParams.aviso && <p role="status" className="mb-4 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">{searchParams.aviso}</p>}
+      {searchParams.aviso && <Notice>{searchParams.aviso}</Notice>}
 
       {/* Avance */}
       <section className="mb-5 card p-4">
-        <h2 className="mb-2 section-title">Avance</h2>
+        <h2 className="mb-3 section-title">Avance</h2>
         {p.units_total > 0 ? (
           <>
-            <div className="h-2.5 overflow-hidden rounded-full bg-stone-100" role="progressbar" aria-valuenow={p.units_done} aria-valuemin={0} aria-valuemax={p.units_total} aria-label="Avance">
-              <div className="h-full bg-brand-green" style={{ width: `${Math.min(100, Math.round((p.units_done / p.units_total) * 100))}%` }} />
-            </div>
+            <ProgressBar value={(p.units_done / p.units_total) * 100} label="Avance" className="!h-2.5" />
             <p className="mt-2 text-sm text-stone-600">
-              {progressSummary(p)}
-              {p.next_unit_title ? <> · Sigue: <strong className="font-medium">{p.next_unit_title}</strong></> : " · ¡Completaste todas las unidades!"}
+              <span className="font-semibold tabular">{p.units_done}</span> de <span className="tabular">{p.units_total}</span> unidades acreditadas
             </p>
           </>
         ) : (
@@ -173,9 +211,9 @@ export default async function ProgresoDetallePage(props: {
                     {list.map((u) => {
                       const d = done.get(u.id);
                       return (
-                        <li key={u.id} className="flex items-center gap-2 text-sm">
-                          <span aria-hidden="true" className={`flex h-4 w-4 items-center justify-center rounded-full border text-[10px] ${d ? "border-brand-green bg-brand-green text-white" : "border-stone-300"}`}>
-                            {d ? "✓" : ""}
+                        <li key={u.id} className="flex items-center gap-2.5 text-sm">
+                          <span aria-hidden="true" className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition ${d ? "border-brand-green bg-brand-green text-white" : "border-stone-300 bg-white"}`}>
+                            {d && <Icon name="check" className="h-3 w-3" strokeWidth={3} />}
                           </span>
                           <span className={d ? "text-stone-700" : "text-stone-500"}>
                             {u.number}. {u.title}
@@ -199,7 +237,7 @@ export default async function ProgresoDetallePage(props: {
           <p className="mb-3 text-sm text-stone-600">{routeSummary(years)}</p>
           <ol className="mb-3 grid gap-2 sm:grid-cols-3">
             {years.map((y) => (
-              <li key={y.formative_year} className={`rounded-lg border p-3 text-sm ${y.is_current ? "border-brand-teal bg-brand-teal/5" : "border-stone-200"}`}>
+              <li key={y.formative_year} className={`rounded-2xl border p-3.5 text-sm transition ${y.is_current ? "border-brand-teal bg-brand-teal-50/60 shadow-sm" : "border-stone-200"}`}>
                 <p className="font-medium">
                   Año {y.formative_year}
                   {y.met && <span className="ml-2 chip bg-green-50 text-xs font-normal text-green-800">Cumplido</span>}
@@ -233,13 +271,13 @@ export default async function ProgresoDetallePage(props: {
       {grid.length > 0 && (
         <section className="mb-5 card p-4">
           <h2 className="mb-2 section-title">Tus encuentros del año {currentYear?.formative_year ?? ce.formative_year}</h2>
-          <ol className="grid grid-cols-6 gap-1.5 sm:grid-cols-9">
+          <ol className="stagger grid grid-cols-6 gap-2 sm:grid-cols-9">
             {grid.map((g) => (
               <li
                 key={g.week}
                 title={`Semana ${g.week}${g.title ? ` · ${g.title}` : ""} · ${g.units_done} de ${g.units_total} unidades`}
-                className={`flex h-9 items-center justify-center rounded text-xs ${
-                  g.state === "hecha" ? "bg-brand-green text-white" : g.state === "parcial" ? "bg-brand-teal/30 text-stone-700" : g.state === "pendiente" ? "border border-stone-300 text-stone-600" : "border border-dashed border-stone-200 text-stone-300"
+                className={`flex h-10 items-center justify-center rounded-xl text-xs font-medium transition duration-150 hover:scale-110 ${
+                  g.state === "hecha" ? "bg-brand-green text-white shadow-sm" : g.state === "parcial" ? "bg-brand-teal/20 text-brand-teal-800" : g.state === "pendiente" ? "border border-stone-300 bg-white text-stone-600" : "border border-dashed border-stone-200 text-stone-300"
                 }`}
               >
                 <span aria-hidden="true">{g.week}</span>
@@ -279,7 +317,7 @@ export default async function ProgresoDetallePage(props: {
           </p>
           <ul className="flex flex-wrap gap-2">
             {stageCredits.map((c) => (
-              <li key={c.id} className="rounded bg-stone-100 px-2 py-1 text-xs text-stone-600">
+              <li key={c.id} className="chip bg-stone-100 px-3 py-1 text-stone-600">
                 Etapa {c.cycles?.number}
                 {c.cycles?.title ? ` · ${c.cycles.title}` : ""} ·{" "}
                 {c.review_status === "validado" ? "validada" : c.review_status === "rechazado" ? "no validada" : "por revisar"}
@@ -294,20 +332,30 @@ export default async function ProgresoDetallePage(props: {
         <h2 className="mb-2 section-title">Mi grupo</h2>
         {currentGroup ? (
           <div className="text-sm">
-            <p className="font-medium">{currentGroup.name}</p>
-            <p className="text-stone-500">{scheduleLabel(currentGroup)}</p>
-            {currentGroup.modality === "virtual" && <p><LocalTime time={currentGroup.start_time} zone={zoneOf.get(currentGroup.id) ?? null} /></p>}
-            {currentGroup.leader_name && <p className="text-stone-500">Líder: {currentGroup.leader_name}</p>}
-            {currentGroup.backup_leader_name && <p className="text-stone-500">Respaldo: {currentGroup.backup_leader_name}</p>}
-            {currentGroup.campus_name && <p className="text-stone-500">Sede: {currentGroup.campus_name}</p>}
-            {currentGroup.address && <p className="text-stone-500">Dirección: {currentGroup.address}</p>}
-            {next && (
-              <p className="mt-2 rounded-lg bg-brand-teal/10 px-3 py-2 text-brand-teal">
-                Próxima reunión: {weekdayName(next.held_on)} {dayMonth(next.held_on)}
-                {next.season_week ? ` · semana ${next.season_week}` : ""}
-              </p>
-            )}
-            <Link href={`/grupos/${currentGroup.id}/calendario`} className="mt-2 inline-block text-xs link">
+            <p className="text-base font-semibold">{currentGroup.name}</p>
+            <ul className="mt-2 space-y-1.5 text-stone-600">
+              <li className="flex items-center gap-2">
+                <Icon name="clock" className="h-4 w-4 text-brand-teal" />
+                <span>
+                  {scheduleLabel(currentGroup)}
+                  {currentGroup.modality === "virtual" && <span className="block"><LocalTime time={currentGroup.start_time} zone={zoneOf.get(currentGroup.id) ?? null} /></span>}
+                </span>
+              </li>
+              {currentGroup.leader_name && (
+                <li className="flex items-center gap-2"><Icon name="user" className="h-4 w-4 text-brand-teal" />Líder: {currentGroup.leader_name}</li>
+              )}
+              {currentGroup.backup_leader_name && (
+                <li className="flex items-center gap-2"><Icon name="users" className="h-4 w-4 text-brand-teal" />Respaldo: {currentGroup.backup_leader_name}</li>
+              )}
+              {currentGroup.campus_name && (
+                <li className="flex items-center gap-2"><Icon name="globe" className="h-4 w-4 text-brand-teal" />Sede: {currentGroup.campus_name}</li>
+              )}
+              {currentGroup.address && (
+                <li className="flex items-center gap-2"><Icon name="pin" className="h-4 w-4 text-brand-teal" />{currentGroup.address}</li>
+              )}
+            </ul>
+            <Link href={`/grupos/${currentGroup.id}/calendario`} className="btn btn-secondary btn-sm mt-4">
+              <Icon name="calendar" className="h-4 w-4" />
               Ver el calendario del grupo
             </Link>
           </div>

@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { GROUP_STATUS_LABEL, WEEKDAYS, scheduleLabel, type GroupOverview } from "@/lib/format";
 import { Flash, fieldClass, primaryBtn } from "@/components/Flash";
+import { Icon } from "@/components/Icon";
+import { EmptyState, PageHeader, ProgressBar } from "@/components/ui";
 import { crearGrupo } from "@/app/actions/gestion";
 
 export const dynamic = "force-dynamic";
@@ -44,17 +46,15 @@ export default async function GruposPage(props: {
 
   return (
     <div className="enter mx-auto max-w-4xl p-4 pb-16 md:p-8 md:pb-16">
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <h1 className="page-title">Grupos</h1>
-          <p className="mb-5 mt-1 text-sm text-stone-500">
-            {groups.length} {groups.length === 1 ? "grupo" : "grupos"} {showFinished ? "finalizados" : "activos"} en tu alcance.
-          </p>
-        </div>
-        <Link href={showFinished ? "/grupos" : "/grupos?ver=finalizados"} className="mb-5 text-sm link">
-          {showFinished ? "Ver los activos" : "Ver los finalizados"}
-        </Link>
-      </div>
+      <PageHeader
+        title="Grupos"
+        subtitle={`${groups.length} ${groups.length === 1 ? "grupo" : "grupos"} ${showFinished ? "finalizados" : "activos"} en tu alcance.`}
+        actions={
+          <Link href={showFinished ? "/grupos" : "/grupos?ver=finalizados"} className="btn btn-secondary">
+            {showFinished ? "Ver los activos" : "Ver los finalizados"}
+          </Link>
+        }
+      />
       <Flash error={searchParams.error} ok={searchParams.ok} />
 
       {canCreate && !showFinished && (
@@ -128,18 +128,25 @@ export default async function GruposPage(props: {
         </form>
       )}
 
-      <section className="card p-4">
-        {groups.length === 0 ? (
-          <p className="py-6 text-center text-sm text-stone-500">Todavía no hay grupos para mostrar.</p>
-        ) : (
-          <ul>
+      {groups.length === 0 ? (
+        <EmptyState icon="users" title="Todavía no hay grupos para mostrar">
+          {canCreate ? "Crea el primero con el formulario de arriba." : "Cuando haya grupos en tu alcance, aparecerán aquí."}
+        </EmptyState>
+      ) : (
+      <section className="card p-2 md:p-3">
+          <ul className="stagger">
             {groups.map((g) => (
               <li key={g.id} className="border-b border-stone-100 last:border-0">
-                <Link href={`/grupos/${g.id}`} className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm hover:bg-stone-50">
-                  <span>
-                    <span className="font-medium">{g.name}</span>
-                    <span className="ml-2 text-stone-400">
-                      {g.curriculum_name}{g.cycle_number != null ? ` · Ciclo ${g.cycle_number}` : g.formative_year && g.formative_year > 1 ? ` · Año ${g.formative_year}` : ""}
+                <Link href={`/grupos/${g.id}`} className="group flex flex-wrap items-center justify-between gap-3 rounded-xl px-3 py-3 text-sm transition hover:bg-brand-teal-50/50">
+                  <span className="flex min-w-0 items-center gap-3">
+                    <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-teal-50 text-brand-teal">
+                      <Icon name={g.modality === "virtual" ? "video" : "pin"} className="h-5 w-5" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate font-semibold">{g.name}</span>
+                      <span className="block truncate text-xs text-stone-500">
+                        {g.curriculum_name}{g.cycle_number != null ? ` · Ciclo ${g.cycle_number}` : g.formative_year && g.formative_year > 1 ? ` · Año ${g.formative_year}` : ""} · {scheduleLabel(g)}
+                      </span>
                     </span>
                   </span>
                   <span className="flex flex-wrap items-center gap-3 text-stone-500">
@@ -148,14 +155,19 @@ export default async function GruposPage(props: {
                         {!g.leader_id ? "Sin líder" : "Sin monitor"}
                       </span>
                     )}
-                    {g.enrolled}/{g.capacity} · {scheduleLabel(g)} · {GROUP_STATUS_LABEL[g.status]}
+                    <span className="hidden w-24 sm:block">
+                      <ProgressBar value={g.capacity ? (g.enrolled / g.capacity) * 100 : 0} label={`Cupos: ${g.enrolled} de ${g.capacity}`} />
+                    </span>
+                    <span className="tabular text-xs">{g.enrolled}/{g.capacity}</span>
+                    <span className={`chip ${g.status === "finalizado" ? "bg-stone-100 text-stone-600" : "bg-brand-green-50 text-brand-green-800"}`}>{GROUP_STATUS_LABEL[g.status]}</span>
+                    <Icon name="chevron-right" className="hidden h-4 w-4 text-stone-300 transition group-hover:translate-x-0.5 group-hover:text-brand-teal sm:block" />
                   </span>
                 </Link>
               </li>
             ))}
           </ul>
-        )}
       </section>
+      )}
     </div>
   );
 }

@@ -2,7 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { scheduleLabel, todayInChile, type GroupOverview } from "@/lib/format";
-import { Flash, fieldClass, primaryBtn } from "@/components/Flash";
+import { Flash, Notice, fieldClass, primaryBtn } from "@/components/Flash";
+import { Icon } from "@/components/Icon";
+import { EmptyState, PageHeader } from "@/components/ui";
+import { Kpi } from "@/components/charts";
 import {
   SESSION_LABEL,
   SESSION_STYLE,
@@ -97,16 +100,26 @@ export default async function CalendarioPage(props: {
       ? (((await supabase.rpc("search_backup_candidates", { gid: id, q })).data ?? []) as Candidate[])
       : [];
 
+  const BORDER: Record<string, string> = {
+    planificada: "border-l-brand-teal-400",
+    realizada: "border-l-brand-green",
+    cancelada: "border-l-stone-300",
+    reprogramada: "border-l-amber-400",
+  };
   const renderSession = (s: Session) => {
     const slot = s.slot_id ? slots.get(s.slot_id) : undefined;
     const units = s.slot_id ? unitsBySlot.get(s.slot_id) ?? [] : [];
     const att = attendance.get(s.id);
     const canOpenList = canRun && group.status !== "finalizado" && s.status !== "cancelada" && s.held_on <= today;
     return (
-      <li key={s.id} className="card p-3">
+      <li key={s.id} className={`card card-hover border-l-4 p-3.5 ${BORDER[s.status]}`}>
         <div className="flex flex-wrap items-start justify-between gap-2">
-          <div className="text-sm">
-            <p className="font-medium">
+          <div className="flex items-start gap-3 text-sm">
+            <span aria-hidden="true" className={`flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-xl text-center leading-none ${s.status === "realizada" ? "bg-brand-green text-white" : s.status === "cancelada" ? "bg-stone-100 text-stone-400" : "bg-brand-teal-50 text-brand-teal-800"}`}>
+              {s.status === "realizada" ? <Icon name="check" className="h-5 w-5" strokeWidth={3} /> : s.season_week ? <><span className="text-[9px] font-medium uppercase tracking-wide opacity-70">Sem</span><span className="text-sm font-bold tabular">{s.season_week}</span></> : <Icon name="plus" className="h-4 w-4" />}
+            </span>
+            <div>
+            <p className="font-semibold">
               {s.season_week ? `Semana ${s.season_week}` : "Reunión extra"}
               <span className="ml-2 font-normal text-stone-500">
                 {weekdayName(s.held_on)} {dayMonth(s.held_on)}
@@ -121,6 +134,7 @@ export default async function CalendarioPage(props: {
               {s.facilitator_id ? `Dirigió: ${names.get(s.facilitator_id) ?? "equipo del grupo"}. ` : ""}
               {att ? `Asistieron ${att.present + att.recovered} de ${att.total}.` : ""}
             </p>
+            </div>
           </div>
           <span className={`chip ${SESSION_STYLE[s.status]}`}>{SESSION_LABEL[s.status]}</span>
         </div>
@@ -128,7 +142,8 @@ export default async function CalendarioPage(props: {
         {(canOpenList || (canManage && s.status !== "cancelada" && s.status !== "realizada") || (canManage && s.status === "cancelada") || (canManage && s.status === "realizada" && units.length > 0)) && (
           <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-stone-100 pt-2 text-sm">
             {canOpenList && (
-              <Link href={`/grupos/${id}/lista?fecha=${s.held_on}`} className="btn btn-outline">
+              <Link href={`/grupos/${id}/lista?fecha=${s.held_on}`} className="btn btn-outline btn-sm">
+                <Icon name="check-circle" className="h-4 w-4" />
                 {s.status === "realizada" ? "Corregir lista" : "Pasar lista"}
               </Link>
             )}
@@ -136,18 +151,18 @@ export default async function CalendarioPage(props: {
               <form action={acreditarSesion}>
                 <input type="hidden" name="group_id" value={id} />
                 <input type="hidden" name="mid" value={s.id} />
-                <button className="rounded-lg border border-stone-300 px-3 py-1.5 text-stone-700 hover:bg-stone-50">Acreditar unidades a quienes asistieron</button>
+                <button className="btn btn-secondary btn-sm"><Icon name="award" className="h-4 w-4" />Acreditar unidades a quienes asistieron</button>
               </form>
             )}
             {canManage && s.status !== "realizada" && (
               <details className="group">
-                <summary className="cursor-pointer rounded-lg px-3 py-1.5 text-stone-600 hover:bg-stone-100">Cambiar</summary>
+                <summary className="btn btn-ghost btn-sm cursor-pointer list-none">Cambiar</summary>
                 <div className="mt-2 space-y-2 rounded-lg bg-stone-50 p-3">
                   <form action={reprogramarSesion} className="flex flex-wrap items-center gap-2">
                     <input type="hidden" name="group_id" value={id} />
                     <input type="hidden" name="mid" value={s.id} />
                     <input type="date" name="new_date" defaultValue={s.held_on} aria-label="Nueva fecha" className={`${fieldClass} w-auto`} />
-                    <button className="h-10 rounded-lg border border-stone-300 px-3 text-sm hover:bg-white">Reprogramar</button>
+                    <button className="btn btn-secondary">Reprogramar</button>
                   </form>
                   {s.status !== "cancelada" && (
                     <form action={cancelarSesion} className="flex flex-wrap items-center gap-2">
@@ -178,13 +193,13 @@ export default async function CalendarioPage(props: {
 
   return (
     <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
-      <Link href={`/grupos/${id}`} className="text-sm link">← {group.name}</Link>
-      <h1 className="mt-2 page-title">Calendario</h1>
-      <p className="mb-5 mt-1 text-sm text-stone-500">
-        {group.name} · {group.curriculum_name} · {scheduleLabel(group)}
-      </p>
+      <PageHeader
+        title="Calendario"
+        subtitle={`${group.name} · ${group.curriculum_name} · ${scheduleLabel(group)}`}
+        back={{ href: `/grupos/${id}`, label: group.name }}
+      />
       <Flash error={sp.error} ok={sp.ok} />
-      {sp.aviso && <p role="status" className="mb-4 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">{sp.aviso}</p>}
+      {sp.aviso && <Notice>{sp.aviso}</Notice>}
 
       {numbered.length === 0 ? (
         canManage ? (
@@ -209,29 +224,24 @@ export default async function CalendarioPage(props: {
             </form>
           </section>
         ) : (
-          <p className="empty">Este grupo todavía no tiene su calendario.</p>
+          <EmptyState icon="calendar" title="Este grupo todavía no tiene su calendario">
+            Cuando el líder o el administrador lo planifique, aquí verás las 36 semanas.
+          </EmptyState>
         )
       ) : (
         <>
-          <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-            {[
-              { label: "Realizadas", value: `${sum.done} de ${numbered.length}`, tone: "" },
-              { label: "Por registrar", value: String(sum.overdue), tone: sum.overdue > 0 ? "text-amber-700" : "" },
-              { label: "Canceladas", value: String(sum.cancelled), tone: "" },
-              { label: "Próxima", value: sum.next ? `${dayMonth(sum.next.held_on).slice(0, 5)}` : "—", tone: "" },
-            ].map((k) => (
-              <div key={k.label} className="card p-3">
-                <p className="text-xs text-stone-500">{k.label}</p>
-                <p className={`text-lg font-medium ${k.tone}`}>{k.value}</p>
-              </div>
-            ))}
+          <div className="stagger mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+            <Kpi label="Realizadas" value={String(sum.done)} sub={`de ${numbered.length}`} icon="check-circle" />
+            <Kpi label="Por registrar" value={String(sum.overdue)} icon="clock" tone={sum.overdue > 0 ? "alert" : undefined} />
+            <Kpi label="Canceladas" value={String(sum.cancelled)} icon="x" />
+            <Kpi label="Próxima" value={sum.next ? dayMonth(sum.next.held_on).slice(0, 5) : "—"} icon="calendar-check" />
           </div>
 
           {sum.withBackup > 0 && (
             <p className="mb-4 text-xs text-stone-500">{sum.withBackup} {sum.withBackup === 1 ? "sesión la dirigió" : "sesiones las dirigió"} el respaldo; la temporada sigue su curso.</p>
           )}
 
-          <ul className="space-y-2">{numbered.map(renderSession)}</ul>
+          <ul className="stagger space-y-2.5">{numbered.map(renderSession)}</ul>
         </>
       )}
 

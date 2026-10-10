@@ -4,6 +4,8 @@ import { getSession } from "@/lib/session";
 import { todayInChile } from "@/lib/format";
 import { AttendanceList } from "@/components/AttendanceList";
 import { Flash, fieldClass } from "@/components/Flash";
+import { Icon } from "@/components/Icon";
+import { Callout, EmptyState, PageHeader } from "@/components/ui";
 import { guardarAsistencia } from "@/app/actions/gestion";
 
 export const dynamic = "force-dynamic";
@@ -85,14 +87,11 @@ export default async function ListaPage(props: {
 
   return (
     <div className="enter mx-auto max-w-2xl p-4 pb-16 md:p-8 md:pb-16">
-      <Link href={`/grupos/${group.id}`} className="text-sm link">
-        ← {group.name}
-      </Link>
-      <h1 className="mt-2 page-title">Pasar lista</h1>
-      <p className="mb-4 mt-1 text-sm text-stone-500">
-        {group.name} · {group.curriculum_name}
-        {group.cycle_number != null ? ` · Ciclo ${group.cycle_number}` : ""}
-      </p>
+      <PageHeader
+        title="Pasar lista"
+        back={{ href: `/grupos/${group.id}`, label: group.name }}
+        subtitle={`${group.name} · ${group.curriculum_name}${group.cycle_number != null ? ` · Ciclo ${group.cycle_number}` : ""}`}
+      />
       <Flash error={searchParams.error} />
 
       <form method="get" className="mb-4 flex items-end gap-2">
@@ -100,25 +99,28 @@ export default async function ListaPage(props: {
           Fecha
           <input type="date" name="fecha" defaultValue={fecha} max={todayInChile()} className={`${fieldClass} mt-1`} />
         </label>
-        <button className="btn btn-secondary">Cambiar</button>
+        <button className="btn btn-secondary">
+          <Icon name="calendar" className="h-4 w-4" />
+          Cambiar
+        </button>
       </form>
 
       {meeting && (
-        <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+        <Callout tone="warn" className="mb-4">
           {meeting.status === "realizada" ? "Ya pasaste lista este día. Si guardas, se corrige la asistencia." : "Esta sesión estaba sin registrar. Al guardar queda como realizada."}
           {meeting.season_week ? ` Es la semana ${meeting.season_week} del calendario.` : ""}
-        </p>
+        </Callout>
       )}
       {claimed && (
-        <p className="mb-4 rounded-lg bg-brand-teal/10 px-3 py-2 text-sm text-brand-teal">
+        <Callout tone="info" className="mb-4">
           Esta lista ocupará la sesión de la semana {claimed.season_week} del calendario (planificada para el {claimed.held_on.split("-").reverse().join("/")}).
-        </p>
+        </Callout>
       )}
 
       {members.length === 0 ? (
-        <p className="empty">
-          Este grupo todavía no tiene inscritos en curso. Inscríbelos desde el detalle del grupo.
-        </p>
+        <EmptyState icon="users" title="Este grupo todavía no tiene inscritos en curso" action={{ href: `/grupos/${group.id}`, label: "Ir al detalle del grupo" }}>
+          Inscríbelos desde el detalle del grupo para poder pasar lista.
+        </EmptyState>
       ) : (
         <form action={guardarAsistencia}>
           <input type="hidden" name="group_id" value={group.id} />
@@ -149,7 +151,8 @@ export default async function ListaPage(props: {
 
           <div className="fixed inset-x-0 bottom-0 border-t border-stone-200 bg-white/95 p-3 backdrop-blur md:left-64">
             <div className="mx-auto max-w-2xl">
-              <button className="h-12 w-full btn btn-primary">
+              <button className="h-12 w-full gap-2 btn btn-primary">
+                <Icon name="check" className="h-5 w-5" strokeWidth={3} />
                 Guardar lista
               </button>
             </div>

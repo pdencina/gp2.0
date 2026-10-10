@@ -4,6 +4,8 @@ import { getSession } from "@/lib/session";
 import { whatsappLink } from "@/lib/phone";
 import { ALERT_LABEL, SEVERITY_CLASS, type Alert } from "@/lib/alerts";
 import { Flash, fieldClass } from "@/components/Flash";
+import { Icon } from "@/components/Icon";
+import { Avatar, EmptyState, PageHeader } from "@/components/ui";
 import { registrarContacto } from "@/app/actions/gestion";
 
 export const dynamic = "force-dynamic";
@@ -33,28 +35,41 @@ export default async function AlertasPage(props: {
 
   return (
     <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
-      <h1 className="page-title">Necesitan tu atención</h1>
-      <p className="mb-5 mt-1 text-sm text-stone-500">
-        {alerts.length === 0
-          ? "Todo en orden por ahora."
-          : `${alerts.length} ${alerts.length === 1 ? "aviso" : "avisos"} en tu alcance, los más urgentes primero.`}
-      </p>
+      <PageHeader
+        eyebrow="Seguimiento"
+        title="Necesitan tu atención"
+        subtitle={
+          alerts.length === 0
+            ? "Todo en orden por ahora."
+            : `${alerts.length} ${alerts.length === 1 ? "aviso" : "avisos"} en tu alcance, los más urgentes primero.`
+        }
+      />
       <Flash error={searchParams.error} ok={searchParams.ok} />
 
-      <ul className="space-y-3">
+      {alerts.length === 0 && (
+        <EmptyState icon="check-circle" title="No hay avisos pendientes">
+          Cuando alguien falte varias veces o llegue nuevo a tu grupo, aparecerá aquí.
+        </EmptyState>
+      )}
+
+      <ul className="stagger space-y-3">
         {alerts.map((a, i) => (
-          <li key={`${a.kind}-${a.group_id}-${a.person_id ?? i}`} className="card p-4">
+          <li key={`${a.kind}-${a.group_id}-${a.person_id ?? i}`} className="card card-hover p-4">
             <div className="flex flex-wrap items-start justify-between gap-2">
-              <div>
-                <span className={`chip ${SEVERITY_CLASS[a.severity]}`}>{ALERT_LABEL[a.kind]}</span>
-                <p className="mt-2 font-medium">{a.person_name || a.group_name}</p>
-                <p className="text-sm text-stone-500">
-                  {a.person_name ? `${a.group_name} · ` : ""}
-                  {a.detail}
-                </p>
+              <div className="flex items-start gap-3">
+                <Avatar name={a.person_name || a.group_name} />
+                <div>
+                  <span className={`chip ${SEVERITY_CLASS[a.severity]}`}>{ALERT_LABEL[a.kind]}</span>
+                  <p className="mt-2 font-semibold">{a.person_name || a.group_name}</p>
+                  <p className="text-sm text-stone-500">
+                    {a.person_name ? `${a.group_name} · ` : ""}
+                    {a.detail}
+                  </p>
+                </div>
               </div>
-              <Link href={`/grupos/${a.group_id}`} className="text-sm link">
-                Ver grupo →
+              <Link href={`/grupos/${a.group_id}`} className="btn btn-ghost btn-sm">
+                Ver grupo
+                <Icon name="arrow-right" className="h-4 w-4" />
               </Link>
             </div>
 
@@ -65,8 +80,9 @@ export default async function AlertasPage(props: {
                     href={whatsappLink(phones.get(a.person_id)!, message(a))}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="rounded-lg bg-brand-green px-3 py-1.5 text-sm font-medium text-white hover:brightness-95"
+                    className="btn btn-sm bg-brand-green text-white hover:brightness-95"
                   >
+                    <Icon name="phone" className="h-4 w-4" />
                     Escribir por WhatsApp
                   </a>
                 ) : (
@@ -77,7 +93,7 @@ export default async function AlertasPage(props: {
 
             {a.person_id && (
               <details className="mt-3">
-                <summary className="cursor-pointer btn btn-outline">
+                <summary className="btn btn-outline btn-sm cursor-pointer list-none">
                   Registrar contacto
                 </summary>
                 <form action={registrarContacto} className="mt-3 grid gap-2 md:grid-cols-[auto_1fr_auto]">

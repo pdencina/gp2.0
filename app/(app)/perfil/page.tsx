@@ -2,6 +2,8 @@ import Link from "next/link";
 import { getSession } from "@/lib/session";
 import { ROLE_VIEWS } from "@/lib/roles";
 import { Flash, fieldClass, primaryBtn } from "@/components/Flash";
+import { Icon } from "@/components/Icon";
+import { Avatar, Callout } from "@/components/ui";
 import { actualizarPerfil } from "@/app/actions/gestion";
 
 export const dynamic = "force-dynamic";
@@ -46,11 +48,24 @@ export default async function PerfilPage(props: {
 
   return (
     <div className="enter mx-auto max-w-xl p-4 pb-16 md:p-8 md:pb-16">
-      <h1 className="page-title">Mi perfil</h1>
-      <p className="mb-5 mt-1 text-sm text-stone-500">{ROLE_VIEWS[role].label}</p>
+      <header className="enter mb-6 flex items-center gap-4">
+        <Avatar name={fullName || user.email || "Yo"} size="lg" />
+        <div className="min-w-0">
+          <h1 className="page-title truncate">{fullName || "Mi perfil"}</h1>
+          <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-stone-500">
+            <span className="chip bg-brand-teal-50 text-brand-teal-800">{ROLE_VIEWS[role].label}</span>
+            <span className="truncate">{user.email}</span>
+          </p>
+        </div>
+      </header>
       <Flash error={searchParams.error} ok={searchParams.ok} />
+      {!p.terms_accepted_at && (
+        <Callout tone="warn" className="mb-4">
+          Para inscribirte necesitas aceptar los términos y la política de privacidad (al final del formulario).
+        </Callout>
+      )}
 
-      <form action={actualizarPerfil} className="space-y-4 card p-4">
+      <form action={actualizarPerfil} className="enter space-y-4 card p-5">
         <label className={label}>
           Nombre completo
           <input name="full_name" defaultValue={fullName} autoComplete="name" className={input} />
@@ -124,8 +139,11 @@ export default async function PerfilPage(props: {
           El género y la fecha de nacimiento se usan para mostrarte los grupos que te corresponden.
         </p>
 
-        <fieldset className="space-y-3 rounded-lg bg-stone-50 p-3">
-          <legend className="px-1 text-xs font-medium text-stone-600">Si eres menor de 18 años</legend>
+        <fieldset className="space-y-3 rounded-2xl border border-stone-200 bg-stone-50/70 p-4">
+          <legend className="flex items-center gap-1.5 px-1 text-xs font-medium text-stone-600">
+            <Icon name="shield" className="h-3.5 w-3.5 text-brand-teal" />
+            Si eres menor de 18 años
+          </legend>
           <input name="guardian_name" placeholder="Nombre de tu tutor" defaultValue={p.guardian_name ?? ""} className={fieldClass} />
           <div className="grid gap-3 md:grid-cols-2">
             <input name="guardian_email" type="email" placeholder="Correo del tutor" defaultValue={p.guardian_email ?? ""} className={fieldClass} />
@@ -135,7 +153,10 @@ export default async function PerfilPage(props: {
 
         <div className="space-y-2 text-sm">
           {p.terms_accepted_at ? (
-            <p className="text-green-800">Aceptaste los términos y la política de privacidad.</p>
+            <p className="flex items-center gap-2 text-brand-green-800">
+              <Icon name="check-circle" className="h-4 w-4" />
+              Aceptaste los términos y la política de privacidad.
+            </p>
           ) : (
             <label className="flex items-start gap-2 text-stone-700">
               <input type="checkbox" name="accept_terms" className="mt-1" />
@@ -157,8 +178,9 @@ export default async function PerfilPage(props: {
         <button className={primaryBtn}>Guardar cambios</button>
       </form>
 
-      <p className="mt-5 text-sm">
-        <Link href="/auth/restablecer" className="link">
+      <p className="mt-5">
+        <Link href="/auth/restablecer" className="btn btn-ghost">
+          <Icon name="lock" className="h-4 w-4" />
           Cambiar mi contraseña
         </Link>
       </p>
