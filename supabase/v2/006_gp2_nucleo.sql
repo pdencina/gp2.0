@@ -342,6 +342,11 @@ create trigger trg_groups_address_apply after insert or update on groups for eac
 alter table groups enable trigger trg_audit_groups;
 
 -- El avance por inscripción ya no depende de que el grupo tenga ciclo
+-- (si una migración posterior ya agregó columnas a esta vista, no se vuelve a definir)
+do $do$ begin
+  if not exists (select 1 from information_schema.columns
+                  where table_schema = 'public' and table_name = 'enrollment_progress' and column_name = 'justified') then
+    execute $v$
 create or replace view enrollment_progress with (security_invoker = true) as
 select
   e.id as enrollment_id,
@@ -359,6 +364,9 @@ join curriculums cu on cu.id = g.curriculum_id
 left join meetings m on m.group_id = e.group_id and m.held_on >= e.enrolled_at::date
 left join attendance a on a.meeting_id = m.id and a.enrollment_id = e.id
 group by e.id, cu.max_absences;
+    $v$;
+  end if;
+end $do$;
 
 -- ---------------------------------------------------------------------------
 -- 9. Inscripción curricular continua
@@ -611,9 +619,14 @@ create policy "gestionar asistencia" on attendance for all
   with check (meeting_id in (select m.id from meetings m where m.group_id in (select session_group_ids())));
 
 -- Pasar lista: el backup también puede; queda registrado quién facilitó
+-- (si 008 ya la reemplazó por la versión con justificados, no se vuelve a crear la anterior: quedarían dos candidatas)
+do $do$ begin
+  if not exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                  where n.nspname = 'public' and p.proname = 'save_attendance' and p.pronargs = 7) then
+    execute $fn$
 create or replace function save_attendance(gid uuid, day date, lesson int, present uuid[], recovered uuid[])
 returns uuid
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public as $b$
 declare
   mid uuid;
 begin
@@ -639,7 +652,10 @@ begin
 
   update groups set status = 'en_curso' where id = gid and status = 'abierto';
   return mid;
-end $$;
+end $b$;
+    $fn$;
+  end if;
+end $do$;
 
 -- Elegibilidad por perfil (audiencia y edad); la usan la membresía y la inscripción curricular
 create or replace function eligibility_error(person uuid, cid uuid) returns text

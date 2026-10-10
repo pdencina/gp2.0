@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSession } from "@/lib/session";
-import { scheduleLabel, ENROLLMENT_LABEL, todayInChile, type GroupOverview } from "@/lib/format";
+import { scheduleLabel, ENROLLMENT_LABEL, WEEKDAYS, todayInChile, type GroupOverview } from "@/lib/format";
 import { dayMonth, weekdayName } from "@/lib/calendar";
 import { avanzarAnio } from "@/app/actions/certificados";
 import { certificateTitle, formatCode, normalizeYear, routeSummary, type CertificateRow, type YearStatus } from "@/lib/certificates";
@@ -15,6 +15,7 @@ import {
 import {
   CE_LABEL,
   CE_STYLE,
+  filterGroups,
   normalizeProgress,
   progressSummary,
   type CompatibleGroup,
@@ -34,7 +35,7 @@ const dateEs = (iso: string) => new Date(iso).toLocaleDateString("es-CL", { day:
 
 export default async function ProgresoDetallePage(props: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string; ok?: string; aviso?: string }>;
+  searchParams: Promise<{ error?: string; ok?: string; aviso?: string; modalidad?: string; sede?: string; dia?: string }>;
 }) {
   const { id } = await props.params;
   const searchParams = await props.searchParams;
@@ -99,6 +100,9 @@ export default async function ProgresoDetallePage(props: {
     const { data } = await supabase.rpc("compatible_groups", { ce: id });
     compatible = ((data ?? []) as CompatibleGroup[]).filter((g) => g.group_id !== current?.group_id);
   }
+  const shown = filterGroups(compatible, { modalidad: searchParams.modalidad, sede: searchParams.sede, dia: searchParams.dia });
+  const campusOptions = Array.from(new Set(compatible.map((g) => g.campus).filter(Boolean))) as string[];
+  const dayOptions = Array.from(new Set(compatible.map((g) => g.weekday).filter((d) => d != null))).sort() as number[];
   const openPlan = ((plans ?? []) as { id: string; status: string; notes: string | null; follow_up_on: string | null }[])[0];
   const stageCredits = (credits ?? []) as unknown as { id: string; review_status: string; cycles: { number: number; title: string | null } | null }[];
   const personName = (personRes.data as { full_name: string } | null)?.full_name;
@@ -314,6 +318,38 @@ export default async function ProgresoDetallePage(props: {
         <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
           <h2 className="mb-1 text-sm font-medium">{current ? "Cambiar de grupo, horario o modalidad" : "Elegir un grupo"}</h2>
           <p className="mb-3 text-xs text-stone-500">Tu avance se mantiene. Estos grupos reciben gente de este programa hoy; no aseguramos que coincidan con la unidad que te toca.</p>
+          {compatible.length > 1 && (
+            <form method="get" className="mb-3 flex flex-wrap items-end gap-2">
+              <label className="text-xs text-stone-500">
+                Modalidad
+                <select name="modalidad" defaultValue={searchParams.modalidad ?? ""} className={`${fieldClass} mt-1`}>
+                  <option value="">Todas</option>
+                  <option value="presencial">Presencial</option>
+                  <option value="virtual">Online</option>
+                </select>
+              </label>
+              {campusOptions.length > 1 && (
+                <label className="text-xs text-stone-500">
+                  Sede
+                  <select name="sede" defaultValue={searchParams.sede ?? ""} className={`${fieldClass} mt-1`}>
+                    <option value="">Todas</option>
+                    {campusOptions.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </label>
+              )}
+              <label className="text-xs text-stone-500">
+                Día
+                <select name="dia" defaultValue={searchParams.dia ?? ""} className={`${fieldClass} mt-1`}>
+                  <option value="">Todos</option>
+                  {dayOptions.map((d) => <option key={d} value={d}>{WEEKDAYS[d]}</option>)}
+                </select>
+              </label>
+              <button className="h-10 rounded-lg border border-stone-300 px-3 text-sm hover:bg-stone-50">Filtrar</button>
+            </form>
+          )}
+          {compatible.length > 0 && shown.length === 0 && (
+            <p className="mb-3 rounded-lg bg-stone-50 p-3 text-sm text-stone-600">Ningún grupo cumple esos filtros. Prueba con otros.</p>
+          )}
           {compatible.length === 0 ? (
             <div className="rounded-lg bg-stone-50 p-3 text-sm text-stone-600">
               <p>Ahora no hay otro grupo abierto para este programa.</p>
@@ -329,7 +365,7 @@ export default async function ProgresoDetallePage(props: {
             </div>
           ) : (
             <ul className="space-y-2">
-              {compatible.map((g) => (
+              {shown.map((g) => (
                 <li key={g.group_id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-stone-50 px-3 py-2">
                   <div className="text-sm">
                     <p className="font-medium">{g.name}</p>

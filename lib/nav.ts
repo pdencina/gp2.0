@@ -20,6 +20,7 @@ const ITEMS: { section: string; item: NavItem; roles: Role[]; pastor?: boolean }
   { section: "Administración", item: { href: "/biblioteca", label: "Biblioteca", icon: "library" }, roles: ["admin", "coordinador"] },
   { section: "Administración", item: { href: "/revision", label: "Revisión", icon: "check" }, roles: ["admin", "coordinador"] },
   { section: "Administración", item: { href: "/certificados", label: "Certificados", icon: "award" }, roles: ["admin", "coordinador"], pastor: true },
+  { section: "Administración", item: { href: "/habilitacion", label: "Habilitación", icon: "flag" }, roles: ["admin"], pastor: true },
   { section: "Administración", item: { href: "/temporadas", label: "Temporadas", icon: "calendar" }, roles: ["admin"] },
 ];
 

@@ -10,7 +10,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "migrar:simular": "tsx migracion/importar.ts",
-    "migrar": "tsx migracion/importar.ts"
+    "migrar": "tsx migracion/importar.ts",
+    "smoke": "node scripts/smoke.js"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

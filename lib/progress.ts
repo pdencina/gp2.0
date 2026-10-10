@@ -67,3 +67,15 @@ export function progressSummary(p: CurriculumProgress): string {
   if (p.units_total === 0) return "Este programa todavía no tiene unidades cargadas.";
   return `${p.units_done} de ${p.units_total} unidades`;
 }
+
+export type GroupFilters = { modalidad?: string; sede?: string; dia?: string };
+
+/** Filtra los grupos compatibles por modalidad, sede y día (los valores vacíos no filtran). */
+export function filterGroups(list: CompatibleGroup[], f: GroupFilters): CompatibleGroup[] {
+  return list.filter(
+    (g) =>
+      (!f.modalidad || g.modality === f.modalidad) &&
+      (!f.sede || (g.campus ?? "") === f.sede) &&
+      (!f.dia || String(g.weekday ?? "") === f.dia),
+  );
+}
