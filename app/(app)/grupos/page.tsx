@@ -9,6 +9,8 @@ export const dynamic = "force-dynamic";
 
 type CycleOption = { id: string; number: number; title: string | null; curriculums: { name: string } | null };
 type SeasonOption = { id: string; name: string; status: string };
+type ProgramOption = { id: string; name: string; duration_years: number };
+type CampusOption = { id: string; name: string };
 
 export default async function GruposPage(props: {
   searchParams: Promise<{ error?: string; ok?: string; ver?: string }>;
@@ -25,7 +27,13 @@ export default async function GruposPage(props: {
 
   let cycles: CycleOption[] = [];
   let seasons: SeasonOption[] = [];
+  let programs: ProgramOption[] = [];
+  let campuses: CampusOption[] = [];
   if (canCreate) {
+    const p = await supabase.from("curriculums").select("id, name, duration_years").eq("active", true).order("name");
+    programs = (p.data ?? []) as ProgramOption[];
+    const ca = await supabase.from("campuses").select("id, name").eq("active", true).order("name");
+    campuses = (ca.data ?? []) as CampusOption[];
     const c = await supabase.from("cycles").select("id, number, title, curriculums(name)").order("number");
     cycles = ((c.data ?? []) as unknown as CycleOption[]).sort((a, b) =>
       (a.curriculums?.name ?? "").localeCompare(b.curriculums?.name ?? "") || a.number - b.number
@@ -52,11 +60,11 @@ export default async function GruposPage(props: {
       {canCreate && !showFinished && (
         <form action={crearGrupo} className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
           <h2 className="mb-3 text-sm font-medium">Nuevo grupo</h2>
-          {cycles.length === 0 || seasons.length === 0 ? (
+          {programs.length === 0 || seasons.length === 0 ? (
             <p className="text-sm text-stone-500">
               Antes de crear un grupo necesitas {seasons.length === 0 ? "una temporada" : ""}
-              {seasons.length === 0 && cycles.length === 0 ? " y " : ""}
-              {cycles.length === 0 ? "al menos un ciclo en un currículum" : ""}.
+              {seasons.length === 0 && programs.length === 0 ? " y " : ""}
+              {programs.length === 0 ? "al menos un programa" : ""}.
             </p>
           ) : (
             <>
@@ -68,13 +76,30 @@ export default async function GruposPage(props: {
                     </option>
                   ))}
                 </select>
-                <select name="cycle_id" aria-label="Ciclo" defaultValue="" className={fieldClass}>
+                <select name="curriculum_id" aria-label="Programa" defaultValue="" className={fieldClass}>
                   <option value="" disabled>
-                    Elige currículum y ciclo
+                    Elige el programa
                   </option>
+                  {programs.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+                <input name="formative_year" type="number" min={1} max={10} defaultValue={1} aria-label="Año formativo" title="Año formativo (AR Hombres: 1 a 3)" className={fieldClass} />
+                <select name="campus_id" aria-label="Sede" defaultValue="" className={fieldClass}>
+                  <option value="">Sede (opcional)</option>
+                  {campuses.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+                <select name="cycle_id" aria-label="Módulo" defaultValue="" className={fieldClass}>
+                  <option value="">Sin módulo (el grupo sigue el plan del año)</option>
                   {cycles.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.curriculums?.name} · Ciclo {c.number}
+                      Solo grupos por ciclos: {c.curriculums?.name} · Ciclo {c.number}
                       {c.title ? ` (${c.title})` : ""}
                     </option>
                   ))}
@@ -114,7 +139,7 @@ export default async function GruposPage(props: {
                   <span>
                     <span className="font-medium">{g.name}</span>
                     <span className="ml-2 text-stone-400">
-                      {g.curriculum_name} · Ciclo {g.cycle_number}
+                      {g.curriculum_name}{g.cycle_number != null ? ` · Ciclo ${g.cycle_number}` : g.formative_year && g.formative_year > 1 ? ` · Año ${g.formative_year}` : ""}
                     </span>
                   </span>
                   <span className="flex flex-wrap items-center gap-3 text-stone-500">

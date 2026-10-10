@@ -17,6 +17,7 @@ type ProfileRow = {
   guardian_phone: string | null;
   terms_accepted_at: string | null;
   accepts_comms: boolean | null;
+  campus_id: string | null;
 };
 
 const COUNTRIES: [string, string][] = [
@@ -33,10 +34,12 @@ export default async function PerfilPage(props: {
 
   const { data } = await supabase
     .from("profiles")
-    .select("phone, gender, country, city, birth_date, guardian_name, guardian_email, guardian_phone, terms_accepted_at, accepts_comms")
+    .select("phone, gender, country, city, birth_date, guardian_name, guardian_email, guardian_phone, terms_accepted_at, accepts_comms, campus_id")
     .eq("id", user.id)
     .maybeSingle();
   const p = (data ?? {}) as Partial<ProfileRow>;
+  const { data: campusRows } = await supabase.from("campuses").select("id, name").eq("active", true).order("name");
+  const campuses = (campusRows ?? []) as { id: string; name: string }[];
 
   const label = "block text-xs text-stone-500";
   const input = `${fieldClass} mt-1 text-base`;
@@ -98,6 +101,19 @@ export default async function PerfilPage(props: {
               ))}
             </select>
           </label>
+          {campuses.length > 0 && (
+            <label className={label}>
+              Mi sede
+              <select name="campus_id" defaultValue={p.campus_id ?? ""} className={input}>
+                <option value="">Sin sede todavía</option>
+                {campuses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <label className={label}>
             Ciudad
             <input name="city" defaultValue={p.city ?? ""} autoComplete="address-level2" className={input} />

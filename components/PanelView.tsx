@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ALERT_LABEL, SEVERITY_CLASS, type Alert } from "@/lib/alerts";
 import {
   countryName, fmt, num, pct, pointsDelta, ratio, shortDate, shortSeason,
-  type Cobertura, type ContinuidadRow, type CurriculumRow, type DistribucionRow, type LiderRow, type Resumen, type Semana, type TemporadaRow,
+  type Cobertura, type ContinuidadRow, type Formacion, type CurriculumRow, type DistribucionRow, type LiderRow, type Resumen, type Semana, type TemporadaRow,
 } from "@/lib/panel";
 import { Bar, Card, Kpi, Legend, LineChart, StackedColumns } from "@/components/charts";
 
@@ -23,10 +23,11 @@ export type PanelData = {
   dist: DistribucionRow[];
   alerts: Alert[];
   cobertura?: Cobertura | null;
+  formacion?: Formacion | null;
   today: Date;
 };
 
-export function PanelView({ role, resumen: r, semanal, curriculums, temporadas, continuidad, lideres, dist, alerts, cobertura, today }: PanelData) {
+export function PanelView({ role, resumen: r, semanal, curriculums, temporadas, continuidad, lideres, dist, alerts, cobertura, formacion, today }: PanelData) {
   const att = num(r?.asistencia_4s);
   const attPrev = num(r?.asistencia_4s_previa);
   const aprobacion = num(r?.aprobacion_historica);
@@ -167,6 +168,33 @@ export function PanelView({ role, resumen: r, semanal, curriculums, temporadas, 
           )}
         </Card>
       </div>
+
+      {/* Formación: personas e inscripciones, sin mezclar con asistencia */}
+      {formacion && (
+        <Card
+          title="Formación"
+          subtitle="Personas distintas, no inscripciones: una persona cuenta una vez aunque haya cambiado de grupo o de año. La asistencia y el aprendizaje completado se miden aparte."
+          className="mb-5"
+        >
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-8">
+            {[
+              { label: "Inscritos únicos", value: fmt(formacion.personas_unicas) },
+              { label: "En curso", value: fmt(formacion.activos) },
+              { label: "En pausa", value: fmt(formacion.pausados) },
+              { label: "Completaron", value: fmt(formacion.completados) },
+              { label: "Reincorporados", value: fmt(formacion.reincorporados) },
+              { label: "Asistieron (30 días)", value: fmt(formacion.asistentes_30d) },
+              { label: "Certif. de programa", value: fmt(formacion.certificados_programa) },
+              { label: "Certif. de etapa", value: fmt(formacion.certificados_etapa) },
+            ].map((k) => (
+              <div key={k.label}>
+                <p className="text-xs text-stone-500">{k.label}</p>
+                <p className="text-xl font-medium">{k.value}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* Calendario y cobertura */}
       {cobertura && cobertura.grupos_activos > 0 && (

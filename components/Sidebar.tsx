@@ -11,6 +11,7 @@ const ICONS: Record<string, string> = {
   lifebuoy: "M12 21a9 9 0 100-18 9 9 0 000 18zM12 15a3 3 0 100-6 3 3 0 000 6zM5.6 5.6l3.5 3.5M14.9 14.9l3.5 3.5M18.4 5.6l-3.5 3.5M9.1 14.9l-3.5 3.5",
   library: "M4 4v16M9 4v16M14 6l5 14M4 20h10",
   check: "M5 12l4 4 10-10M4 20h16",
+  award: "M12 15a6 6 0 100-12 6 6 0 000 12zM8.5 14l-1.5 7 5-3 5 3-1.5-7",
   route: "M6 19a2 2 0 100-4 2 2 0 000 4zM18 9a2 2 0 100-4 2 2 0 000 4zM8 17h6a4 4 0 000-8h-4a3 3 0 010-6h5",
   plus: "M12 21a9 9 0 100-18 9 9 0 000 18zM12 8v8M8 12h8",
   user: "M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0",
@@ -99,12 +100,12 @@ export function Sidebar(props: { sections: NavSection[]; userName: string; roleL
   return (
     <>
       {/* Escritorio: menú fijo a la izquierda */}
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-stone-200 bg-white md:block">
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-stone-200 bg-white md:block print:hidden">
         <NavContent {...props} />
       </aside>
 
       {/* Celular: barra superior y menú desplegable */}
-      <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-stone-200 bg-white px-4 md:hidden">
+      <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-stone-200 bg-white px-4 md:hidden print:hidden">
         <Logo />
         <button
           onClick={() => setOpen(true)}

@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { scheduleLabel, ENROLLMENT_LABEL, todayInChile, type GroupOverview } from "@/lib/format";
 import { dayMonth, weekdayName } from "@/lib/calendar";
+import { avanzarAnio } from "@/app/actions/certificados";
+import { certificateTitle, formatCode, normalizeYear, routeSummary, type CertificateRow, type YearStatus } from "@/lib/certificates";
 import { Flash, fieldClass, primaryBtn } from "@/components/Flash";
 import {
   cambiarGrupo,
@@ -32,7 +34,7 @@ const dateEs = (iso: string) => new Date(iso).toLocaleDateString("es-CL", { day:
 
 export default async function ProgresoDetallePage(props: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string; ok?: string }>;
+  searchParams: Promise<{ error?: string; ok?: string; aviso?: string }>;
 }) {
   const { id } = await props.params;
   const searchParams = await props.searchParams;
@@ -100,6 +102,17 @@ export default async function ProgresoDetallePage(props: {
   const openPlan = ((plans ?? []) as { id: string; status: string; notes: string | null; follow_up_on: string | null }[])[0];
   const stageCredits = (credits ?? []) as unknown as { id: string; review_status: string; cycles: { number: number; title: string | null } | null }[];
   const personName = (personRes.data as { full_name: string } | null)?.full_name;
+  // Ruta de varios años y certificados (010_certificados.sql; si falta, la sección simplemente no aparece)
+  const [yearsR, gridR, certsR] = await Promise.all([
+    supabase.rpc("year_status", { ce: id }),
+    supabase.rpc("plan_progress", { ce: id }),
+    supabase.from("certificates").select("id, code, kind, formative_year, status, issued_at, curriculum_id, person_id, campus_id").eq("curriculum_enrollment_id", id).order("issued_at", { ascending: false }),
+  ]);
+  const years: YearStatus[] = yearsR.error ? [] : ((yearsR.data ?? []) as Record<string, unknown>[]).map(normalizeYear);
+  const grid = gridR.error ? [] : ((gridR.data ?? []) as { week: number; kind: string; title: string | null; units_total: number; units_done: number; state: string }[]);
+  const certs = certsR.error ? [] : ((certsR.data ?? []) as CertificateRow[]);
+  const currentYear = years.find((y) => y.is_current);
+  const canAdvance = Boolean(currentYear?.met) && years.some((y) => y.formative_year > (currentYear?.formative_year ?? 0)) && ["activo", "pausado"].includes(ce.status);
   const name = ce.curriculums?.name ?? "Programa";
   const back = mine ? "/mi-progreso" : "/grupos";
 
@@ -115,6 +128,7 @@ export default async function ProgresoDetallePage(props: {
         {ce.formative_year > 1 ? ` · Año ${ce.formative_year}` : ""}
       </p>
       <Flash error={searchParams.error} ok={searchParams.ok} />
+      {searchParams.aviso && <p role="status" className="mb-4 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">{searchParams.aviso}</p>}
 
       {/* Avance */}
       <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
@@ -169,6 +183,84 @@ export default async function ProgresoDetallePage(props: {
           </div>
         )}
       </section>
+
+      {/* Ruta de varios años */}
+      {years.length > 1 && (
+        <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
+          <h2 className="mb-1 text-sm font-medium">Tu ruta</h2>
+          <p className="mb-3 text-sm text-stone-600">{routeSummary(years)}</p>
+          <ol className="mb-3 grid gap-2 sm:grid-cols-3">
+            {years.map((y) => (
+              <li key={y.formative_year} className={`rounded-lg border p-3 text-sm ${y.is_current ? "border-brand-teal bg-brand-teal/5" : "border-stone-200"}`}>
+                <p className="font-medium">
+                  Año {y.formative_year}
+                  {y.met && <span className="ml-2 rounded bg-green-50 px-1.5 py-0.5 text-xs font-normal text-green-800">Cumplido</span>}
+                  {y.is_current && !y.met && <span className="ml-2 rounded bg-brand-teal/10 px-1.5 py-0.5 text-xs font-normal text-brand-teal">Aquí vas</span>}
+                </p>
+                {y.items_total > 0 ? (
+                  <>
+                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-stone-100" role="progressbar" aria-valuenow={y.items_done} aria-valuemin={0} aria-valuemax={y.items_total} aria-label={`Año ${y.formative_year}`}>
+                      <div className="h-full bg-brand-green" style={{ width: `${Math.min(100, Math.round((y.items_done / y.items_total) * 100))}%` }} />
+                    </div>
+                    <p className="mt-1 text-xs text-stone-500">
+                      {y.items_done} de {y.items_total} · se pide {y.min_pct}%
+                    </p>
+                  </>
+                ) : (
+                  <p className="mt-2 text-xs text-stone-400">Todavía sin contenido cargado</p>
+                )}
+              </li>
+            ))}
+          </ol>
+          {canAdvance && (
+            <form action={avanzarAnio}>
+              <input type="hidden" name="ce" value={id} />
+              <button className={primaryBtn}>Pasar al año {(currentYear?.formative_year ?? 0) + 1}</button>
+            </form>
+          )}
+          <p className="mt-2 text-xs text-stone-400">Nada avanza solo por el calendario: se pasa de año cuando la etapa está cumplida.</p>
+        </section>
+      )}
+
+      {grid.length > 0 && (
+        <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
+          <h2 className="mb-2 text-sm font-medium">Tus encuentros del año {currentYear?.formative_year ?? ce.formative_year}</h2>
+          <ol className="grid grid-cols-6 gap-1.5 sm:grid-cols-9">
+            {grid.map((g) => (
+              <li
+                key={g.week}
+                title={`Semana ${g.week}${g.title ? ` · ${g.title}` : ""} · ${g.units_done} de ${g.units_total} unidades`}
+                className={`flex h-9 items-center justify-center rounded text-xs ${
+                  g.state === "hecha" ? "bg-brand-green text-white" : g.state === "parcial" ? "bg-brand-teal/30 text-stone-700" : g.state === "pendiente" ? "border border-stone-300 text-stone-600" : "border border-dashed border-stone-200 text-stone-300"
+                }`}
+              >
+                <span aria-hidden="true">{g.week}</span>
+                <span className="sr-only">Semana {g.week}: {g.state === "hecha" ? "completa" : g.state === "parcial" ? "parcial" : g.state === "pendiente" ? "pendiente" : "sin unidades"}</span>
+              </li>
+            ))}
+          </ol>
+          <p className="mt-2 text-xs text-stone-500">Verde: unidades acreditadas · Azul: parcial · Borde: pendiente · Punteado: encuentro sin unidades.</p>
+        </section>
+      )}
+
+      {certs.length > 0 && (
+        <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
+          <h2 className="mb-2 text-sm font-medium">Certificados</h2>
+          <ul className="space-y-1.5 text-sm">
+            {certs.map((c) => (
+              <li key={c.id} className="flex flex-wrap items-center justify-between gap-2">
+                <Link href={`/certificados/${c.id}`} className="text-brand-teal hover:underline">
+                  {certificateTitle(c, name)}
+                </Link>
+                <span className="text-xs text-stone-500">
+                  {c.status === "revocado" ? "Revocado · " : ""}
+                  {formatCode(c.code)} · {dateEs(c.issued_at)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* Créditos de la plataforma anterior */}
       {stageCredits.length > 0 && (

@@ -70,3 +70,9 @@ export type Cobertura = {
   grupos_activos: number; con_calendario: number; sin_calendario: number; sin_lider: number; sin_respaldo: number;
   sesiones_planificadas: number; sesiones_realizadas: number; sesiones_atrasadas: number; sesiones_canceladas: number; sesiones_con_respaldo: number;
 };
+
+// Formación: personas e inscripciones, separado de la asistencia (010_certificados.sql)
+export type Formacion = {
+  personas_unicas: number; activos: number; pausados: number; completados: number; reincorporados: number;
+  asistentes_30d: number; certificados_programa: number; certificados_etapa: number;
+};

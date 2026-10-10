@@ -6,6 +6,7 @@ import { whatsappLink } from "@/lib/phone";
 import { Flash, fieldClass } from "@/components/Flash";
 import {
   asignarResponsables,
+  asignarSede,
   cancelarInscripcion,
   cerrarGrupo,
   crearContinuacion,
@@ -83,6 +84,11 @@ export default async function GrupoPage(props: {
         .maybeSingle()
     : { data: null };
 
+  let campusOptions: { id: string; name: string }[] = [];
+  if (canAssign) {
+    const { data: ca } = await supabase.from("campuses").select("id, name").eq("active", true).order("name");
+    campusOptions = (ca ?? []) as typeof campusOptions;
+  }
   let monitors: Person[] = [];
   let leaders: Person[] = [];
   if (canAssign) {
@@ -184,6 +190,23 @@ export default async function GrupoPage(props: {
           <p className="text-sm text-stone-600">
             Monitor: {group.monitor_name ?? "Sin asignar"} · Líder: {group.leader_name ?? "Sin asignar"}
           </p>
+        )}
+        {canAssign ? (
+          <form action={asignarSede} className="mt-3 flex flex-wrap items-center gap-2">
+            <input type="hidden" name="id" value={group.id} />
+            <label className="text-xs text-stone-500">
+              Sede
+              <select name="campus_id" defaultValue={group.campus_id ?? ""} className={`${fieldClass} mt-1`}>
+                <option value="">Sin sede</option>
+                {campusOptions.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </label>
+            <button className="mt-5 h-10 rounded-lg border border-brand-teal px-3 text-sm text-brand-teal hover:bg-brand-teal hover:text-white">Guardar sede</button>
+          </form>
+        ) : (
+          group.campus_name && <p className="mt-2 text-sm text-stone-600">Sede: {group.campus_name}</p>
         )}
         <p className="mt-2 text-sm text-stone-600">
           Respaldo: {group.backup_leader_name ?? "Sin asignar"}

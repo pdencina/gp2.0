@@ -9,6 +9,7 @@ import {
   crearModulo,
   quitarRevisor,
 } from "@/app/actions/curriculo";
+import { cambiarAnioModulo, guardarRequisito, recalcularAnios, sincronizarGrupos } from "@/app/actions/certificados";
 import {
   STATUS_LABEL,
   STATUS_STYLE,
@@ -46,7 +47,7 @@ export default async function CurriculumPage(props: {
 
   const { data: curriculum } = await supabase
     .from("curriculums")
-    .select("id, name, description, kind, duration_years")
+    .select("id, name, description, kind, duration_years, certifiable")
     .eq("id", params.id)
     .maybeSingle();
   if (!curriculum) notFound();
@@ -71,7 +72,7 @@ export default async function CurriculumPage(props: {
   if (!selected) notFound();
   const editable = isEditable(selected);
 
-  const [cyclesR, revR, linkR, issuesR, eventsR, coordR] = await Promise.all([
+  const [cyclesR, revR, linkR, issuesR, eventsR, coordR, reqR] = await Promise.all([
     supabase
       .from("cycles")
       .select("id, number, title, classes, prerequisite_cycle_id, formative_year, stage_kind")
@@ -83,7 +84,9 @@ export default async function CurriculumPage(props: {
     supabase.rpc("version_readiness", { vid: selected.id }),
     supabase.from("version_events").select("id, from_status, to_status, note, created_at, actor").eq("version_id", selected.id).order("created_at", { ascending: false }),
     supabase.from("curriculum_coordinators").select("coordinator_id").eq("curriculum_id", curriculum.id).eq("coordinator_id", user.id),
+    supabase.from("year_requirements").select("formative_year, min_pct").eq("version_id", selected.id),
   ]);
+  const minPct = new Map(((reqR.data ?? []) as { formative_year: number; min_pct: number | string }[]).map((r) => [r.formative_year, Number(r.min_pct)]));
   const cycles = (cyclesR.data ?? []) as Cycle[];
   const reviewerIds = ((revR.data ?? []) as { reviewer_id: string }[]).map((r) => r.reviewer_id);
   const lessonCount = (cid: string) => ((linkR.data ?? []) as { cycle_id: string }[]).filter((l) => l.cycle_id === cid).length;
@@ -230,9 +233,22 @@ export default async function CurriculumPage(props: {
                     <span className="ml-2 text-xs text-stone-400">(requiere módulo {cycles.find((x) => x.id === c.prerequisite_cycle_id)?.number})</span>
                   )}
                 </span>
-                <Link href={`/ciclos/${c.id}`} className="shrink-0 text-brand-teal hover:underline">
-                  Unidades →
-                </Link>
+                <span className="flex shrink-0 items-center gap-3">
+                  {years > 1 && editable && (
+                    <form action={cambiarAnioModulo} className="flex items-center gap-1">
+                      <input type="hidden" name="curriculum_id" value={curriculum.id} />
+                      <input type="hidden" name="version_id" value={selected.id} />
+                      <input type="hidden" name="cycle_id" value={c.id} />
+                      <select name="formative_year" defaultValue={c.formative_year} aria-label={`Año del módulo ${c.number}`} className="h-8 rounded border border-stone-300 bg-white px-1 text-xs">
+                        {Array.from({ length: years }, (_, i) => i + 1).map((y) => <option key={y} value={y}>Año {y}</option>)}
+                      </select>
+                      <button className="text-xs text-brand-teal hover:underline">Cambiar</button>
+                    </form>
+                  )}
+                  <Link href={`/ciclos/${c.id}`} className="text-brand-teal hover:underline">
+                    Unidades →
+                  </Link>
+                </span>
               </li>
             ))}
           </ul>
@@ -271,6 +287,51 @@ export default async function CurriculumPage(props: {
           </form>
         )}
       </section>
+
+      {/* Años y requisitos */}
+      {(years > 1 || curriculum.certifiable) && (
+        <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">
+          <h2 className="mb-1 text-sm font-medium">Años y requisitos de certificación</h2>
+          <p className="mb-3 text-xs text-stone-500">
+            Cada año es una etapa. Se cumple cuando la persona tiene acreditado al menos este porcentaje de sus unidades (un módulo heredado sin unidades cuenta como una etapa, y vale cuando alguien valida su crédito). Los certificados ya emitidos guardan la regla con la que se emitieron.
+          </p>
+          <ul className="space-y-2">
+            {Array.from({ length: years }, (_, i) => i + 1).map((y) => (
+              <li key={y}>
+                <form action={guardarRequisito} className="flex flex-wrap items-center gap-2 text-sm">
+                  <input type="hidden" name="curriculum_id" value={curriculum.id} />
+                  <input type="hidden" name="version_id" value={selected.id} />
+                  <input type="hidden" name="formative_year" value={y} />
+                  <span className="w-16 font-medium">Año {y}</span>
+                  <span className="text-xs text-stone-500">{cycles.filter((c) => c.formative_year === y).length} módulos</span>
+                  <input name="min_pct" type="number" min={1} max={100} step="0.5" defaultValue={minPct.get(y) ?? 100} aria-label={`Porcentaje mínimo del año ${y}`} className={`${fieldClass} w-24`} />
+                  <span className="text-xs text-stone-500">% mínimo</span>
+                  <button className="h-9 rounded-lg border border-brand-teal px-3 text-sm text-brand-teal hover:bg-brand-teal hover:text-white">Guardar</button>
+                </form>
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-4 flex flex-wrap gap-2 border-t border-stone-100 pt-3">
+            <Link href={`/curriculums/${curriculum.id}/creditos`} className="h-10 rounded-lg border border-stone-300 px-3 text-sm leading-10 text-stone-700 hover:bg-stone-50">
+              Créditos de la plataforma anterior →
+            </Link>
+            <form action={recalcularAnios}>
+              <input type="hidden" name="curriculum_id" value={curriculum.id} />
+              <input type="hidden" name="version_id" value={selected.id} />
+              <button className="h-10 rounded-lg border border-stone-300 px-3 text-sm text-stone-700 hover:bg-stone-50">Recalcular el año de cada persona</button>
+            </form>
+            <form action={sincronizarGrupos}>
+              <input type="hidden" name="curriculum_id" value={curriculum.id} />
+              <input type="hidden" name="version_id" value={selected.id} />
+              <button className="h-10 rounded-lg border border-stone-300 px-3 text-sm text-stone-700 hover:bg-stone-50">Sincronizar el año de los grupos</button>
+            </form>
+          </div>
+          <p className="mt-2 text-xs text-stone-500">
+            Después de asignar el año de cada módulo: primero valida los créditos, luego sincroniza los grupos y recalcula el año de cada persona. El año se deduce de lo acreditado o validado; no se asume.
+          </p>
+        </section>
+      )}
 
       {/* Revisores */}
       <section className="mb-5 rounded-xl border border-stone-200 bg-white p-4">

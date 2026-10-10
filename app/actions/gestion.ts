@@ -111,14 +111,21 @@ export async function guardarLeccion(fd: FormData) {
 export async function crearGrupo(fd: FormData) {
   const name = text(fd, "name");
   if (name.length < 2) finish("/grupos", "Escribe el nombre del grupo.");
-  if (!text(fd, "cycle_id")) finish("/grupos", "Elige un ciclo.");
+  // Un grupo pertenece a un programa (y su año formativo); el módulo es opcional, para los que avanzan por ciclos
+  const cycleId = orNull(text(fd, "cycle_id"));
+  const programId = orNull(text(fd, "curriculum_id"));
+  if (!cycleId && !programId) finish("/grupos", "Elige el programa del grupo.");
   if (!text(fd, "season_id")) finish("/grupos", "Elige una temporada.");
+  const year = Math.max(1, intOrNull(text(fd, "formative_year")) ?? 1);
 
   const { data, error } = await (await createClient())
     .from("groups")
     .insert({
       season_id: text(fd, "season_id"),
-      cycle_id: text(fd, "cycle_id"),
+      cycle_id: cycleId,
+      ...(cycleId ? {} : { curriculum_id: programId }),
+      ...(year > 1 || !cycleId ? { formative_year: year } : {}),
+      ...(orNull(text(fd, "campus_id")) ? { campus_id: text(fd, "campus_id") } : {}),
       name,
       weekday: intOrNull(text(fd, "weekday")),
       start_time: orNull(text(fd, "start_time")),
@@ -132,6 +139,16 @@ export async function crearGrupo(fd: FormData) {
   if (error || !data) finish("/grupos", error?.message ?? "No se pudo crear el grupo.");
   revalidatePath("/grupos");
   redirect(`/grupos/${data.id}?ok=1`);
+}
+
+export async function asignarSede(fd: FormData) {
+  const id = text(fd, "id");
+  const { data, error } = await (await createClient())
+    .from("groups")
+    .update({ campus_id: orNull(text(fd, "campus_id")) })
+    .eq("id", id)
+    .select("id");
+  finish(`/grupos/${id}`, error?.message ?? (data?.length ? undefined : "No tienes permiso para hacer este cambio."));
 }
 
 export async function asignarResponsables(fd: FormData) {
@@ -282,6 +299,8 @@ export async function actualizarPerfil(fd: FormData) {
     guardian_phone: orNull(text(fd, "guardian_phone")),
     accepts_comms: text(fd, "accepts_comms") === "on",
   };
+  // La sede solo se envía si la pantalla la ofrece (así funciona aunque falte instalar 010_certificados.sql)
+  if (fd.has("campus_id")) update.campus_id = orNull(text(fd, "campus_id"));
   if (text(fd, "accept_terms") === "on") {
     update.terms_accepted_at = new Date().toISOString();
     update.terms_version = "2026-1";
