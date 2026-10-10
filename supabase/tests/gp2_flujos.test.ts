@@ -30,7 +30,7 @@ const GRANTS = `
 const sql = (f: string) => readFileSync(join(__dirname, "../v2", f), "utf8");
 const ALL = [
   "001_schema.sql", "004_rendimiento.sql", "005_panel.sql", "006_gp2_nucleo.sql", "007_catalogo.sql",
-  "008_calendario.sql", "009_biblioteca.sql", "010_certificados.sql", "011_habilitacion.sql", "014_reencuentro.sql",
+  "008_calendario.sql", "009_biblioteca.sql", "010_certificados.sql", "011_habilitacion.sql", "014_reencuentro.sql", "016_historial_de_roles_rapido.sql",
 ];
 
 const id = (n: number) => `00000000-0000-0000-0000-${String(n).padStart(12, "0")}`;

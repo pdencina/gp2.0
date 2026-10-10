@@ -11,7 +11,7 @@ const run = process.env.GP2_BENCH ? describe : describe.skip;
 const sql = (f: string) => readFileSync(join(__dirname, "../v2", f), "utf8");
 const ALL = [
   "001_schema.sql", "004_rendimiento.sql", "005_panel.sql", "006_gp2_nucleo.sql", "007_catalogo.sql",
-  "008_calendario.sql", "009_biblioteca.sql", "010_certificados.sql", "011_habilitacion.sql", "014_reencuentro.sql",
+  "008_calendario.sql", "009_biblioteca.sql", "010_certificados.sql", "011_habilitacion.sql", "014_reencuentro.sql", "016_historial_de_roles_rapido.sql",
 ];
 const STUBS = `
   create role anon nologin; create role authenticated nologin; create schema auth;
@@ -127,6 +127,34 @@ run("rendimiento con volumen real", () => {
     // Supabase analiza las tablas solo después de una carga grande; aquí se hace de inmediato.
     // Sin estadísticas el planificador elige planes pésimos (una consulta pasó de 56 ms a 23 s).
     await db.exec(`analyze`);
+  }, 900_000);
+
+  // Recorre TODAS las tablas como lo haría la API pública: sin sesión, como participante y como líder.
+  // Una política de seguridad que evalúe una función costosa fila por fila se nota aquí (y hace que una consulta pública
+  // pueda agotar el tiempo). Ninguna debería tardar más de unos segundos con 12.000 personas.
+  it("ninguna tabla es lenta de leer, ni siquiera sin sesión", async () => {
+    await db.exec(`grant usage on schema public to anon; grant select on all tables in schema public to anon;`);
+    const tablas = (await db.query<{ table_name: string }>(
+      `select table_name from information_schema.tables where table_schema = 'public' and table_type = 'BASE TABLE' order by 1`)).rows.map((r) => r.table_name);
+    const quien: [string, string, string | null][] = [["anon", "visitante sin sesión", null], ["authenticated", "participante", PERSON], ["authenticated", "líder", LEADER]];
+    const lentas: string[] = [];
+    for (const t of tablas) {
+      for (const [rol, etiqueta, uid] of quien) {
+        await db.exec(`set role ${rol}; select set_config('request.jwt.claim.sub', '${uid ?? ""}', false);`);
+        const t0 = performance.now();
+        try {
+          await db.query(`select * from public.${t} limit 1`);
+        } catch {
+          /* sin permiso: rápido y correcto */
+        } finally {
+          await db.exec(`reset role; select set_config('request.jwt.claim.sub', '', false);`);
+        }
+        const ms = Math.round(performance.now() - t0);
+        if (ms > 1500) lentas.push(`${t} como ${etiqueta}: ${ms} ms`);
+      }
+    }
+    if (lentas.length) console.log("Tablas lentas:\n" + lentas.join("\n"));
+    expect(lentas).toEqual([]);
   }, 900_000);
 
   it("mide las consultas principales", async () => {

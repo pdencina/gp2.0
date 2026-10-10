@@ -19,6 +19,7 @@ Dos caminos, según el proyecto de Supabase que se use:
 - `013_sedes_por_lote.sql`: asignar sedes por criterios (solo administrador).
 - `014_reencuentro.sql`: recuperar a quienes se alejaron (registro de contactos y consultas por alcance).
 - `015_archivo_historico.sql`: archivo de solo agregar con las filas de la plataforma anterior (lo escribe la clave de importación; lo lee el administrador).
+- `016_historial_de_roles_rapido.sql`: la política de `role_history` pasa a evaluarse una vez por consulta y solo con sesión (antes una consulta sin sesión agotaba el tiempo).
 
 ## Cómo se prueba
 `npm test` carga los scripts en un Postgres real en memoria (PGlite):

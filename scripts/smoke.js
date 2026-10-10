@@ -38,7 +38,7 @@ async function main() {
   check("/privacidad es pública", r.status === 200, `HTTP ${r.status}`);
 
   // Privadas: deben mandar a iniciar sesión
-  for (const p of ["/inicio", "/mi-progreso", "/catalogo", "/panel", "/certificados", "/biblioteca", "/revision", "/habilitacion", "/curriculums", "/grupos"]) {
+  for (const p of ["/inicio", "/mi-progreso", "/catalogo", "/panel", "/certificados", "/biblioteca", "/revision", "/habilitacion", "/curriculums", "/grupos", "/reencuentro", "/alertas", "/recuperacion", "/perfil"]) {
     r = await get(p);
     const to = r.headers.get("location") || "";
     check(`${p} exige iniciar sesión`, [301, 302, 303, 307, 308].includes(r.status) && /\/login/.test(to), `HTTP ${r.status} → ${to || "—"}`);
