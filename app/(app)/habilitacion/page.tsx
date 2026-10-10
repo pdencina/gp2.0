@@ -32,10 +32,15 @@ export default async function HabilitacionPage(props: {
   const isPastor = (pastorRows ?? []).length > 0;
   if (!isAdmin && !isPastor) redirect("/inicio");
 
-  const [reconR, campusR] = await Promise.all([
+  const [reconR, campusR, archiveR] = await Promise.all([
     isAdmin ? supabase.rpc("reconciliacion") : Promise.resolve({ data: [], error: null }),
     supabase.rpc("campus_readiness"),
+    isAdmin ? supabase.rpc("legacy_archive_summary") : Promise.resolve({ data: [], error: null }),
   ]);
+  // Si falta instalar 015, la tarjeta del archivo simplemente no se muestra
+  const archiveMissing = !!archiveR.error;
+  const archive = ((archiveR.data ?? []) as { source_table: string; filas: number | string }[]);
+  const archiveTotal = archive.reduce((n, a) => n + Number(a.filas), 0);
   if (campusR.error && /Could not find|PGRST202|404/i.test(campusR.error.message + (campusR.error.code ?? ""))) {
     return (
       <div className="enter mx-auto max-w-3xl p-4 pb-16 md:p-8 md:pb-16">
@@ -175,6 +180,37 @@ export default async function HabilitacionPage(props: {
           <p className="text-xs text-stone-500">
             “Esperado” en Importación es lo que trajo la importación del 9 de octubre de 2026: hoy debe haber al menos eso. Un “Problema” en Modelo es algo que no debería existir y conviene revisar antes de habilitar sedes.
           </p>
+        </section>
+      )}
+
+      {isAdmin && !archiveMissing && (
+        <section className="mt-8 card p-4" aria-label="Archivo histórico">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="section-title flex items-center gap-2"><Icon name="library" className="h-4 w-4 text-brand-teal" />Archivo histórico</h2>
+            <span className={`chip ${archive.length > 0 ? STATE_STYLE.ok : "bg-amber-50 text-amber-800"}`}>
+              {archive.length > 0 ? `${fmtNum(archiveTotal)} filas guardadas` : "Todavía vacío"}
+            </span>
+          </div>
+          <p className="mb-3 text-sm text-stone-600">
+            Cada fila de la plataforma anterior se guarda tal cual, aunque GP 2.0 aún no tenga dónde usarla (matrimonios, evaluaciones, fútbol, columnas sin equivalente). Solo el administrador la ve y nada se modifica ni se borra.
+          </p>
+          {archive.length === 0 ? (
+            <Callout tone="warn">
+              Aún no se ha archivado el respaldo. Desde tu computador: <code>npm run migrar:archivar -- --respaldo migracion/datos/respaldo.sql --aplicar --si-estoy-seguro</code>
+            </Callout>
+          ) : (
+            <details>
+              <summary className="cursor-pointer text-sm text-brand-teal">Ver por tabla ({archive.length})</summary>
+              <ul className="mt-2 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
+                {archive.map((a) => (
+                  <li key={a.source_table} className="flex justify-between gap-2 border-b border-stone-100 py-1">
+                    <span className="text-stone-600">{a.source_table}</span>
+                    <span className="tabular font-medium">{fmtNum(Number(a.filas))}</span>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
         </section>
       )}
     </div>

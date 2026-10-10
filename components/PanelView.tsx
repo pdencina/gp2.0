@@ -6,7 +6,7 @@ import {
 } from "@/lib/panel";
 import { Bar, Card, Kpi, Legend, LineChart, StackedColumns } from "@/components/charts";
 import { Icon, type IconName } from "@/components/Icon";
-import { Avatar, EmptyState, PageHeader } from "@/components/ui";
+import { Avatar, Callout, EmptyState, PageHeader } from "@/components/ui";
 
 // Cifra de apoyo con ícono: se usa en "Formación" y "Calendario y cobertura"
 function Stat({ label, value, sub, icon, warn }: { label: string; value: string; sub?: string; icon: IconName; warn?: boolean }) {
@@ -42,10 +42,14 @@ export type PanelData = {
   alerts: Alert[];
   cobertura?: Cobertura | null;
   formacion?: Formacion | null;
+  reencuentro?: ReencuentroResumen | null;
   today: Date;
 };
 
-export function PanelView({ role, resumen: r, semanal, curriculums, temporadas, continuidad, lideres, dist, alerts, cobertura, formacion, today }: PanelData) {
+/** Lo mínimo del resumen del reencuentro que muestra el panel */
+export type ReencuentroResumen = { total: number; por_contactar: number; en_camino: number; recuperados: number };
+
+export function PanelView({ role, resumen: r, semanal, curriculums, temporadas, continuidad, lideres, dist, alerts, cobertura, formacion, reencuentro, today }: PanelData) {
   const att = num(r?.asistencia_4s);
   const attPrev = num(r?.asistencia_4s_previa);
   const aprobacion = num(r?.aprobacion_historica);
@@ -124,6 +128,14 @@ export function PanelView({ role, resumen: r, semanal, curriculums, temporadas, 
         title="Cómo va todo"
         subtitle={`${SCOPE[role]} · ${dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1)}`}
       />
+
+      {reencuentro && reencuentro.total > 0 && (
+        <Callout tone="info" href="/reencuentro" action="Ver" className="mb-5">
+          {fmt(reencuentro.total)} {reencuentro.total === 1 ? "persona se alejó" : "personas se alejaron"} de su camino (3 meses o más sin asistir)
+          {reencuentro.por_contactar > 0 ? `; ${fmt(reencuentro.por_contactar)} todavía sin contactar` : ""}.
+          {reencuentro.recuperados > 0 ? ` Ya ${reencuentro.recuperados === 1 ? "volvió 1" : `volvieron ${fmt(reencuentro.recuperados)}`} después de una conversación.` : ""}
+        </Callout>
+      )}
 
       {/* Pulso */}
       <div className="stagger mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">

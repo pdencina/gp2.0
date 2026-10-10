@@ -8,6 +8,18 @@ import { Icon } from "@/components/Icon";
 import { ProgressRing } from "@/components/ui";
 import { countryLabel, locationMismatch } from "@/lib/places";
 import type { MissingField } from "@/lib/profile-check";
+import { awayLabel, progressLine } from "@/lib/reencuentro";
+
+/** Un camino que la persona dejó hace tiempo y sigue guardado (my_comeback) */
+export type Comeback = {
+  ce_id: string;
+  curriculum: string;
+  months_away: number;
+  units_done: number;
+  units_total: number;
+  modules_done: number;
+  modules_total: number;
+};
 
 // Ventana de bienvenida: una vez por inicio de sesión. Saluda, avisa de los datos personales que
 // faltan y, si el dispositivo parece estar en otro país que el del perfil, invita a actualizarlo.
@@ -22,6 +34,7 @@ export function WelcomeDialog({
   missing,
   percent,
   blocking,
+  comeback = [],
 }: {
   userId: string;
   /** Cambia en cada inicio de sesión (así la ventana vuelve a salir, pero no en cada página) */
@@ -31,6 +44,7 @@ export function WelcomeDialog({
   missing: MissingField[];
   percent: number;
   blocking: boolean;
+  comeback?: Comeback[];
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const pathname = usePathname();
@@ -86,13 +100,16 @@ export function WelcomeDialog({
   const shown = missing.slice(0, MAX_LISTED);
   const rest = missing.length - shown.length;
   const hasMissing = missing.length > 0;
-  const needsAction = hasMissing || !!elsewhere;
+  const hasComeback = comeback.length > 0;
+  const needsAction = hasMissing || !!elsewhere || hasComeback;
   const greeting = firstName ? `Te damos la bienvenida, ${firstName}` : "Te damos la bienvenida";
-  const lead = blocking
-    ? "Para poder inscribirte a un programa necesitamos que completes algunos datos."
-    : hasMissing
-      ? "Tu perfil está casi listo. Estos datos ayudan a que tu líder pueda acompañarte mejor."
-      : "Qué bueno verte de nuevo. Tus datos personales están al día.";
+  const lead = hasComeback
+    ? "Qué bueno verte de nuevo. Lo que avanzaste sigue guardado: puedes continuar desde donde lo dejaste."
+    : blocking
+      ? "Para poder inscribirte a un programa necesitamos que completes algunos datos."
+      : hasMissing
+        ? "Tu perfil está casi listo. Estos datos ayudan a que tu líder pueda acompañarte mejor."
+        : "Qué bueno verte de nuevo. Tus datos personales están al día.";
 
   return (
     <dialog
@@ -111,6 +128,27 @@ export function WelcomeDialog({
           {greeting}
         </h2>
         <p className="mx-auto mt-1.5 max-w-sm text-center text-sm text-stone-600">{lead}</p>
+
+        {hasComeback && (
+          <section aria-label="Tu camino sigue guardado" className="mt-5 space-y-2">
+            {comeback.map((c) => (
+              <div key={c.ce_id} className="flex items-center gap-3 rounded-2xl border border-brand-green/25 bg-brand-green-50/60 p-3">
+                <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-brand-green shadow-sm">
+                  <Icon name="route" className="h-5 w-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold">{c.curriculum}</p>
+                  <p className="text-xs text-stone-600">
+                    {progressLine(c)} · {awayLabel(c.months_away)}
+                  </p>
+                </div>
+                <Link href={`/mi-progreso/${c.ce_id}`} onClick={close} className="btn btn-primary btn-sm shrink-0">
+                  Retomar
+                </Link>
+              </div>
+            ))}
+          </section>
+        )}
 
         {hasMissing && (
           <section aria-label="Datos por completar" className="mt-5 rounded-2xl border border-stone-200 bg-stone-50/70 p-4">

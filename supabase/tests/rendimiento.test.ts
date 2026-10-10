@@ -11,7 +11,7 @@ const run = process.env.GP2_BENCH ? describe : describe.skip;
 const sql = (f: string) => readFileSync(join(__dirname, "../v2", f), "utf8");
 const ALL = [
   "001_schema.sql", "004_rendimiento.sql", "005_panel.sql", "006_gp2_nucleo.sql", "007_catalogo.sql",
-  "008_calendario.sql", "009_biblioteca.sql", "010_certificados.sql", "011_habilitacion.sql",
+  "008_calendario.sql", "009_biblioteca.sql", "010_certificados.sql", "011_habilitacion.sql", "014_reencuentro.sql",
 ];
 const STUBS = `
   create role anon nologin; create role authenticated nologin; create schema auth;
@@ -124,6 +124,9 @@ run("rendimiento con volumen real", () => {
               (select count(*) from enrollments)::int inscripciones, (select count(*) from curriculum_enrollments)::int inscripciones_curriculares,
               (select count(*) from meetings)::int reuniones, (select count(*) from attendance)::int asistencia`)).rows[0];
     console.log("Volumen de la prueba:", counts);
+    // Supabase analiza las tablas solo después de una carga grande; aquí se hace de inmediato.
+    // Sin estadísticas el planificador elige planes pésimos (una consulta pasó de 56 ms a 23 s).
+    await db.exec(`analyze`);
   }, 900_000);
 
   it("mide las consultas principales", async () => {
@@ -146,6 +149,13 @@ run("rendimiento con volumen real", () => {
     if (PERSON_CE) await timed("participante · su avance por año", PERSON, `select * from year_status($1)`, [PERSON_CE]);
     await timed("participante · unidades visibles", PERSON, `select count(*) from lessons`);
     await timed("administrador · cobertura por sede", ADMIN, `select * from panel_curriculums()`);
+    await timed("administrador · reencuentro, primera página", ADMIN, `select * from reengagement_list(3, null, null, 'por_contactar', null, 25, 0)`);
+    await timed("administrador · reencuentro, página 40", ADMIN, `select * from reengagement_list(3, null, null, 'todas', null, 25, 1000)`);
+    await timed("coordinador · reencuentro", COORD, `select * from reengagement_list(3)`);
+    await timed("líder · reencuentro", LEADER, `select * from reengagement_list(3)`);
+    await timed("administrador · reencuentro, buscar por nombre", ADMIN, `select * from reengagement_list(3, null, null, 'todas', 'Persona 123')`);
+    await timed("administrador · resumen del reencuentro", ADMIN, `select * from reengagement_summary()`);
+    await timed("participante · mi camino guardado (my_comeback)", PERSON, `select * from my_comeback()`);
     console.table(timings);
     // referencia amplia: lo que pase de aquí es una consulta que hay que mirar
     for (const t of timings) expect(t.ms, t.consulta).toBeLessThan(60_000);

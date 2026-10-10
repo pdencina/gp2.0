@@ -15,6 +15,7 @@ const ITEMS: { section: string; item: NavItem; roles: Role[]; pastor?: boolean }
   { section: "Seguimiento", item: { href: "/grupos", label: "Grupos", icon: "grid" }, roles: MANAGERS },
   { section: "Seguimiento", item: { href: "/alertas", label: "Alertas", icon: "bell" }, roles: MANAGERS },
   { section: "Seguimiento", item: { href: "/recuperacion", label: "Recuperación", icon: "lifebuoy" }, roles: MANAGERS },
+  { section: "Seguimiento", item: { href: "/reencuentro", label: "Reencuentro", icon: "heart" }, roles: MANAGERS, pastor: true },
   { section: "Seguimiento", item: { href: "/equipo", label: "Equipo", icon: "users" }, roles: ["admin", "coordinador", "monitor"] },
   { section: "Administración", item: { href: "/curriculums", label: "Currículums", icon: "book" }, roles: ["admin", "coordinador"] },
   { section: "Administración", item: { href: "/biblioteca", label: "Biblioteca", icon: "library" }, roles: ["admin", "coordinador"] },

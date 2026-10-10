@@ -38,6 +38,9 @@ Lo que ya está hecho en el código está marcado con [x]. Lo que falta configur
 - [ ] Un monitor de disponibilidad (UptimeRobot, Better Stack) apuntando a `/api/health`, con aviso por correo o WhatsApp.
 - [ ] Un servicio de errores (por ejemplo Sentry) conectado en `app/error.tsx`.
 
+## Después de una importación grande
+Ejecuta `analyze;` en el SQL Editor. Supabase actualiza las estadísticas solo, pero tarda unos minutos; sin ellas el planificador puede elegir planes miles de veces más lentos (una consulta del reencuentro pasó de 56 ms a 23 s en la medición). `014_reencuentro.sql` ya lo ejecuta al instalarse.
+
 ## Operación
 - **Quitar acceso a alguien:** en Supabase → Authentication → Users, bloquear o eliminar el usuario.
 - **Cambiar un rol hacia abajo** (solo el administrador, desde el SQL Editor):

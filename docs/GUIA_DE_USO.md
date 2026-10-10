@@ -57,6 +57,13 @@ Al iniciar sesión sale una ventana de bienvenida (una vez por inicio de sesión
 - **Detecta si cambiaste de lugar**: compara el país de tu perfil con la zona horaria de tu dispositivo (no usa GPS ni pide permisos). Si no coinciden, ofrece *Actualizar mi ubicación* (te lleva al perfil con el país ya propuesto) o *Sigo en…* (no vuelve a preguntar por ese país).
 - En **Mi perfil** lo que falta se resalta en ámbar y arriba se ve el avance. Esa pantalla no se tapa con la ventana.
 
+## Reencuentro: volver a encontrarnos con quienes se alejaron
+En **Seguimiento → Reencuentro** están las personas que dejaron su camino a medias (3 meses o más sin asistir y sin grupo vigente). Cada líder ve a quienes pasaron por sus grupos; el coordinador, a los de su programa; el pastor, a los de su sede.
+- Escribe por WhatsApp con el mensaje de partida (recuerda que su avance sigue guardado) y **anota el contacto** para que nadie les escriba dos veces.
+- Marca cómo resultó: *no respondió*, *quiere volver*, *más adelante* (con fecha) o *no continuará*. Quien no continuará no se vuelve a insistir.
+- Cuando alguien quiere volver, abre **su camino** y ayúdale a elegir un grupo.
+- El Panel muestra cuántas personas volvieron después de una conversación. Más detalle: docs/HISTORICO_Y_REENCUENTRO.md.
+
 ## Verificar un certificado
 Cualquier persona puede abrir `/verificar` en el sitio, escribir el código del pie del certificado y ver si es válido. Solo muestra el nombre, el programa, la sede y la fecha.
 

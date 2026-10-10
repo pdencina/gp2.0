@@ -15,6 +15,11 @@ Dos caminos, según el proyecto de Supabase que se use:
 - **Antes:** hacer un respaldo (Supabase → Database → Backups) y confirmar que esos datos no se necesitan.
 - **Seguros:** `000` solo actúa si se quitan los guiones de la línea `set app.confirmo_borrar_v1`; `001` se niega a correr sobre una versión 1 sin pasar por `000`; ambos son de todo o nada (transacción).
 
+## Después de 011
+- `013_sedes_por_lote.sql`: asignar sedes por criterios (solo administrador).
+- `014_reencuentro.sql`: recuperar a quienes se alejaron (registro de contactos y consultas por alcance).
+- `015_archivo_historico.sql`: archivo de solo agregar con las filas de la plataforma anterior (lo escribe la clave de importación; lo lee el administrador).
+
 ## Cómo se prueba
 `npm test` carga los scripts en un Postgres real en memoria (PGlite):
 - `supabase/tests/schema_v2.test.ts`: proyecto limpio. Inscripción, cupos, audiencia y ciclo previo, quién ve qué, pasar lista, ausencias, alertas, lecciones, cierre de ciclo, continuación, escalera de roles y auditoría.

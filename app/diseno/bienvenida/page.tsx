@@ -4,7 +4,7 @@ import { WelcomeDialog } from "@/components/WelcomeDialog";
 import { profileCheck, type ProfileData } from "@/lib/profile-check";
 
 // Ventana de bienvenida con datos de ejemplo: solo en desarrollo (en producción responde 404).
-// ?caso=bloqueante | casi | completo | otro-pais
+// ?caso=bloqueante | casi | completo | vuelve | otro-pais
 export const dynamic = "force-dynamic";
 
 const BASE: ProfileData = {
@@ -21,6 +21,11 @@ const CASES: Record<string, { label: string; profile: ProfileData; country: stri
   },
   completo: {
     label: "Todo al día",
+    profile: { ...BASE, gender: "hombre", birth_date: "1990-05-01", terms_accepted_at: "2026-01-01", phone: "+56912345678", city: "Santiago", campus_id: "c1" },
+    country: "CL",
+  },
+  "vuelve": {
+    label: "Vuelve después de mucho tiempo",
     profile: { ...BASE, gender: "hombre", birth_date: "1990-05-01", terms_accepted_at: "2026-01-01", phone: "+56912345678", city: "Santiago", campus_id: "c1" },
     country: "CL",
   },
@@ -57,6 +62,14 @@ export default async function DisenoBienvenida(props: { searchParams: Promise<{ 
         missing={check.missing}
         percent={check.percent}
         blocking={check.blocking}
+        comeback={
+          key === "vuelve"
+            ? [
+                { ce_id: "a", curriculum: "AR Hombres", months_away: 14, units_done: 0, units_total: 36, modules_done: 4, modules_total: 13 },
+                { ce_id: "b", curriculum: "Libro Morado", months_away: 30, units_done: 5, units_total: 12, modules_done: 0, modules_total: 1 },
+              ]
+            : []
+        }
       />
     </main>
   );

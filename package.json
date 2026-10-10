@@ -12,7 +12,8 @@
     "migrar:simular": "tsx migracion/importar.ts",
     "migrar": "tsx migracion/importar.ts",
     "smoke": "node scripts/smoke.js",
-    "migrar:solo-nuevo": "tsx migracion/importar.ts --solo-nuevo"
+    "migrar:solo-nuevo": "tsx migracion/importar.ts --solo-nuevo",
+    "migrar:archivar": "tsx migracion/archivar.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

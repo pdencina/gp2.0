@@ -3,7 +3,7 @@ import { ROLE_VIEWS } from "@/lib/roles";
 import { navFor } from "@/lib/nav";
 import { firstName, profileCheck, type ProfileData } from "@/lib/profile-check";
 import { Sidebar } from "@/components/Sidebar";
-import { WelcomeDialog } from "@/components/WelcomeDialog";
+import { WelcomeDialog, type Comeback } from "@/components/WelcomeDialog";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { supabase, role, fullName, user } = await getSession();
@@ -13,14 +13,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const userName = fullName || (user.email ?? "").split("@")[0];
 
   // Datos personales: la ventana de bienvenida avisa lo que falta
-  const [{ data: prof }, { count: campusCount }] = await Promise.all([
+  const [{ data: prof }, { count: campusCount }, comebackR] = await Promise.all([
     supabase
       .from("profiles")
       .select("full_name, phone, gender, country, city, birth_date, guardian_name, guardian_email, guardian_phone, terms_accepted_at, campus_id")
       .eq("id", user.id)
       .maybeSingle(),
     supabase.from("campuses").select("id", { count: "exact", head: true }).eq("active", true),
+    // Caminos que la persona dejó hace tiempo (si falta instalar 014, simplemente no hay mensaje)
+    supabase.rpc("my_comeback"),
   ]);
+  const comeback = comebackR.error ? [] : ((comebackR.data ?? []) as Comeback[]);
   const check = prof ? profileCheck(prof as ProfileData, { campusesExist: (campusCount ?? 0) > 0 }) : null;
 
   return (
@@ -36,6 +39,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           missing={check.missing}
           percent={check.percent}
           blocking={check.blocking}
+          comeback={comeback}
         />
       )}
     </div>

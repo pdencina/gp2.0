@@ -69,6 +69,19 @@ Qué hace y qué no:
 - Es repetible: correrlo dos veces seguidas no cambia nada la segunda vez.
 - Si una reunión nueva cae el mismo día que una que ya existe en el mismo grupo (por ejemplo, una planificada aquí), la nueva se omite junto con su asistencia.
 
+## Archivo histórico: no perder lo que el modelo nuevo no recoge
+La importación traduce los datos; algunas tablas (matrimonios, evaluaciones, fútbol, soporte) y columnas no tienen dónde quedar. Para no perderlas, cada fila se guarda **tal cual** en el archivo histórico (solo el administrador la lee; no se modifica ni se borra).
+1. Ejecuta una vez `supabase/v2/015_archivo_historico.sql` en el SQL Editor de Supabase.
+2. Simula (no escribe) y luego guarda:
+```
+npm run migrar:archivar -- --respaldo migracion/datos/respaldo.sql
+npm run migrar:archivar -- --respaldo migracion/datos/respaldo.sql --aplicar --si-estoy-seguro
+```
+- Repetirlo no cambia nada (lo ya guardado no se sobrescribe).
+- Nunca guarda contraseñas ni datos de sesión. Omite el documento de identidad salvo `--incluir-dni`.
+- `--incluir-financiero` agrega los aportes económicos y `--incluir-asistencia-cruda`, las ~505 mil marcas originales.
+- Detalle y cifras en `docs/HISTORICO_Y_REENCUENTRO.md`.
+
 ## Pruebas
 `npm test` incluye una importación completa contra un Postgres real con el esquema v2.
 
